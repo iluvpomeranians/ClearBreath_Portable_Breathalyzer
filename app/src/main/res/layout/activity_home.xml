@@ -24,14 +24,55 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Blood Alcohol Display -->
+        <!-- Circular Progress Bar for BAC -->
+        <com.mikhaellopez.circularprogressbar.CircularProgressBar
+            android:id="@+id/circularProgressBar"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            app:cpb_progress="0"
+            app:cpb_progress_max="500"
+            app:cpb_progressbar_width="10dp"
+            app:cpb_background_progressbar_width="10dp"
+            app:cpb_progress_direction="to_right"
+            app:cpb_progressbar_color="#FF6347"
+            app:cpb_background_progressbar_color="#D3D3D3"
+            app:layout_constraintTop_toBottomOf="@id/toolbar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp"/>
+
+        <!-- BAC Percentage Display -->
         <TextView
             android:id="@+id/bac_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="BAC Display"
+            android:text="BAC: 0.00%"
             android:textSize="24sp"
-            app:layout_constraintTop_toBottomOf="@id/toolbar"
+            app:layout_constraintTop_toBottomOf="@id/circularProgressBar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp" />
+
+        <!-- BAC in mL Display -->
+        <TextView
+            android:id="@+id/bac_ml_display"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="BAC in mL: 0.00 mL"
+            android:textSize="24sp"
+            app:layout_constraintTop_toBottomOf="@id/bac_display"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp" />
+
+        <!-- Time Until Sober Display -->
+        <TextView
+            android:id="@+id/time_until_sober_display"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Time Until Sober: 0.0 hours"
+            android:textSize="24sp"
+            app:layout_constraintTop_toBottomOf="@id/bac_ml_display"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="16dp" />
@@ -42,7 +83,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Going Out"
-            app:layout_constraintTop_toBottomOf="@id/bac_display"
+            app:layout_constraintTop_toBottomOf="@id/time_until_sober_display"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="32dp" />
