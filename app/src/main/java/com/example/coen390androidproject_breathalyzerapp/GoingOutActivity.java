@@ -16,6 +16,7 @@ public class GoingOutActivity extends AppCompatActivity {
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle("Going Out");
         }
     }
 
