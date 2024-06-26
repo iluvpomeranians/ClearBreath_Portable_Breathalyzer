@@ -95,7 +95,7 @@ public class HomeActivity extends AppCompatActivity {
 
         setupBluetooth();
 
-        simulateReceivingData("0.05"); // Simulated BAC value
+        simulateReceivingData("0.01"); // Simulated BAC value
     }
 
     @Override
@@ -189,7 +189,7 @@ public class HomeActivity extends AppCompatActivity {
     private void processReceivedData(String data) {
         try {
             double bac = Double.parseDouble(data.trim());
-            int bacPercentage = (int) (bac * 100); // Convert BAC to percentage for the progress bar
+            int bacProgress = (int) (bac * 1000); // Convert BAC to integer representation
 
             // Set color based on BAC level
             int progressBarColor;
@@ -198,21 +198,24 @@ public class HomeActivity extends AppCompatActivity {
             } else if (bac < 0.05) {
                 progressBarColor = Color.YELLOW;
             } else if (bac < 0.08) {
-                progressBarColor = Color.rgb(255, 165, 0);
+                progressBarColor = Color.rgb(255, 165, 0); // Orange color
             } else {
                 progressBarColor = Color.RED;
             }
 
             bacDisplay.setText("BAC: " + String.format("%.2f", bac) + "%");
-            circularProgressBar.setProgressWithAnimation(bacPercentage, 1000L); // Animation duration of 1 second
+            CircularProgressBar circularProgressBar = findViewById(R.id.circularProgressBar);
+            circularProgressBar.setProgressWithAnimation(bacProgress, 1000L); // Animation duration of 1 second
             circularProgressBar.setProgressBarColor(progressBarColor);
 
             // Display BAC in terms of mL
             double bacMl = bac * 1000; // Convert BAC to mL
+            TextView bacMlDisplay = findViewById(R.id.bac_ml_display);
             bacMlDisplay.setText("BAC in mL: " + String.format("%.2f", bacMl) + " mL");
 
             // Estimate time until sobriety (assuming 0.015% BAC reduction per hour)
             double hoursUntilSober = bac / 0.015;
+            TextView timeUntilSoberDisplay = findViewById(R.id.time_until_sober_display);
             timeUntilSoberDisplay.setText("Time Until Sober: " + String.format("%.1f", hoursUntilSober) + " hours");
 
         } catch (NumberFormatException e) {
