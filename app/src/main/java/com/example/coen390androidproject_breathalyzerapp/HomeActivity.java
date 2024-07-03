@@ -46,6 +46,7 @@ public class HomeActivity extends AppCompatActivity {
     private byte[] readBuffer;
     private int readBufferPosition;
     private volatile boolean stopWorker;
+    private boolean isSober = true;
 
     private static final String DEVICE_NAME = "ESP32_Sensor";
     private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // Standard SPP UUID
@@ -83,14 +84,14 @@ public class HomeActivity extends AppCompatActivity {
         bacDisplay = findViewById(R.id.bac_display);
         bacMlDisplay = findViewById(R.id.bac_ml_display);
         timeUntilSoberDisplay = findViewById(R.id.time_until_sober_display);
-        btnGoingOut = findViewById(R.id.btn_going_out);
+        btnGoingOut = findViewById(R.id.btn_more_info);
         btnHealth = findViewById(R.id.btn_health);
 
         btnGoingOut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Handle Going Out button click
-                Intent intent = new Intent(HomeActivity.this, GoingOutActivity.class);
+                Intent intent = new Intent(HomeActivity.this, MoreInfoActivity.class);
                 startActivity(intent);
             }
         });

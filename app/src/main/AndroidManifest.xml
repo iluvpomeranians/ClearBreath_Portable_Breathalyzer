@@ -25,7 +25,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".GoingOutActivity" />
+        <activity android:name=".MoreInfoActivity" />
         <activity android:name=".HealthActivity" />
 
     </application>
