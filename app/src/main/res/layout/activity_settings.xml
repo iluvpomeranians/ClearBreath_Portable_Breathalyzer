@@ -1,0 +1,38 @@
+<!-- res/layout/activity_settings.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".SettingsActivity">
+
+    <SeekBar
+        android:id="@+id/text_size_seekbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="50"
+        android:progress="16"/>
+
+    <Spinner
+        android:id="@+id/font_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" />
+
+    <TextView
+        android:id="@+id/sample_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Sample Text"
+        android:textSize="16sp"
+        android:layout_marginTop="16dp" />
+
+    <GridLayout
+        android:id="@+id/color_grid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:columnCount="4"
+        android:rowCount="3" />
+</LinearLayout>

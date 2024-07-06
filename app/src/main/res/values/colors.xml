@@ -7,4 +7,16 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="color1">#FF0000</color> <!-- Red -->
+    <color name="color2">#FFA500</color> <!-- Orange -->
+    <color name="color3">#FFFF00</color> <!-- Yellow -->
+    <color name="color4">#008000</color> <!-- Green -->
+    <color name="color5">#0000FF</color> <!-- Blue -->
+    <color name="color6">#4B0082</color> <!-- Indigo -->
+    <color name="color7">#EE82EE</color> <!-- Violet -->
+    <color name="color8">#A52A2A</color> <!-- Brown -->
+    <color name="color9">#00FFFF</color> <!-- Cyan -->
+    <color name="color10">#FFC0CB</color> <!-- Pink -->
+    <color name="color11">#000000</color> <!-- Black -->
+    <color name="color12">#FFFFFF</color> <!-- White -->
 </resources>
