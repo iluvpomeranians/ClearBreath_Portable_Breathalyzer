@@ -12,7 +12,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- Top Menu with Hamburger Icon -->
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="0dp"
@@ -24,7 +23,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Circular Progress Bar for BAC -->
         <com.mikhaellopez.circularprogressbar.CircularProgressBar
             android:id="@+id/circularProgressBar"
             android:layout_width="200dp"
@@ -41,7 +39,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="16dp"/>
 
-        <!-- BAC Percentage Display -->
         <TextView
             android:id="@+id/bac_display"
             android:layout_width="wrap_content"
@@ -53,7 +50,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="16dp" />
 
-        <!-- BAC in mL Display -->
         <TextView
             android:id="@+id/bac_ml_display"
             android:layout_width="wrap_content"
@@ -65,7 +61,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="16dp" />
 
-        <!-- Time Until Sober Display -->
         <TextView
             android:id="@+id/time_until_sober_display"
             android:layout_width="wrap_content"
@@ -77,7 +72,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="16dp" />
 
-        <!-- Going Out Button -->
         <Button
             android:id="@+id/btn_going_out"
             android:layout_width="wrap_content"
@@ -88,7 +82,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="32dp" />
 
-        <!-- Health Button -->
         <Button
             android:id="@+id/btn_health"
             android:layout_width="wrap_content"
@@ -101,7 +94,6 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Navigation View -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
