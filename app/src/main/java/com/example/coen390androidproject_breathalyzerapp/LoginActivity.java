@@ -17,9 +17,9 @@ public class LoginActivity extends AppCompatActivity {
     private Button btnLogin;
 
     private static final String SHARED_PREFS_NAME = "UserPrefs";
+    private static final String KEY_LOGGED_IN = "loggedIn";
     private static final String KEY_USERNAME = "username";
     private static final String KEY_PASSWORD = "password";
-    private static final String KEY_LOGGED_IN = "loggedIn";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,14 +28,13 @@ public class LoginActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setTitle("Login");
         }
 
-        editTextUsername = findViewById(R.id.et_username);
-        editTextPassword = findViewById(R.id.et_password);
+        editTextUsername = findViewById(R.id.editTextUsername);
+        editTextPassword = findViewById(R.id.editTextPassword);
         btnLogin = findViewById(R.id.btn_login);
 
         btnLogin.setOnClickListener(v -> login());
@@ -55,7 +54,7 @@ public class LoginActivity extends AppCompatActivity {
             editor.apply();
 
             Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+            Intent intent = new Intent(LoginActivity.this, AccountActivity.class);
             startActivity(intent);
             finish();
         } else {

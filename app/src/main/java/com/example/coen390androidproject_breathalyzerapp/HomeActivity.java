@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -51,10 +50,6 @@ public class HomeActivity extends AppCompatActivity {
     private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // Standard SPP UUID
     private final String DEVICE_ADDRESS = "00:11:22:33:44:55"; // Replace with your device's address
 
-    private static final String SHARED_PREFS_NAME = "UserPrefs";
-    private static final String KEY_USERNAME = "username";
-    private static final String KEY_LOGGED_IN = "loggedIn";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,15 +81,6 @@ public class HomeActivity extends AppCompatActivity {
             return false;
         });
 
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS_NAME, MODE_PRIVATE);
-        boolean loggedIn = sharedPreferences.getBoolean(KEY_LOGGED_IN, false);
-        String username = sharedPreferences.getString(KEY_USERNAME, "Account");
-
-        if (loggedIn) {
-            MenuItem accountItem = navigationView.getMenu().findItem(R.id.nav_account);
-            accountItem.setTitle(username);
-        }
-
         circularProgressBar = findViewById(R.id.circularProgressBar);
         bacDisplay = findViewById(R.id.bac_display);
         bacMlDisplay = findViewById(R.id.bac_ml_display);
@@ -103,11 +89,13 @@ public class HomeActivity extends AppCompatActivity {
         btnHealth = findViewById(R.id.btn_health);
 
         btnGoingOut.setOnClickListener(v -> {
+            // Handle Going Out button click
             Intent intent = new Intent(HomeActivity.this, GoingOutActivity.class);
             startActivity(intent);
         });
 
         btnHealth.setOnClickListener(v -> {
+            // Handle Health button click
             Intent intent = new Intent(HomeActivity.this, HealthActivity.class);
             startActivity(intent);
         });
@@ -137,6 +125,7 @@ public class HomeActivity extends AppCompatActivity {
     private void setupBluetooth() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
+            // Device does not support Bluetooth
             return;
         }
 
@@ -163,34 +152,40 @@ public class HomeActivity extends AppCompatActivity {
     private void beginListenForData() {
         final Handler handler = new Handler();
 
-        final byte delimiter = 10;
+        final byte delimiter = 10; // This is the ASCII code for a newline character
 
         stopWorker = false;
         readBufferPosition = 0;
         readBuffer = new byte[1024];
-        workerThread = new Thread(() -> {
-            while (!Thread.currentThread().isInterrupted() && !stopWorker) {
-                try {
-                    int bytesAvailable = inputStream.available();
-                    if (bytesAvailable > 0) {
-                        byte[] packetBytes = new byte[bytesAvailable];
-                        inputStream.read(packetBytes);
-                        for (int i = 0; i < bytesAvailable; i++) {
-                            byte b = packetBytes[i];
-                            if (b == delimiter) {
-                                byte[] encodedBytes = new byte[readBufferPosition];
-                                System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
-                                final String data = new String(encodedBytes, "US-ASCII");
-                                readBufferPosition = 0;
+        workerThread = new Thread(new Runnable() {
+            public void run() {
+                while (!Thread.currentThread().isInterrupted() && !stopWorker) {
+                    try {
+                        int bytesAvailable = inputStream.available();
+                        if (bytesAvailable > 0) {
+                            byte[] packetBytes = new byte[bytesAvailable];
+                            inputStream.read(packetBytes);
+                            for (int i = 0; i < bytesAvailable; i++) {
+                                byte b = packetBytes[i];
+                                if (b == delimiter) {
+                                    byte[] encodedBytes = new byte[readBufferPosition];
+                                    System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
+                                    final String data = new String(encodedBytes, "US-ASCII");
+                                    readBufferPosition = 0;
 
-                                handler.post(() -> processReceivedData(data));
-                            } else {
-                                readBuffer[readBufferPosition++] = b;
+                                    handler.post(new Runnable() {
+                                        public void run() {
+                                            processReceivedData(data);
+                                        }
+                                    });
+                                } else {
+                                    readBuffer[readBufferPosition++] = b;
+                                }
                             }
                         }
+                    } catch (IOException ex) {
+                        stopWorker = true;
                     }
-                } catch (IOException ex) {
-                    stopWorker = true;
                 }
             }
         });
@@ -201,28 +196,33 @@ public class HomeActivity extends AppCompatActivity {
     private void processReceivedData(String data) {
         try {
             double bac = Double.parseDouble(data.trim());
-            int bacProgress = (int) (bac * 1000);
+            int bacProgress = (int) (bac * 1000); // Convert BAC to integer representation
 
+            // Set color based on BAC level
             int progressBarColor;
             if (bac < 0.02) {
                 progressBarColor = Color.GREEN;
             } else if (bac < 0.05) {
                 progressBarColor = Color.YELLOW;
             } else if (bac < 0.08) {
-                progressBarColor = Color.rgb(255, 165, 0);
+                progressBarColor = Color.rgb(255, 165, 0); // Orange color
             } else {
                 progressBarColor = Color.RED;
             }
 
             bacDisplay.setText("BAC: " + String.format("%.2f", bac) + "%");
             CircularProgressBar circularProgressBar = findViewById(R.id.circularProgressBar);
-            circularProgressBar.setProgressWithAnimation(bacProgress, 1000L);
+            circularProgressBar.setProgressWithAnimation(bacProgress, 1000L); // Animation duration of 1 second
             circularProgressBar.setProgressBarColor(progressBarColor);
 
-            double bacMl = bac * 1000;
+            // Display BAC in terms of mL
+            double bacMl = bac * 1000; // Convert BAC to mL
+            TextView bacMlDisplay = findViewById(R.id.bac_ml_display);
             bacMlDisplay.setText("BAC in mL: " + String.format("%.2f", bacMl) + " mL");
 
+            // Estimate time until sobriety (assuming 0.015% BAC reduction per hour)
             double hoursUntilSober = bac / 0.015;
+            TextView timeUntilSoberDisplay = findViewById(R.id.time_until_sober_display);
             timeUntilSoberDisplay.setText("Time Until Sober: " + String.format("%.1f", hoursUntilSober) + " hours");
 
         } catch (NumberFormatException e) {
