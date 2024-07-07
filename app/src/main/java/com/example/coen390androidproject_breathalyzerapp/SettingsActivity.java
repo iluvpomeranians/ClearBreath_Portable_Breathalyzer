@@ -17,6 +17,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -111,22 +112,32 @@ public class SettingsActivity extends AppCompatActivity {
         int savedColor = sharedPreferences.getInt("toolbar_color", Color.BLACK);
         toolbar.setBackgroundColor(savedColor);
 
-        for (int colorRes : COLORS) {
-            View colorView = new View(this);
-            colorView.setBackgroundColor(getResources().getColor(colorRes));
-            colorView.setLayoutParams(new GridLayout.LayoutParams());
-            colorView.setMinimumWidth(100);
-            colorView.setMinimumHeight(100);
+        colorGrid.removeAllViews();  // Clear any existing views
 
+        for (int i = 0; i < COLORS.length; i++) {
+            int colorRes = COLORS[i];
+            View colorView = new View(this);
+            colorView.setBackgroundColor(ContextCompat.getColor(this, colorRes));
+
+            GridLayout.Spec rowSpec = GridLayout.spec(i / 4, 1f); // Row span of 1
+            GridLayout.Spec colSpec = GridLayout.spec(i % 4, 1f); // Column span of 1
+            GridLayout.LayoutParams params = new GridLayout.LayoutParams(rowSpec, colSpec);
+            params.width = 0;
+            params.height = 0;
+            params.setMargins(8, 8, 8, 8); // Adjust margins as needed
+
+            colorView.setLayoutParams(params);
+
+            final int finalColor = ContextCompat.getColor(this, colorRes);
             colorView.setOnClickListener(v -> {
-                int color = getResources().getColor(colorRes);
-                toolbar.setBackgroundColor(color);
-                sharedPreferences.edit().putInt("toolbar_color", color).apply();
+                toolbar.setBackgroundColor(finalColor);
+                sharedPreferences.edit().putInt("toolbar_color", finalColor).apply();
             });
 
             colorGrid.addView(colorView);
         }
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
