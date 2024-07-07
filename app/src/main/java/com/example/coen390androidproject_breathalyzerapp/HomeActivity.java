@@ -1,13 +1,18 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -18,6 +23,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -47,9 +53,21 @@ public class HomeActivity extends AppCompatActivity {
     private byte[] readBuffer;
     private int readBufferPosition;
     private volatile boolean stopWorker;
+    private boolean isSober = true;
 
+    private static final String DEVICE_NAME = "ESP32_Sensor";
     private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // Standard SPP UUID
     private final String DEVICE_ADDRESS = "00:11:22:33:44:55"; // Replace with your device's address
+
+    private static final int REQUEST_CODE_PERMISSIONS = 101;
+    private static final String[] REQUIRED_PERMISSIONS = new String[]{
+            Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+    };
+
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +76,8 @@ public class HomeActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("ClearBreath Portable Breathalyzer");
@@ -79,29 +99,52 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
                 return true;
             }
+            else if (id == R.id.nav_settings) {
+                Intent intent = new Intent(HomeActivity.this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
+            }
             return false;
         });
+        /*navigationView.setNavigationItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.nav_settings) {
+                Intent intent = new Intent(HomeActivity.this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
+            }
+            return false;
+        });*/
 
         circularProgressBar = findViewById(R.id.circularProgressBar);
         bacDisplay = findViewById(R.id.bac_display);
         bacMlDisplay = findViewById(R.id.bac_ml_display);
         timeUntilSoberDisplay = findViewById(R.id.time_until_sober_display);
-        btnGoingOut = findViewById(R.id.btn_going_out);
+        btnGoingOut = findViewById(R.id.btn_more_info);
         btnHealth = findViewById(R.id.btn_health);
 
-        btnGoingOut.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, GoingOutActivity.class);
-            startActivity(intent);
-        });
 
-        btnHealth.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, HealthActivity.class);
-            startActivity(intent);
-        });
+        // Call applySettings after initializing all views
+        applySettings();
 
-        setupBluetooth();
+        btnGoingOut.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Handle Going Out button click
+                Intent intent = new Intent(HomeActivity.this, MoreInfoActivity.class);
+                startActivity(intent);
+            }
+        });
+        /*
+        // Check and request permissions if needed
+        if (!allPermissionsGranted()) {
+            ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
+        } else {
+            setupBluetooth();
+        }
 
         simulateReceivingData("0.01"); // Simulated BAC value
+        */
     }
 
     @Override
@@ -112,14 +155,35 @@ public class HomeActivity extends AppCompatActivity {
             super.onBackPressed();
         }
     }
+    //@Override
+    protected void OnResume()
+    {
+        super.onResume();
+        applySettings();
+    }
 
-    @Override
+    /*@Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.drawer_menu, menu);
+        return true;
+    }*/
+
+    /*@Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (toggle.onOptionsItemSelected(item)) {
             return true;
         }
+
+        int id = item.getItemId();
+        if (id == R.id.nav_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
+    */
 
     private void setupBluetooth() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -220,5 +284,29 @@ public class HomeActivity extends AppCompatActivity {
 
     private void simulateReceivingData(String data) {
         processReceivedData(data);
+    }
+
+    private void applySettings() {
+        // Retrieve preferences and apply them
+        int textSize = sharedPreferences.getInt("text_size", 16); // Default text size 16
+        String font = sharedPreferences.getString("font", "default");
+        int toolbarColor = sharedPreferences.getInt("toolbar_color", Color.BLACK);
+
+        // Apply text size to TextViews
+        bacDisplay.setTextSize(textSize);
+        bacMlDisplay.setTextSize(textSize);
+        timeUntilSoberDisplay.setTextSize(textSize);
+
+        // Apply font
+        if (!font.equals("default")) {
+            Typeface typeface = Typeface.createFromAsset(getAssets(), font);
+            bacDisplay.setTypeface(typeface);
+            bacMlDisplay.setTypeface(typeface);
+            timeUntilSoberDisplay.setTypeface(typeface);
+        }
+
+        // Apply toolbar color
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setBackgroundColor(toolbarColor);
     }
 }

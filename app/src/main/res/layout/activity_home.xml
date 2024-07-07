@@ -17,80 +17,100 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            app:layout_constraintTop_toTopOf="parent"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.mikhaellopez.circularprogressbar.CircularProgressBar
             android:id="@+id/circularProgressBar"
             android:layout_width="200dp"
             android:layout_height="200dp"
-            app:cpb_progress="0"
-            app:cpb_progress_max="500"
-            app:cpb_progressbar_width="10dp"
-            app:cpb_background_progressbar_width="10dp"
-            app:cpb_progress_direction="to_right"
-            app:cpb_progressbar_color="#FF6347"
+            android:layout_marginTop="16dp"
             app:cpb_background_progressbar_color="#D3D3D3"
-            app:layout_constraintTop_toBottomOf="@id/toolbar"
-            app:layout_constraintStart_toStartOf="parent"
+            app:cpb_background_progressbar_width="10dp"
+            app:cpb_progress="0"
+            app:cpb_progress_direction="to_right"
+            app:cpb_progress_max="500"
+            app:cpb_progressbar_color="#FF6347"
+            app:cpb_progressbar_width="10dp"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="16dp"/>
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/toolbar" />
+
+        <!-- Sober Label -->
+        <TextView
+            android:id="@+id/isSober"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Sober?:"
+            android:textSize="32dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/circularProgressBar" />
+
 
         <TextView
             android:id="@+id/bac_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:text="BAC: 0.00%"
             android:textSize="24sp"
-            app:layout_constraintTop_toBottomOf="@id/circularProgressBar"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="16dp" />
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/isSober" />
 
         <TextView
             android:id="@+id/bac_ml_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:text="BAC in mL: 0.00 mL"
             android:textSize="24sp"
-            app:layout_constraintTop_toBottomOf="@id/bac_display"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="16dp" />
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/bac_display" />
 
         <TextView
             android:id="@+id/time_until_sober_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
             android:text="Time Until Sober: 0.0 hours"
             android:textSize="24sp"
-            app:layout_constraintTop_toBottomOf="@id/bac_ml_display"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="16dp" />
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/bac_ml_display" />
 
         <Button
-            android:id="@+id/btn_going_out"
+            android:id="@+id/btn_more_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Going Out"
-            app:layout_constraintTop_toBottomOf="@id/time_until_sober_display"
-            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="8dp"
+            android:text="More Info"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="32dp" />
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/time_until_sober_display" />
 
         <Button
             android:id="@+id/btn_health"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
             android:text="Health"
-            app:layout_constraintTop_toBottomOf="@id/btn_going_out"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="16dp" />
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btn_more_info" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
