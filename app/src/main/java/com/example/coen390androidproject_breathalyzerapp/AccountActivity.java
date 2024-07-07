@@ -84,9 +84,9 @@ public class AccountActivity extends AppCompatActivity {
     }
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        // Handle action bar item clicks here.
+
         if (item.getItemId() == android.R.id.home) {
-            onBackPressed(); // Go back to previous activity
+            onBackPressed();
             return true;
         }
         return super.onOptionsItemSelected(item);
