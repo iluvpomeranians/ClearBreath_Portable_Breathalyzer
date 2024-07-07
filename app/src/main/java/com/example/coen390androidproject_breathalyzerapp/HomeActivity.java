@@ -27,6 +27,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.google.android.material.navigation.NavigationView;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
 import java.io.IOException;
@@ -95,6 +96,16 @@ public class HomeActivity extends AppCompatActivity {
         timeUntilSoberDisplay = findViewById(R.id.time_until_sober_display);
         btnGoingOut = findViewById(R.id.btn_more_info);
         btnHealth = findViewById(R.id.btn_health);
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.nav_settings) {
+                Intent intent = new Intent(HomeActivity.this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
+            }
+            return false;
+        });
 
         // Call applySettings after initializing all views
         applySettings();
@@ -134,6 +145,12 @@ public class HomeActivity extends AppCompatActivity {
         } else {
             super.onBackPressed();
         }
+    }
+    @Override
+    public void OnResume()
+    {
+        super.onResume();
+
     }
 
     @Override
