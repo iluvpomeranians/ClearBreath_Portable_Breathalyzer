@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -22,6 +23,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.google.android.material.navigation.NavigationView;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
 import java.io.IOException;
@@ -79,6 +81,17 @@ public class HomeActivity extends AppCompatActivity {
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.nav_account) {
+                Intent intent = new Intent(HomeActivity.this, AccountActivity.class);
+                startActivity(intent);
+                return true;
+            }
+            return false;
+        });
+
         circularProgressBar = findViewById(R.id.circularProgressBar);
         bacDisplay = findViewById(R.id.bac_display);
         bacMlDisplay = findViewById(R.id.bac_ml_display);
@@ -86,22 +99,16 @@ public class HomeActivity extends AppCompatActivity {
         btnGoingOut = findViewById(R.id.btn_going_out);
         btnHealth = findViewById(R.id.btn_health);
 
-        btnGoingOut.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Handle Going Out button click
-                Intent intent = new Intent(HomeActivity.this, GoingOutActivity.class);
-                startActivity(intent);
-            }
+        btnGoingOut.setOnClickListener(v -> {
+            // Handle Going Out button click
+            Intent intent = new Intent(HomeActivity.this, GoingOutActivity.class);
+            startActivity(intent);
         });
 
-        btnHealth.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Handle Health button click
-                Intent intent = new Intent(HomeActivity.this, HealthActivity.class);
-                startActivity(intent);
-            }
+        btnHealth.setOnClickListener(v -> {
+            // Handle Health button click
+            Intent intent = new Intent(HomeActivity.this, HealthActivity.class);
+            startActivity(intent);
         });
 
         setupBluetooth();
@@ -250,7 +257,6 @@ public class HomeActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-
 
     private void simulateReceivingData(String data) {
         processReceivedData(data);
