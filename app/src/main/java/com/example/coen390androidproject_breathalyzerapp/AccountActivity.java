@@ -1,6 +1,5 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -8,29 +7,30 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
-import java.util.Map;
-import java.util.UUID;
+import com.google.android.material.navigation.NavigationView;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class AccountActivity extends AppCompatActivity {
 
-    private static final String SHARED_PREFS_NAME = "UserPrefs";
-    private static final String KEY_LOGGED_IN = "loggedIn";
-    private static final String KEY_USERNAME = "username";
-    private static final String KEY_PASSWORD = "password";
-    private static final String KEY_BIRTHDAY = "birthday";
-    private static final String KEY_ID = "id";
-
+    private DrawerLayout drawerLayout;
+    private ActionBarDrawerToggle toggle;
     private TextView textViewWelcome;
-    private Button btnLogin;
-    private Button btnRegister;
-    private Button btnLogout;
-    private Button btnDeleteAccount;
+    private Button btnLogin, btnRegister, btnLogout, btnDeleteAccount;
+    private NavigationView navigationView;
+    private static final String SHARED_PREFS_NAME = "UserPrefs";
+    private static final String KEY_ACCOUNTS = "accounts";
+    private static final String KEY_CURRENT_USER = "current_user";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,10 +39,22 @@ public class AccountActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("Account");
-        }
+
+        drawerLayout = findViewById(R.id.drawer_layout);
+        toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+
+        navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.nav_home) {
+                Intent intent = new Intent(AccountActivity.this, HomeActivity.class);
+                startActivity(intent);
+                return true;
+            }
+            return false;
+        });
 
         textViewWelcome = findViewById(R.id.textViewWelcome);
         btnLogin = findViewById(R.id.btn_login);
@@ -51,15 +63,8 @@ public class AccountActivity extends AppCompatActivity {
         btnDeleteAccount = findViewById(R.id.btn_delete_account);
 
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS_NAME, MODE_PRIVATE);
-        boolean loggedIn = sharedPreferences.getBoolean(KEY_LOGGED_IN, false);
-        String username = sharedPreferences.getString(KEY_USERNAME, "");
-
-        if (loggedIn) {
-            textViewWelcome.setText("Welcome, " + username);
-            showLoggedInState();
-        } else {
-            showLoggedOutState();
-        }
+        String currentUser = sharedPreferences.getString(KEY_CURRENT_USER, null);
+        updateUI(currentUser);
 
         btnLogin.setOnClickListener(v -> {
             Intent intent = new Intent(AccountActivity.this, LoginActivity.class);
@@ -73,18 +78,23 @@ public class AccountActivity extends AppCompatActivity {
 
         btnLogout.setOnClickListener(v -> {
             SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putBoolean(KEY_LOGGED_IN, false);
+            editor.remove(KEY_CURRENT_USER);
             editor.apply();
-            showLoggedOutState();
-            Intent intent = new Intent(AccountActivity.this, AccountActivity.class);
-            startActivity(intent);
+            Toast.makeText(AccountActivity.this, "Logged out successfully", Toast.LENGTH_SHORT).show();
+            updateUI(null);
         });
 
-        btnDeleteAccount.setOnClickListener(v -> showDeleteAccountDialog(username));
+        btnDeleteAccount.setOnClickListener(v -> {
+            String username = sharedPreferences.getString(KEY_CURRENT_USER, null);
+            if (username != null) {
+                ConfirmDeleteDialogFragment confirmDeleteDialogFragment = ConfirmDeleteDialogFragment.newInstance(username);
+                confirmDeleteDialogFragment.show(getSupportFragmentManager(), "confirmDelete");
+            }
+        });
     }
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-
         if (item.getItemId() == android.R.id.home) {
             onBackPressed();
             return true;
@@ -92,41 +102,49 @@ public class AccountActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void showDeleteAccountDialog(String username) {
-        new AlertDialog.Builder(this)
-                .setTitle("Delete Account")
-                .setMessage("Are you sure you want to delete account " + username + "?")
-                .setPositiveButton(android.R.string.yes, (dialog, which) -> deleteAccount(username))
-                .setNegativeButton(android.R.string.no, null)
-                .show();
+    @Override
+    public void onBackPressed() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
     }
 
-    private void deleteAccount(String username) {
+    public void deleteAccount(String username) {
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS_NAME, MODE_PRIVATE);
+        Set<String> accounts = sharedPreferences.getStringSet(KEY_ACCOUNTS, new HashSet<>());
+        accounts.remove(username);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.remove(KEY_USERNAME);
-        editor.remove(KEY_PASSWORD);
-        editor.remove(KEY_BIRTHDAY);
-        editor.remove(KEY_ID);
-        editor.putBoolean(KEY_LOGGED_IN, false);
+        editor.putStringSet(KEY_ACCOUNTS, accounts);
+        editor.remove(username);
+        editor.remove("birthday_" + username);
+        editor.remove("id_" + username);
+        editor.remove(KEY_CURRENT_USER);
         editor.apply();
-        showLoggedOutState();
-        Intent intent = new Intent(AccountActivity.this, AccountActivity.class);
-        startActivity(intent);
+        Toast.makeText(this, "Account deleted successfully", Toast.LENGTH_SHORT).show();
+        updateUI(null);
     }
 
-    private void showLoggedInState() {
-        btnLogin.setVisibility(View.GONE);
-        btnRegister.setVisibility(View.GONE);
-        btnLogout.setVisibility(View.VISIBLE);
-        btnDeleteAccount.setVisibility(View.VISIBLE);
-    }
+    public void updateUI(String currentUser) {
+        if (currentUser == null) {
+            textViewWelcome.setText("Welcome");
+            btnLogin.setVisibility(View.VISIBLE);
+            btnRegister.setVisibility(View.VISIBLE);
+            btnLogout.setVisibility(View.GONE);
+            btnDeleteAccount.setVisibility(View.GONE);
 
-    private void showLoggedOutState() {
-        btnLogin.setVisibility(View.VISIBLE);
-        btnRegister.setVisibility(View.VISIBLE);
-        btnLogout.setVisibility(View.GONE);
-        btnDeleteAccount.setVisibility(View.GONE);
-        textViewWelcome.setText("Please log in or register");
+            MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
+            accountMenuItem.setTitle("Account");
+        } else {
+            textViewWelcome.setText("Welcome, " + currentUser);
+            btnLogin.setVisibility(View.GONE);
+            btnRegister.setVisibility(View.GONE);
+            btnLogout.setVisibility(View.VISIBLE);
+            btnDeleteAccount.setVisibility(View.VISIBLE);
+
+            MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
+            accountMenuItem.setTitle(currentUser);
+        }
     }
 }
