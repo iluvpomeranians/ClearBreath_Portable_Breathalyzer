@@ -254,20 +254,25 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void applySettings() {
-        // Apply user settings (e.g., text size, font style, toolbar color)
-        float textSize = sharedPreferences.getFloat("text_size", 14);
-        String fontName = sharedPreferences.getString("font_name", "sans-serif");
+        // Retrieve preferences and apply them
+        int textSize = sharedPreferences.getInt("text_size", 16); // Default text size 16
+        String font = sharedPreferences.getString("font", "default");
         int toolbarColor = sharedPreferences.getInt("toolbar_color", Color.BLACK);
 
+        // Apply text size to TextViews
         bacDisplay.setTextSize(textSize);
         bacMlDisplay.setTextSize(textSize);
         timeUntilSoberDisplay.setTextSize(textSize);
 
-        Typeface typeface = Typeface.create(fontName, Typeface.NORMAL);
-        bacDisplay.setTypeface(typeface);
-        bacMlDisplay.setTypeface(typeface);
-        timeUntilSoberDisplay.setTypeface(typeface);
+        // Apply font
+        if (!font.equals("default")) {
+            Typeface typeface = Typeface.createFromAsset(getAssets(), font);
+            bacDisplay.setTypeface(typeface);
+            bacMlDisplay.setTypeface(typeface);
+            timeUntilSoberDisplay.setTypeface(typeface);
+        }
 
+        // Apply toolbar color
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setBackgroundColor(toolbarColor);
     }
