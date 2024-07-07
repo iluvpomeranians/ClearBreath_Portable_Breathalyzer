@@ -4,10 +4,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -79,6 +81,15 @@ public class AccountActivity extends AppCompatActivity {
         });
 
         btnDeleteAccount.setOnClickListener(v -> showDeleteAccountDialog(username));
+    }
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        // Handle action bar item clicks here.
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed(); // Go back to previous activity
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void showDeleteAccountDialog(String username) {
