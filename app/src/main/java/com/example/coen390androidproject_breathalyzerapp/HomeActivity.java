@@ -1,6 +1,7 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -12,11 +13,13 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -33,6 +36,7 @@ import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Set;
 import java.util.UUID;
 
 public class HomeActivity extends AppCompatActivity {
@@ -45,6 +49,8 @@ public class HomeActivity extends AppCompatActivity {
     private CircularProgressBar circularProgressBar;
     private Button btnGoingOut;
     private Button btnHealth;
+    private Button btnBluetooth;
+    private TextView bluetoothStatusDisplay;
 
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothSocket bluetoothSocket;
@@ -56,6 +62,7 @@ public class HomeActivity extends AppCompatActivity {
     private boolean isSober = true;
 
     private static final String DEVICE_NAME = "ESP32_Sensor";
+    private static final String TAG = "HomeActivity";
     private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // Standard SPP UUID
     private final String DEVICE_ADDRESS = "00:11:22:33:44:55"; // Replace with your device's address
 
@@ -106,15 +113,6 @@ public class HomeActivity extends AppCompatActivity {
             }
             return false;
         });
-        /*navigationView.setNavigationItemSelectedListener(item -> {
-            int id = item.getItemId();
-            if (id == R.id.nav_settings) {
-                Intent intent = new Intent(HomeActivity.this, SettingsActivity.class);
-                startActivity(intent);
-                return true;
-            }
-            return false;
-        });*/
 
         circularProgressBar = findViewById(R.id.circularProgressBar);
         bacDisplay = findViewById(R.id.bac_display);
@@ -122,7 +120,8 @@ public class HomeActivity extends AppCompatActivity {
         timeUntilSoberDisplay = findViewById(R.id.time_until_sober_display);
         btnGoingOut = findViewById(R.id.btn_more_info);
         btnHealth = findViewById(R.id.btn_health);
-
+        btnBluetooth = findViewById(R.id.btn_bluetooth);
+        bluetoothStatusDisplay = findViewById(R.id.bluetooth_status_display);
 
         // Call applySettings after initializing all views
         applySettings();
@@ -135,16 +134,14 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-        /*
-        // Check and request permissions if needed
-        if (!allPermissionsGranted()) {
-            ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
-        } else {
-            setupBluetooth();
-        }
 
-        simulateReceivingData("0.01"); // Simulated BAC value
-        */
+        btnBluetooth.setOnClickListener(v -> setupBluetooth());
+
+        if (allPermissionsGranted()) {
+            setupBluetooth();
+        } else {
+            ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
+        }
     }
 
     @Override
@@ -155,7 +152,7 @@ public class HomeActivity extends AppCompatActivity {
             super.onBackPressed();
         }
     }
-    //@Override
+
     protected void OnResume()
     {
         super.onResume();
@@ -174,78 +171,83 @@ public class HomeActivity extends AppCompatActivity {
             return true;
         }
 
-        int id = item.getItemId();
-        if (id == R.id.nav_settings) {
-            Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
-            return true;
-        }
-
         return super.onOptionsItemSelected(item);
     }
     */
 
+    private boolean allPermissionsGranted() {
+        for (String permission : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @SuppressLint("MissingPermission")
     private void setupBluetooth() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
+            Toast.makeText(this, "Device does not support Bluetooth", Toast.LENGTH_SHORT).show();
+            bluetoothStatusDisplay.setText("Status: Bluetooth not supported");
             return;
         }
 
         if (!bluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.BLUETOOTH_CONNECT}, 1);
-                return;
-            }
             startActivityForResult(enableBtIntent, 1);
         }
 
-        BluetoothDevice device = bluetoothAdapter.getRemoteDevice(DEVICE_ADDRESS);
-        try {
-            bluetoothSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
-            bluetoothSocket.connect();
-            inputStream = bluetoothSocket.getInputStream();
-            beginListenForData();
-        } catch (IOException e) {
-            e.printStackTrace();
+        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+        if (!pairedDevices.isEmpty()) {
+            for (BluetoothDevice device : pairedDevices) {
+                if (DEVICE_NAME.equals(device.getName())) {
+                    connectToDevice(device);
+                    break;
+                }
+            }
         }
     }
 
-    private void beginListenForData() {
-        final Handler handler = new Handler();
-        final byte delimiter = 10; // This is the ASCII code for a newline character
-
-        stopWorker = false;
-        readBufferPosition = 0;
-        readBuffer = new byte[1024];
-        workerThread = new Thread(() -> {
-            while (!Thread.currentThread().isInterrupted() && !stopWorker) {
-                try {
-                    int bytesAvailable = inputStream.available();
-                    if (bytesAvailable > 0) {
-                        byte[] packetBytes = new byte[bytesAvailable];
-                        inputStream.read(packetBytes);
-                        for (int i = 0; i < bytesAvailable; i++) {
-                            byte b = packetBytes[i];
-                            if (b == delimiter) {
-                                byte[] encodedBytes = new byte[readBufferPosition];
-                                System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
-                                final String data = new String(encodedBytes, "US-ASCII");
-                                readBufferPosition = 0;
-
-                                handler.post(() -> processReceivedData(data));
-                            } else {
-                                readBuffer[readBufferPosition++] = b;
-                            }
-                        }
-                    }
-                } catch (IOException ex) {
-                    stopWorker = true;
-                }
+    @SuppressLint("MissingPermission")
+    private void connectToDevice(BluetoothDevice device) {
+        new Thread(() -> {
+            try {
+                bluetoothSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
+                bluetoothSocket.connect();
+                runOnUiThread(() -> {
+                    Toast.makeText(HomeActivity.this, "Connected to " + device.getName(), Toast.LENGTH_SHORT).show();
+                    bluetoothStatusDisplay.setText("Status: Connected to " + device.getName());
+                });
+                listenForData();
+            } catch (IOException e) {
+                Log.e(TAG, "Can't connect to " + device.getName(), e);
+                runOnUiThread(() -> {
+                    Toast.makeText(HomeActivity.this, "Failed to connect to " + device.getName(), Toast.LENGTH_SHORT).show();
+                    bluetoothStatusDisplay.setText("Status: Connection failed");
+                });
             }
-        });
+        }).start();
+    }
 
-        workerThread.start();
+    private void listenForData() {
+        new Thread(() -> {
+            try {
+                InputStream inputStream = bluetoothSocket.getInputStream();
+                byte[] buffer = new byte[1024];
+                int bytes;
+                while (true) {
+                    bytes = inputStream.read(buffer);
+                    String incomingMessage = new String(buffer, 0, bytes);
+                    Log.d(TAG, "Incoming message: " + incomingMessage);
+                    runOnUiThread(() -> {
+                        processReceivedData(incomingMessage.trim());
+                    });
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "Error reading data", e);
+            }
+        }).start();
     }
 
     private void processReceivedData(String data) {
@@ -253,7 +255,6 @@ public class HomeActivity extends AppCompatActivity {
             double bac = Double.parseDouble(data.trim());
             int bacProgress = (int) (bac * 1000); // Convert BAC to integer representation
 
-            // Set color based on BAC level
             int progressBarColor;
             if (bac < 0.02) {
                 progressBarColor = Color.GREEN;
@@ -265,20 +266,30 @@ public class HomeActivity extends AppCompatActivity {
                 progressBarColor = Color.RED;
             }
 
-            bacDisplay.setText("BAC: " + String.format("%.2f", bac) + "%");
+            bacDisplay.setText(String.format("BAC: %.2f%%", bac));
             circularProgressBar.setProgressWithAnimation(bacProgress, 1000L); // Animation duration of 1 second
             circularProgressBar.setProgressBarColor(progressBarColor);
 
-            // Display BAC in terms of mL
             double bacMl = bac * 1000; // Convert BAC to mL
-            bacMlDisplay.setText("BAC in mL: " + String.format("%.2f", bacMl) + " mL");
+            bacMlDisplay.setText(String.format("BAC in mL: %.2f mL", bacMl));
 
-            // Estimate time until sobriety (assuming 0.015% BAC reduction per hour)
             double hoursUntilSober = bac / 0.015;
-            timeUntilSoberDisplay.setText("Time Until Sober: " + String.format("%.1f", hoursUntilSober) + " hours");
+            timeUntilSoberDisplay.setText(String.format("Time Until Sober: %.1f hours", hoursUntilSober));
 
         } catch (NumberFormatException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Invalid BAC data received", e);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            if (allPermissionsGranted()) {
+                setupBluetooth();
+            } else {
+                Toast.makeText(this, "Permissions not granted.\n\n  Press Setup Bluetooth", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
