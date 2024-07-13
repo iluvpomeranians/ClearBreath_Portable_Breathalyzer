@@ -17,6 +17,6 @@
     <color name="color8">#A52A2A</color> <!-- Brown -->
     <color name="color9">#00FFFF</color> <!-- Cyan -->
     <color name="color10">#FFC0CB</color> <!-- Pink -->
-    <color name="color11">#000000</color> <!-- Black -->
-    <color name="color12">#FFFFFF</color> <!-- White -->
+    <color name="color11">#AEB432</color>
+    <color name="color12">#FAB696</color>
 </resources>
