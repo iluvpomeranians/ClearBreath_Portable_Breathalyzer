@@ -1,9 +1,12 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
 import android.Manifest;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -308,5 +311,29 @@ public class HomeActivity extends AppCompatActivity {
         // Apply toolbar color
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setBackgroundColor(toolbarColor);
+    }
+
+    // Push Notification System
+
+    public long calculateTimeUntilSober(double currentBAC)
+    {
+        double metabolismRate = 0.015;
+        double hoursUntilSober = currentBAC / metabolismRate;
+        return (long) (hoursUntilSober * 3600000); // Convert to milliseconds
+    }
+
+    private void scheduleSoberNotification(double currentBAC)
+    {
+        long timeUntilSober = calculateTimeUntilSober(currentBAC);
+
+        Intent intent = new Intent(this, SoberNotificationReceiver.class);
+        intent.putExtra("title", "You're Sober Now");
+        intent.putExtra("message", "Your BAC level should now be 0.0. Please take another measurement to confirm");
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        long triggerTime = System.currentTimeMillis() + timeUntilSober;
+        alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
     }
 }
