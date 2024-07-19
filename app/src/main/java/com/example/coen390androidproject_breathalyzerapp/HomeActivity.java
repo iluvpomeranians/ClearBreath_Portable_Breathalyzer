@@ -20,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -93,7 +94,7 @@ public class HomeActivity extends AppCompatActivity {
         );
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
-
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
@@ -107,37 +108,23 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
                 return true;
             }
-            return false;
-        });
-        /*navigationView.setNavigationItemSelectedListener(item -> {
-            int id = item.getItemId();
-            if (id == R.id.nav_settings) {
-                Intent intent = new Intent(HomeActivity.this, SettingsActivity.class);
+            else if (id == R.id.nav_manage_account)
+            {
+                Intent intent = new Intent(HomeActivity.this, ManageAccountActivity.class);
                 startActivity(intent);
                 return true;
             }
-            return false;
-        });*/
-
-        circularProgressBar = findViewById(R.id.circularProgressBar);
-        bacDisplay = findViewById(R.id.bac_display);
-        bacMlDisplay = findViewById(R.id.bac_ml_display);
-        timeUntilSoberDisplay = findViewById(R.id.time_until_sober_display);
-        btnGoingOut = findViewById(R.id.btn_more_info);
-        btnHealth = findViewById(R.id.btn_health);
-
-
-        // Call applySettings after initializing all views
-        applySettings();
-
-        btnGoingOut.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Handle Going Out button click
-                Intent intent = new Intent(HomeActivity.this, MoreInfoActivity.class);
-                startActivity(intent);
+            else if (id == R.id.nav_logout)
+            {
+                logOut();
+                return true;
             }
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
         });
+
+
+
         /*
         // Check and request permissions if needed
         if (!allPermissionsGranted()) {
@@ -149,6 +136,28 @@ public class HomeActivity extends AppCompatActivity {
         simulateReceivingData("0.01"); // Simulated BAC value
         */
     }
+
+
+    private void updateMenuItems() {
+        boolean isLoggedIn = sharedPreferences.getBoolean("is_logged_in", false);
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        Menu menu = navigationView.getMenu();
+        menu.findItem(R.id.nav_logout).setVisible(isLoggedIn);
+        menu.findItem(R.id.nav_manage_account).setVisible(isLoggedIn);
+    }
+
+    private void logOut() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("is_logged_in", false);
+        editor.apply();
+        updateMenuItems();
+        Toast.makeText(HomeActivity.this, "Logged out successfully", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(HomeActivity.this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
 
     @Override
     public void onBackPressed() {
@@ -165,13 +174,13 @@ public class HomeActivity extends AppCompatActivity {
         applySettings();
     }
 
-    /*@Override
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.drawer_menu, menu);
         return true;
-    }*/
+    }
 
-    /*@Override
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (toggle.onOptionsItemSelected(item)) {
             return true;
@@ -186,7 +195,7 @@ public class HomeActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-    */
+
 
     private void setupBluetooth() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();

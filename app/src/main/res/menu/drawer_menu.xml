@@ -11,4 +11,12 @@
         android:id="@+id/nav_account"
         android:icon="@drawable/ic_account"
         android:title="Account" />
+    <item
+        android:id="@+id/nav_manage_account"
+        android:title="Manage Account"
+        android:visible="false"/>
+    <item
+        android:id="@+id/nav_logout"
+        android:title="Logout"
+        android:visible="false"/>
 </menu>

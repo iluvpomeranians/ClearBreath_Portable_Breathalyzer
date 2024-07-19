@@ -1,12 +1,11 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
-import android.app.DatePickerDialog;
+import android.content.ContentValues;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -14,21 +13,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
 public class RegisterActivity extends AppCompatActivity {
 
-    private EditText editTextUsername;
-    private EditText editTextPassword;
-    private EditText editTextBirthday;
-    private Button btnRegister;
-
-    private static final String SHARED_PREFS_NAME = "UserPrefs";
-    private static final String KEY_ACCOUNTS = "accounts";
-    private static final String KEY_CURRENT_USER = "current_user";
+    private EditText fullNameEditText, usernameEditText, passwordEditText, confirmPasswordEditText, ageEditText, genderEditText, bmiEditText;
+    private DBHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,29 +31,61 @@ public class RegisterActivity extends AppCompatActivity {
             getSupportActionBar().setTitle("Register");
         }
 
-        editTextUsername = findViewById(R.id.et_username);
-        editTextPassword = findViewById(R.id.et_password);
-        editTextBirthday = findViewById(R.id.et_birthday);
-        btnRegister = findViewById(R.id.btn_register);
+        // Initialize DBHelper
+        dbHelper = new DBHelper(this);
 
-        editTextBirthday.setOnClickListener(v -> showDatePickerDialog());
+        fullNameEditText = findViewById(R.id.editTextFullName);
+        usernameEditText = findViewById(R.id.editTextUsername);
+        passwordEditText = findViewById(R.id.editTextPassword);
+        confirmPasswordEditText = findViewById(R.id.editTextConfirmPassword);
+        ageEditText = findViewById(R.id.editTextAge);
+        genderEditText = findViewById(R.id.editTextGender);
+        bmiEditText = findViewById(R.id.editTextBMI);
 
-        btnRegister.setOnClickListener(v -> register());
+        Button registerButton = findViewById(R.id.buttonRegister);
+        registerButton.setOnClickListener(v -> {
+            String fullName = fullNameEditText.getText().toString().trim();
+            String username = usernameEditText.getText().toString().trim();
+            String password = passwordEditText.getText().toString().trim();
+            String confirmPassword = confirmPasswordEditText.getText().toString().trim();
+            int age = Integer.parseInt(ageEditText.getText().toString().trim());
+            String gender = genderEditText.getText().toString().trim();
+            double bmi = Double.parseDouble(bmiEditText.getText().toString().trim());
+
+            if (password.equals(confirmPassword)) {
+                SQLiteDatabase db = dbHelper.getWritableDatabase();
+                ContentValues values = new ContentValues();
+                values.put(DBHelper.COLUMN_USERNAME, username);
+                values.put(DBHelper.COLUMN_PASSWORD, password);
+                values.put(DBHelper.COLUMN_FULL_NAME, fullName);
+                values.put(DBHelper.COLUMN_AGE, age);
+                values.put(DBHelper.COLUMN_GENDER, gender);
+                values.put(DBHelper.COLUMN_BMI, bmi);
+
+                db.insert(DBHelper.ACCOUNT_TABLE, null, values);
+                db.close();
+
+                Intent intent = new Intent(RegisterActivity.this, HomeActivity.class);
+                startActivity(intent);
+            } else {
+                Toast.makeText(RegisterActivity.this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
-    private void showDatePickerDialog() {
-        final Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
-
-        DatePickerDialog datePickerDialog = new DatePickerDialog(this, (view, year1, monthOfYear, dayOfMonth) -> {
-            String selectedDate = year1 + "-" + (monthOfYear + 1) + "-" + dayOfMonth;
-            editTextBirthday.setText(selectedDate);
-        }, year, month, day);
-        datePickerDialog.show();
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            Intent intent = new Intent(RegisterActivity.this, HomeActivity.class);
+            startActivity(intent);
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
+}
 
+/*
     private void register() {
         String username = editTextUsername.getText().toString();
         String password = editTextPassword.getText().toString();
@@ -99,4 +119,5 @@ public class RegisterActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-}
+    */
+

@@ -72,7 +72,7 @@ public class AccountActivity extends AppCompatActivity {
         });
 
         btnRegister.setOnClickListener(v -> {
-            Intent intent = new Intent(AccountActivity.this, RegisterActivity.class);
+            Intent intent = new Intent(AccountActivity.this, ConsentActivity.class);
             startActivity(intent);
         });
 
