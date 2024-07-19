@@ -120,10 +120,26 @@ public class HomeActivity extends AppCompatActivity {
                 return true;
             }
             return false;
+
+
         });
 
 
+        circularProgressBar = findViewById(R.id.circularProgressBar);
+        bacDisplay = findViewById(R.id.bac_display);
+        bacMlDisplay = findViewById(R.id.bac_ml_display);
+        timeUntilSoberDisplay = findViewById(R.id.time_until_sober_display);
+        btnGoingOut = findViewById(R.id.btn_more_info);
+        btnHealth = findViewById(R.id.btn_health);
 
+        btnGoingOut.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Handle Going Out button click
+                Intent intent = new Intent(HomeActivity.this, MoreInfoActivity.class);
+                startActivity(intent);
+            }
+        });
         /*
         // Check and request permissions if needed
         if (!allPermissionsGranted()) {
@@ -135,6 +151,8 @@ public class HomeActivity extends AppCompatActivity {
         simulateReceivingData("0.01"); // Simulated BAC value
         */
     }
+
+
 
 
     private void updateMenuItems() {
@@ -221,6 +239,8 @@ public class HomeActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+
 
     private void beginListenForData() {
         final Handler handler = new Handler();

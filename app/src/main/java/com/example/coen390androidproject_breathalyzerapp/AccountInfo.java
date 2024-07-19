@@ -1,8 +1,7 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
 public class AccountInfo {
-    private String accountName;
-    private String accountLastName;
+    private String accountFullName;
     // To find the user easier, set from creation date, such as 1st user is number 1
     // 2nd user is number 2 etc etc
     private int accountNumber;
@@ -16,13 +15,13 @@ public class AccountInfo {
     private int accountAge;
     private boolean accountGender;
 
-    public AccountInfo(String accountName, String accountLastName, int accountNumber,
+    public AccountInfo(String accountFullName, int accountNumber,
                        float accountPhoneNumber, String accountBirthday,
                        String accountAddress, String accountEmail, String accountPassword,
-                       String accountConfirmPassword, int accountWeight, int accountHeight,
+                       String accountConfirmPassword, int accountBMI,
                        int accountAge, boolean accountGender) {
-        this.accountName = accountName;
-        this.accountLastName = accountLastName;
+        this.accountFullName = accountFullName;
+
         this.accountNumber = accountNumber;
         this.accountPhoneNumber = accountPhoneNumber;
         this.accountBirthday = accountBirthday;
@@ -35,21 +34,14 @@ public class AccountInfo {
         this.accountGender = accountGender;
     }
 
-    public String getAccountName() {
-        return accountName;
+    public String getAccountFullName() {
+        return accountFullName;
     }
 
-    public void setAccountName(String accountName) {
-        this.accountName = accountName;
+    public void setAccountName(String accountFullName) {
+        this.accountFullName = accountFullName;
     }
 
-    public String getAccountLastName() {
-        return accountLastName;
-    }
-
-    public void setAccountLastName(String accountLastName) {
-        this.accountLastName = accountLastName;
-    }
 
     public int getAccountNumber() {
         return accountNumber;

@@ -49,24 +49,26 @@ public class RegisterActivity extends AppCompatActivity {
             String password = passwordEditText.getText().toString().trim();
             String confirmPassword = confirmPasswordEditText.getText().toString().trim();
             int age = Integer.parseInt(ageEditText.getText().toString().trim());
-            String gender = genderEditText.getText().toString().trim();
+            boolean gender = genderEditText.getText().toString().trim().equalsIgnoreCase("Male");
             double bmi = Double.parseDouble(bmiEditText.getText().toString().trim());
 
             if (password.equals(confirmPassword)) {
-                SQLiteDatabase db = dbHelper.getWritableDatabase();
                 ContentValues values = new ContentValues();
                 values.put(DBHelper.COLUMN_USERNAME, username);
                 values.put(DBHelper.COLUMN_PASSWORD, password);
                 values.put(DBHelper.COLUMN_FULL_NAME, fullName);
                 values.put(DBHelper.COLUMN_AGE, age);
-                values.put(DBHelper.COLUMN_GENDER, gender);
+                values.put(DBHelper.COLUMN_GENDER, gender ? "Male" : "Female");
                 values.put(DBHelper.COLUMN_BMI, bmi);
 
-                db.insert(DBHelper.ACCOUNT_TABLE, null, values);
-                db.close();
-
-                Intent intent = new Intent(RegisterActivity.this, HomeActivity.class);
-                startActivity(intent);
+                long id = dbHelper.insertAccount(values);
+                if (id != -1) {
+                    Toast.makeText(RegisterActivity.this, "Registration successful", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
+                    finish();
+                } else {
+                    Toast.makeText(RegisterActivity.this, "Registration failed", Toast.LENGTH_SHORT).show();
+                }
             } else {
                 Toast.makeText(RegisterActivity.this, "Passwords do not match", Toast.LENGTH_SHORT).show();
             }

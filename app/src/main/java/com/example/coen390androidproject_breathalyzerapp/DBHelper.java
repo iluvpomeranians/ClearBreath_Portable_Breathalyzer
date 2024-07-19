@@ -1,6 +1,8 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
@@ -51,5 +53,39 @@ public class DBHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+    public long insertAccount(ContentValues values)
+    {
+        SQLiteDatabase db = this.getWritableDatabase();
+        long id = db.insert(ACCOUNT_TABLE, null, values);
+        db.close();
+        return id;
+    }
+
+    public Cursor getAccount(String username, String password)
+    {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(ACCOUNT_TABLE, null, COLUMN_USERNAME + "=? AND " + COLUMN_PASSWORD + "=?", new String[]{username, password}, null, null, null);
+        return cursor;
+    }
+
+    public Cursor getAccountById(int id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(ACCOUNT_TABLE, null, COLUMN_ID + "=?", new String[]{String.valueOf(id)}, null, null, null);
+        return cursor;
+    }
+
+    public int updateAccount(int id, ContentValues values) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        int rows = db.update(ACCOUNT_TABLE, values, COLUMN_ID + "=?", new String[]{String.valueOf(id)});
+        db.close();
+        return rows;
+    }
+
+    public int deleteAccount(int id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        int rows = db.delete(ACCOUNT_TABLE, COLUMN_ID + "=?", new String[]{String.valueOf(id)});
+        db.close();
+        return rows;
+    }
 
 }

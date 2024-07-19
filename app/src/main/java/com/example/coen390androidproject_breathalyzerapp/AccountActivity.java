@@ -23,14 +23,15 @@ import java.util.Set;
 
 public class AccountActivity extends AppCompatActivity {
 
+
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle toggle;
     private TextView textViewWelcome;
-    private Button btnLogin, btnRegister, btnLogout, btnDeleteAccount;
+    private Button btnLogin, btnRegister;
     private NavigationView navigationView;
-    private static final String SHARED_PREFS_NAME = "UserPrefs";
-    private static final String KEY_ACCOUNTS = "accounts";
-    private static final String KEY_CURRENT_USER = "current_user";
+    private static final String SHARED_PREFS = "sharedPrefs";
+    private static final String KEY_USER_ID = "userId";
+    private DBHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +40,11 @@ public class AccountActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle("Account Management");
+        }
+        dbHelper = new DBHelper(this);
 
         drawerLayout = findViewById(R.id.drawer_layout);
         toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -71,11 +77,10 @@ public class AccountActivity extends AppCompatActivity {
         textViewWelcome = findViewById(R.id.textViewWelcome);
         btnLogin = findViewById(R.id.btn_login);
         btnRegister = findViewById(R.id.btn_register);
-        btnLogout = findViewById(R.id.btn_logout);
-        btnDeleteAccount = findViewById(R.id.btn_delete_account);
 
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS_NAME, MODE_PRIVATE);
-        String currentUser = sharedPreferences.getString(KEY_CURRENT_USER, null);
+
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        String currentUser = sharedPreferences.getString(KEY_USER_ID, null);
         updateUI(currentUser);
 
         btnLogin.setOnClickListener(v -> {
@@ -88,21 +93,6 @@ public class AccountActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        btnLogout.setOnClickListener(v -> {
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.remove(KEY_CURRENT_USER);
-            editor.apply();
-            Toast.makeText(AccountActivity.this, "Logged out successfully", Toast.LENGTH_SHORT).show();
-            updateUI(null);
-        });
-
-        btnDeleteAccount.setOnClickListener(v -> {
-            String username = sharedPreferences.getString(KEY_CURRENT_USER, null);
-            if (username != null) {
-                ConfirmDeleteDialogFragment confirmDeleteDialogFragment = ConfirmDeleteDialogFragment.newInstance(username);
-                confirmDeleteDialogFragment.show(getSupportFragmentManager(), "confirmDelete");
-            }
-        });
     }
 
     @Override

@@ -24,6 +24,8 @@ public class LoginActivity extends AppCompatActivity {
     private EditText et_username, et_password;
     private Button btn_login, buttonRegister;
     private DBHelper dbHelper;
+    private static final String SHARED_PREFS = "sharedPrefs";
+    private static final String KEY_USER_ID = "userId";
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -43,36 +45,45 @@ public class LoginActivity extends AppCompatActivity {
             String password = et_password.getText().toString().trim();
 
             if (checkCredentials(username, password)) {
+                Cursor cursor = dbHelper.getAccount(username, password);
+                if (cursor != null && cursor.moveToFirst()) {
+                    int userId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_ID));
+                    saveUserId(userId);
+                    cursor.close();
+                }
+
                 Intent intent = new Intent(LoginActivity.this, AccountActivity.class);
-                intent.putExtra("username", username);
+                intent.putExtra("USER_ID", username); // Verify this
                 startActivity(intent);
                 finish();
             } else {
                 Toast.makeText(this, "Invalid username or password", Toast.LENGTH_SHORT).show();
             }
-        });
 
+        });
         buttonRegister.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
             startActivity(intent);
-        });
+    });
     }
+
 
     private boolean checkCredentials(String username, String password) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         Cursor cursor = db.query(DBHelper.ACCOUNT_TABLE, null, DBHelper.COLUMN_USERNAME + "=? AND " + DBHelper.COLUMN_PASSWORD + "=?", new String[]{username, password}, null, null, null);
 
-        if (cursor != null && cursor.moveToFirst()) {
-            cursor.close();
-            db.close();
-            return true;
-        }
-
+        boolean isValid = cursor != null && cursor.moveToFirst();
         if (cursor != null) {
             cursor.close();
         }
         db.close();
-        return false;
+        return isValid;
+    }
+    private void saveUserId(int userId) {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt(KEY_USER_ID, userId);
+        editor.apply();
     }
 }
 

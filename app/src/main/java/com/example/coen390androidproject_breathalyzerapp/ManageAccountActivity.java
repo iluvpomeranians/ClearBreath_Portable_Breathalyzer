@@ -71,13 +71,12 @@ private int userId;
     }
     private void loadUserData() {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cursor = db.query(DBHelper.ACCOUNT_TABLE, new String[]{DBHelper.COLUMN_USERNAME, DBHelper.COLUMN_AGE, DBHelper.COLUMN_BMI}, DBHelper.COLUMN_ID + "=?", new String[]{String.valueOf(userId)}, null, null, null);
-        if (cursor != null && cursor.moveToFirst())
-        {
+        Cursor cursor = db.query(DBHelper.ACCOUNT_TABLE, new String[]{DBHelper.COLUMN_USERNAME, DBHelper.COLUMN_AGE, DBHelper.COLUMN_BMI, DBHelper.COLUMN_TIMESTAMP}, DBHelper.COLUMN_ID + "=?", new String[]{String.valueOf(userId)}, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
             String accountCreatedTime = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
             String username = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_USERNAME));
             int age = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_AGE));
-            double bmi = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BMI));
+            float bmi = cursor.getFloat(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BMI));
             textViewAccountCreated.setText("Account Created: " + accountCreatedTime);
             editTextUsername.setText(username);
             editTextAge.setText(String.valueOf(age));
