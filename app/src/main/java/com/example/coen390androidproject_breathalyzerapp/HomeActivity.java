@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -128,17 +129,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     protected void onResume() {
         super.onResume();
         applySettings();
-        if (isBound && bluetoothService != null) {
-            String connectedDeviceName = bluetoothService.getConnectedDeviceName();
-            Log.d(TAG, "Connected device name in onResume: " + connectedDeviceName);
-            if (connectedDeviceName != null) {
-                bluetoothStatusDisplay.setText("Status: Connected to " + connectedDeviceName);
-                bluetoothStatusDisplay.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-            } else {
-                bluetoothStatusDisplay.setText("Status: Not connected");
-                bluetoothStatusDisplay.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-            }
-        }
+        updateBluetoothStatus();
     }
 
     @Override
@@ -203,6 +194,10 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private void processReceivedData(String data) {
         try {
             data = data.replace("BAC:", "").trim(); // Remove "BAC:" prefix
+            if (data.isEmpty()) {
+                return;
+            }
+
             double bac = Double.parseDouble(data);
             int bacProgress = (int) (bac * 1000); // Convert BAC to integer representation
 
@@ -232,6 +227,25 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         }
     }
 
+    private void updateBluetoothStatus() {
+        if (isBound && bluetoothService != null) {
+            String connectedDeviceName = bluetoothService.getConnectedDeviceName();
+            Log.d(TAG, "Connected device name in updateBluetoothStatus: " + connectedDeviceName);
+            if (connectedDeviceName != null) {
+                bluetoothStatusDisplay.setText("Status: Connected to " + connectedDeviceName);
+                bluetoothStatusDisplay.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+            } else {
+                bluetoothStatusDisplay.setText("Status: Not connected");
+                bluetoothStatusDisplay.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+            }
+        } else {
+            bluetoothStatusDisplay.setText("Status: Not connected");
+            bluetoothStatusDisplay.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+        }
+    }
+
+
+
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -239,6 +253,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             bluetoothService = binder.getService();
             bluetoothService.setBluetoothDataListener(HomeActivity.this);
             isBound = true;
+            updateBluetoothStatus();
 
             // Call setupBluetooth here if permissions are already granted
             if (allPermissionsGranted()) {
@@ -249,6 +264,9 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         @Override
         public void onServiceDisconnected(ComponentName name) {
             isBound = false;
+            bluetoothService = null;
+            updateBluetoothStatus();
+
         }
     };
 }
