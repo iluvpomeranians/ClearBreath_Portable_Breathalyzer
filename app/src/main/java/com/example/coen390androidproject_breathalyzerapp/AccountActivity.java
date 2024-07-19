@@ -23,7 +23,6 @@ import java.util.Set;
 
 public class AccountActivity extends AppCompatActivity {
 
-
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle toggle;
     private TextView textViewWelcome;
@@ -31,6 +30,9 @@ public class AccountActivity extends AppCompatActivity {
     private NavigationView navigationView;
     private static final String SHARED_PREFS = "sharedPrefs";
     private static final String KEY_USER_ID = "userId";
+    private static final String SHARED_PREFS_NAME = "sharedPrefs"; // Ensure this matches your actual preference name
+    private static final String KEY_ACCOUNTS = "accounts"; // Ensure this matches your actual accounts key
+    private static final String KEY_CURRENT_USER = "currentUser"; // Ensure this matches your actual current user key
     private DBHelper dbHelper;
 
     @Override
@@ -58,28 +60,23 @@ public class AccountActivity extends AppCompatActivity {
                 Intent intent = new Intent(AccountActivity.this, HomeActivity.class);
                 startActivity(intent);
                 return true;
+            } else if (id == R.id.nav_settings) {
+                Intent intent = new Intent(AccountActivity.this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
+            } else if (id == R.id.nav_manage_account) {
+                Intent intent = new Intent(AccountActivity.this, ManageAccountActivity.class);
+                startActivity(intent);
+                return true;
             }
-            else if (id == R.id.nav_settings) {
-                    Intent intent = new Intent(AccountActivity.this, SettingsActivity.class);
-                    startActivity(intent);
-                    return true;
-                }
-                else if (id == R.id.nav_manage_account)
-                {
-                    Intent intent = new Intent(AccountActivity.this, ManageAccountActivity.class);
-                    startActivity(intent);
-                    return true;
-                }
-
-                return false;
+            return false;
         });
 
         textViewWelcome = findViewById(R.id.textViewWelcome);
         btnLogin = findViewById(R.id.btn_login);
         btnRegister = findViewById(R.id.btn_register);
 
-
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS_NAME, MODE_PRIVATE);
         String currentUser = sharedPreferences.getString(KEY_USER_ID, null);
         updateUI(currentUser);
 
@@ -92,7 +89,6 @@ public class AccountActivity extends AppCompatActivity {
             Intent intent = new Intent(AccountActivity.this, ConsentActivity.class);
             startActivity(intent);
         });
-
     }
 
     @Override
@@ -133,20 +129,13 @@ public class AccountActivity extends AppCompatActivity {
             textViewWelcome.setText("Welcome");
             btnLogin.setVisibility(View.VISIBLE);
             btnRegister.setVisibility(View.VISIBLE);
-            btnLogout.setVisibility(View.GONE);
-            btnDeleteAccount.setVisibility(View.GONE);
-
-            MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
-            accountMenuItem.setTitle("Account");
         } else {
             textViewWelcome.setText("Welcome, " + currentUser);
             btnLogin.setVisibility(View.GONE);
             btnRegister.setVisibility(View.GONE);
-            btnLogout.setVisibility(View.VISIBLE);
-            btnDeleteAccount.setVisibility(View.VISIBLE);
-
-            MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
-            accountMenuItem.setTitle(currentUser);
         }
+
+        MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
+        accountMenuItem.setTitle(currentUser != null ? currentUser : "Account");
     }
 }
