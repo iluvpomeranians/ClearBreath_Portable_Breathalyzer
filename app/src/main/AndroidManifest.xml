@@ -35,6 +35,11 @@
         <activity android:name=".LoginActivity" />
         <activity android:name=".RegisterActivity" />
 
+        <service
+            android:name=".BluetoothService"
+            android:enabled="true"
+            android:exported="true"
+            android:foregroundServiceType="location" />
 
     </application>
 </manifest>
