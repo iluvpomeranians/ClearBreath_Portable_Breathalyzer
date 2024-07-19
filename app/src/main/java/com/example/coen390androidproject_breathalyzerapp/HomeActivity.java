@@ -119,8 +119,7 @@ public class HomeActivity extends AppCompatActivity {
                 logOut();
                 return true;
             }
-            drawerLayout.closeDrawer(GravityCompat.START);
-            return true;
+            return false;
         });
 
 

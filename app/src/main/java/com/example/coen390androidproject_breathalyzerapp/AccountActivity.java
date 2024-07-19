@@ -53,7 +53,19 @@ public class AccountActivity extends AppCompatActivity {
                 startActivity(intent);
                 return true;
             }
-            return false;
+            else if (id == R.id.nav_settings) {
+                    Intent intent = new Intent(AccountActivity.this, SettingsActivity.class);
+                    startActivity(intent);
+                    return true;
+                }
+                else if (id == R.id.nav_manage_account)
+                {
+                    Intent intent = new Intent(AccountActivity.this, ManageAccountActivity.class);
+                    startActivity(intent);
+                    return true;
+                }
+
+                return false;
         });
 
         textViewWelcome = findViewById(R.id.textViewWelcome);
