@@ -135,7 +135,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Setup Bluetooth"
+            android:text="Turn On/Off Bluetooth"
             app:layout_constraintBottom_toTopOf="@+id/bluetooth_status_display"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
