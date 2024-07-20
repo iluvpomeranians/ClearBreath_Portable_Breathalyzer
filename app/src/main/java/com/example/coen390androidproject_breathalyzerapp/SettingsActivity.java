@@ -16,6 +16,7 @@ import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
@@ -64,6 +65,14 @@ public class SettingsActivity extends AppCompatActivity {
         setupTextSizeSeekBar();
         setupFontSpinner();
         setupColorGrid();
+
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                navigateBackToHome();
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(this, callback);
     }
 
     private void setupTextSizeSeekBar() {
@@ -139,14 +148,17 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
+    private void navigateBackToHome() {
+        Intent intent = new Intent(SettingsActivity.this, HomeActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        finish();
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            Intent intent = new Intent(SettingsActivity.this, HomeActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(intent);
-            finish();
+            navigateBackToHome();
             return true;
         }
         return super.onOptionsItemSelected(item);
