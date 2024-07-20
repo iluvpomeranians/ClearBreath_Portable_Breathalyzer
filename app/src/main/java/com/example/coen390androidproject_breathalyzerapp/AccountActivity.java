@@ -92,41 +92,10 @@ public class AccountActivity extends AppCompatActivity {
             Intent intent = new Intent(AccountActivity.this, ConsentActivity.class);
             startActivity(intent);
         });
-        applySettings();
+
+        SettingsUtils.applySettings(this, textViewWelcome);
     }
-    private void applySettings() {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        // Apply toolbar color
-        int toolbarColor = preferences.getInt("toolbar_color", Color.BLUE);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setBackgroundColor(toolbarColor);
-
-        // Apply font size and type
-        String fontSizePref = preferences.getString("font_size", "16"); // Default font size 16
-        String fontTypePref = preferences.getString("font_type", "sans"); // Default font type sans
-
-        try {
-            int fontSize = Integer.parseInt(fontSizePref);
-            Typeface typeface;
-            switch (fontTypePref) {
-                case "serif":
-                    typeface = Typeface.SERIF;
-                    break;
-                case "monospace":
-                    typeface = Typeface.MONOSPACE;
-                    break;
-                default:
-                    typeface = Typeface.SANS_SERIF;
-                    break;
-            }
-
-            textViewWelcome.setTextSize(fontSize);
-            textViewWelcome.setTypeface(typeface);
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-        }
-    }
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {

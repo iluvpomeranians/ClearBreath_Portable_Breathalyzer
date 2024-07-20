@@ -57,6 +57,7 @@ public class HomeActivity extends AppCompatActivity {
     private volatile boolean stopWorker;
     private boolean isSober = true;
 
+
     private static final String DEVICE_NAME = "ESP32_Sensor";
     private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // Standard SPP UUID
     private final String DEVICE_ADDRESS = "00:11:22:33:44:55"; // Replace with your device's address
@@ -126,10 +127,7 @@ public class HomeActivity extends AppCompatActivity {
             Intent intent = new Intent(HomeActivity.this, MoreInfoActivity.class);
             startActivity(intent);
         });
-
-        // Apply settings initially
-        applySettings();
-
+        SettingsUtils.applySettings(this, bacDisplay,bacMlDisplay, timeUntilSoberDisplay, btnHealth, btnGoingOut);
         /*
         // Check and request permissions if needed
         if (!allPermissionsGranted()) {
@@ -145,7 +143,7 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        applySettings();
+       SettingsUtils.applySettings(this, bacDisplay,bacMlDisplay, timeUntilSoberDisplay, btnHealth, btnGoingOut);
     }
 
     private void updateMenuItems() {
@@ -183,21 +181,6 @@ public class HomeActivity extends AppCompatActivity {
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (toggle.onOptionsItemSelected(item)) {
-            return true;
-        }
-
-        int id = item.getItemId();
-        if (id == R.id.nav_settings) {
-            Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 
     private void setupBluetooth() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -325,29 +308,6 @@ public class HomeActivity extends AppCompatActivity {
             }
         }
         return true;
-    }
-
-    private void applySettings() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-        // Retrieving and applying text size
-        int textSize = sharedPreferences.getInt("text_size", 16);
-        bacDisplay.setTextSize(textSize);
-        bacMlDisplay.setTextSize(textSize);
-        timeUntilSoberDisplay.setTextSize(textSize);
-
-        // Retrieving and applying font type
-        int fontIndex = sharedPreferences.getInt("font_index", 0);
-        String font = SettingsActivity.getFonts()[fontIndex];
-        Typeface typeface = Typeface.create(font, Typeface.NORMAL);
-        bacDisplay.setTypeface(typeface);
-        bacMlDisplay.setTypeface(typeface);
-        timeUntilSoberDisplay.setTypeface(typeface);
-
-        // Retrieving and applying toolbar color
-        int toolbarColor = sharedPreferences.getInt("toolbar_color", Color.BLACK);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setBackgroundColor(toolbarColor);
     }
 
 

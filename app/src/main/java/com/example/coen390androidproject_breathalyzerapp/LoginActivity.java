@@ -75,7 +75,8 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         // Apply settings after views are initialized
-        applySettings();
+
+        SettingsUtils.applySettings(this, et_username, et_password, btn_login);
     }
 
     private boolean checkCredentials(String username, String password) {
