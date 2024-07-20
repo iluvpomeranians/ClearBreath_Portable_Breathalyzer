@@ -37,17 +37,6 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <Button
-            android:id="@+id/btn_register"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Register"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.501"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btn_login" />
-
-        <Button
             android:id="@+id/btn_login"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -59,14 +48,26 @@
             app:layout_constraintTop_toBottomOf="@id/textViewWelcome" />
 
         <Button
+            android:id="@+id/btn_register"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Register"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.501"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btn_login" />
+
+        <Button
             android:id="@+id/btn_logout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Logout"
-            app:layout_constraintTop_toBottomOf="@id/btn_register"
-            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="24dp"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="16dp"
+            app:layout_constraintHorizontal_bias="0.501"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btn_register"
             android:visibility="gone" />
 
         <Button
@@ -74,10 +75,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Delete Account"
-            app:layout_constraintTop_toBottomOf="@id/btn_logout"
-            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="24dp"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="16dp"
+            app:layout_constraintHorizontal_bias="0.501"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btn_logout"
             android:visibility="gone" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
