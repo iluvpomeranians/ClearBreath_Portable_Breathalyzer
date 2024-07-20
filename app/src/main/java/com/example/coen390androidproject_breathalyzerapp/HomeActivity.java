@@ -8,9 +8,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.nfc.Tag;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -18,6 +16,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -103,26 +102,27 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         btnBluetooth.setOnClickListener(v -> {
             if (!allPermissionsGranted()) {
                 ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
-                if (isBound && bluetoothService != null) {
-                    bluetoothService.setupBluetooth(this, bluetoothStatusDisplay);
-                } else {
-                    Toast.makeText(this, "Bluetooth service not connected", Toast.LENGTH_SHORT).show();
-                }
             }
+            setupBluetoothService();
         });
 
         Intent serviceIntent = new Intent(this, BluetoothService.class);
         startService(serviceIntent);  // Use startService instead of startForegroundService
         bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-    }
 
-    @Override
-    public void onBackPressed() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                } else {
+                    moveTaskToBack(true); 
+                }
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(this, callback);
+
+        Log.d(TAG, "onCreate");
     }
 
     @Override
@@ -130,11 +130,19 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         super.onResume();
         applySettings();
         updateBluetoothStatus();
+        Log.d(TAG, "onResume");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.d(TAG, "onDestroy");
         if (isBound) {
             unbindService(serviceConnection);
             isBound = false;
@@ -154,11 +162,18 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (allPermissionsGranted()) {
-                if (isBound && bluetoothService != null) {
-                    bluetoothService.setupBluetooth(this, bluetoothStatusDisplay);
-                }
+            if (!allPermissionsGranted()) {
+                ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
+                setupBluetoothService();
             }
+        }
+    }
+
+    private void setupBluetoothService() {
+        if (isBound && bluetoothService != null) {
+            bluetoothService.setupBluetooth(this, bluetoothStatusDisplay);
+        } else {
+            Toast.makeText(this, "Bluetooth service not connected", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -244,9 +259,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         }
     }
 
-
-
-    private ServiceConnection serviceConnection = new ServiceConnection() {
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             BluetoothService.LocalBinder binder = (BluetoothService.LocalBinder) service;
@@ -266,7 +279,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             isBound = false;
             bluetoothService = null;
             updateBluetoothStatus();
-
         }
     };
 }

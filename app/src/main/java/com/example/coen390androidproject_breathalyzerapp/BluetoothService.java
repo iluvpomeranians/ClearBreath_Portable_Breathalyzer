@@ -170,9 +170,11 @@ public class BluetoothService extends Service {
         try {
             if (inputStream != null) {
                 inputStream.close();
+                inputStream = null;
             }
             if (bluetoothSocket != null) {
                 bluetoothSocket.close();
+                bluetoothSocket = null;
             }
         } catch (IOException e) {
             Log.e(TAG, "Error closing connection", e);
