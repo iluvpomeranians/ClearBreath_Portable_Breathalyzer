@@ -41,30 +41,19 @@
             app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
         <!-- Sober Label -->
-        <TextView
-            android:id="@+id/isSober"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="Sober?:"
-            android:textSize="32dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/circularProgressBar" />
 
 
         <TextView
             android:id="@+id/bac_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="48dp"
             android:text="BAC: 0.00%"
             android:textSize="24sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/isSober" />
+            app:layout_constraintTop_toBottomOf="@+id/circularProgressBar" />
 
         <TextView
             android:id="@+id/bac_ml_display"

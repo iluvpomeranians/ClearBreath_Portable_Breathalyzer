@@ -1,5 +1,4 @@
 package com.example.coen390androidproject_breathalyzerapp;
-
 import android.Manifest;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -31,7 +30,6 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-import com.example.coen390androidproject_breathalyzerapp.R;
 import com.google.android.material.navigation.NavigationView;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
@@ -102,28 +100,20 @@ public class HomeActivity extends AppCompatActivity {
                 Intent intent = new Intent(HomeActivity.this, AccountActivity.class);
                 startActivity(intent);
                 return true;
-            }
-            else if (id == R.id.nav_settings) {
+            } else if (id == R.id.nav_settings) {
                 Intent intent = new Intent(HomeActivity.this, SettingsActivity.class);
                 startActivity(intent);
                 return true;
-            }
-            else if (id == R.id.nav_manage_account)
-            {
+            } else if (id == R.id.nav_manage_account) {
                 Intent intent = new Intent(HomeActivity.this, ManageAccountActivity.class);
                 startActivity(intent);
                 return true;
-            }
-            else if (id == R.id.nav_logout)
-            {
+            } else if (id == R.id.nav_logout) {
                 logOut();
                 return true;
             }
             return false;
-
-
         });
-
 
         circularProgressBar = findViewById(R.id.circularProgressBar);
         bacDisplay = findViewById(R.id.bac_display);
@@ -132,14 +122,14 @@ public class HomeActivity extends AppCompatActivity {
         btnGoingOut = findViewById(R.id.btn_more_info);
         btnHealth = findViewById(R.id.btn_health);
 
-        btnGoingOut.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Handle Going Out button click
-                Intent intent = new Intent(HomeActivity.this, MoreInfoActivity.class);
-                startActivity(intent);
-            }
+        btnGoingOut.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, MoreInfoActivity.class);
+            startActivity(intent);
         });
+
+        // Apply settings initially
+        applySettings();
+
         /*
         // Check and request permissions if needed
         if (!allPermissionsGranted()) {
@@ -152,8 +142,11 @@ public class HomeActivity extends AppCompatActivity {
         */
     }
 
-
-
+    @Override
+    protected void onResume() {
+        super.onResume();
+        applySettings();
+    }
 
     private void updateMenuItems() {
         boolean isLoggedIn = sharedPreferences.getBoolean("is_logged_in", false);
@@ -175,7 +168,6 @@ public class HomeActivity extends AppCompatActivity {
         finish();
     }
 
-
     @Override
     public void onBackPressed() {
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
@@ -183,12 +175,6 @@ public class HomeActivity extends AppCompatActivity {
         } else {
             super.onBackPressed();
         }
-    }
-    //@Override
-    protected void OnResume()
-    {
-        super.onResume();
-        applySettings();
     }
 
     @Override
@@ -213,7 +199,6 @@ public class HomeActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-
     private void setupBluetooth() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
@@ -222,8 +207,8 @@ public class HomeActivity extends AppCompatActivity {
 
         if (!bluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.BLUETOOTH_CONNECT}, 1);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.BLUETOOTH_CONNECT}, 1);
                 return;
             }
             startActivityForResult(enableBtIntent, 1);
@@ -239,8 +224,6 @@ public class HomeActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-
-
 
     private void beginListenForData() {
         final Handler handler = new Handler();
@@ -288,80 +271,97 @@ public class HomeActivity extends AppCompatActivity {
             int progressBarColor;
             if (bac < 0.02) {
                 progressBarColor = Color.GREEN;
-            } else if (bac < 0.05) {
-                progressBarColor = Color.YELLOW;
             } else if (bac < 0.08) {
-                progressBarColor = Color.rgb(255, 165, 0); // Orange color
+                progressBarColor = Color.YELLOW;
             } else {
                 progressBarColor = Color.RED;
+                isSober = false; // User is no longer sober
             }
 
-            bacDisplay.setText("BAC: " + String.format("%.2f", bac) + "%");
-            circularProgressBar.setProgressWithAnimation(bacProgress, 1000L); // Animation duration of 1 second
+            circularProgressBar.setProgress(bacProgress);
             circularProgressBar.setProgressBarColor(progressBarColor);
 
-            // Display BAC in terms of mL
-            double bacMl = bac * 1000; // Convert BAC to mL
-            bacMlDisplay.setText("BAC in mL: " + String.format("%.2f", bacMl) + " mL");
+            bacDisplay.setText(String.format("BAC: %.3f%%", bac));
+            bacMlDisplay.setText(String.format("BAC in mL: %.3f", bac * 1000));
+            timeUntilSoberDisplay.setText(calculateTimeUntilSober(bac));
 
-            // Estimate time until sobriety (assuming 0.015% BAC reduction per hour)
-            double hoursUntilSober = bac / 0.015;
-            timeUntilSoberDisplay.setText("Time Until Sober: " + String.format("%.1f", hoursUntilSober) + " hours");
+            if (!isSober) {
+                scheduleSoberNotification();
+            }
 
         } catch (NumberFormatException e) {
             e.printStackTrace();
         }
     }
 
-    private void simulateReceivingData(String data) {
-        processReceivedData(data);
+    private String calculateTimeUntilSober(double bac) {
+        double soberTimeHours = bac / 0.015; // On average, BAC decreases by 0.015% per hour
+        int hours = (int) soberTimeHours;
+        int minutes = (int) ((soberTimeHours - hours) * 60);
+        return String.format("Time until sober: %d hours %d minutes", hours, minutes);
+    }
+
+    private void scheduleSoberNotification() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, SoberNotificationReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        long soberTimeMillis = System.currentTimeMillis() + (long) (calculateSoberTimeInMillis());
+        if (alarmManager != null) {
+            alarmManager.set(AlarmManager.RTC_WAKEUP, soberTimeMillis, pendingIntent);
+        }
+    }
+
+    private long calculateSoberTimeInMillis() {
+        double bac = 0.1; // Example BAC value, replace with actual value from your sensor
+        double soberTimeHours = bac / 0.015; // On average, BAC decreases by 0.015% per hour
+        return (long) (soberTimeHours * 3600 * 1000); // Convert hours to milliseconds
+    }
+
+    private boolean allPermissionsGranted() {
+        for (String permission : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void applySettings() {
-        // Retrieve preferences and apply them
-        int textSize = sharedPreferences.getInt("text_size", 16); // Default text size 16
-        String font = sharedPreferences.getString("font", "default");
-        int toolbarColor = sharedPreferences.getInt("toolbar_color", Color.BLACK);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        // Apply text size to TextViews
+        // Retrieving and applying text size
+        int textSize = sharedPreferences.getInt("text_size", 16);
         bacDisplay.setTextSize(textSize);
         bacMlDisplay.setTextSize(textSize);
         timeUntilSoberDisplay.setTextSize(textSize);
 
-        // Apply font
-        if (!font.equals("default")) {
-            Typeface typeface = Typeface.createFromAsset(getAssets(), font);
-            bacDisplay.setTypeface(typeface);
-            bacMlDisplay.setTypeface(typeface);
-            timeUntilSoberDisplay.setTypeface(typeface);
-        }
+        // Retrieving and applying font type
+        int fontIndex = sharedPreferences.getInt("font_index", 0);
+        String font = SettingsActivity.getFonts()[fontIndex];
+        Typeface typeface = Typeface.create(font, Typeface.NORMAL);
+        bacDisplay.setTypeface(typeface);
+        bacMlDisplay.setTypeface(typeface);
+        timeUntilSoberDisplay.setTypeface(typeface);
 
-        // Apply toolbar color
+        // Retrieving and applying toolbar color
+        int toolbarColor = sharedPreferences.getInt("toolbar_color", Color.BLACK);
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setBackgroundColor(toolbarColor);
     }
 
-    // Push Notification System
 
-    public long calculateTimeUntilSober(double currentBAC)
-    {
-        double metabolismRate = 0.015;
-        double hoursUntilSober = currentBAC / metabolismRate;
-        return (long) (hoursUntilSober * 3600000); // Convert to milliseconds
+    /*
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            if (allPermissionsGranted()) {
+                setupBluetooth();
+            } else {
+                Toast.makeText(this, "Permissions not granted", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
-
-    private void scheduleSoberNotification(double currentBAC)
-    {
-        long timeUntilSober = calculateTimeUntilSober(currentBAC);
-
-        Intent intent = new Intent(this, SoberNotificationReceiver.class);
-        intent.putExtra("title", "You're Sober Now");
-        intent.putExtra("message", "Your BAC level should now be 0.0. Please take another measurement to confirm");
-
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        long triggerTime = System.currentTimeMillis() + timeUntilSober;
-        alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
-    }
+    */
 }

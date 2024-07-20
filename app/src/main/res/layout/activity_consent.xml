@@ -24,7 +24,6 @@
                     android:id="@+id/textViewConsentDetails"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="We require your consent to collect and use your personal information, such as your gender, age and BMI. This information will be used solely for enhancing your experience within the application. By pressing 'I Acknowledge', you consent to provide this information."
                     android:textSize="16sp" />
         </ScrollView>
 
