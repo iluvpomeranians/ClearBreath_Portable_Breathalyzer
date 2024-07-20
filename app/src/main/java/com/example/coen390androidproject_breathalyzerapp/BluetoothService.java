@@ -5,8 +5,10 @@ import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
@@ -132,6 +134,45 @@ public class BluetoothService extends Service {
         }).start();
     }
 
+    @SuppressLint("MissingPermission")
+    public void pairDevice(Context context, BluetoothDevice device, TextView bluetoothStatusDisplay) {
+        if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
+            connectToDevice(context, device, bluetoothStatusDisplay);
+        } else {
+            device.createBond();
+            final BroadcastReceiver receiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    final String action = intent.getAction();
+                    if (BluetoothDevice.ACTION_BOND_STATE_CHANGED.equals(action)) {
+                        final int state = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR);
+                        final int prevState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, BluetoothDevice.ERROR);
+
+                        if (state == BluetoothDevice.BOND_BONDED && prevState == BluetoothDevice.BOND_BONDING) {
+                            context.unregisterReceiver(this);
+                            connectToDevice(context, device, bluetoothStatusDisplay);
+                        } else if (state == BluetoothDevice.BOND_NONE && prevState == BluetoothDevice.BOND_BONDING) {
+                            context.unregisterReceiver(this);
+                            handler.post(() -> {
+                                Toast.makeText(context, "Pairing failed", Toast.LENGTH_SHORT).show();
+                                bluetoothStatusDisplay.setText("Status: Pairing failed");
+                                bluetoothStatusDisplay.setTextColor(context.getResources().getColor(android.R.color.holo_red_dark));
+                            });
+                        }
+                    }
+                }
+            };
+
+            IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+            context.registerReceiver(receiver, filter);
+        }
+    }
+
+    public boolean isDeviceConnected(BluetoothDevice device) {
+        return bluetoothSocket != null && bluetoothSocket.isConnected() && bluetoothSocket.getRemoteDevice().equals(device);
+    }
+
+
     private void listenForData() {
         new Thread(() -> {
             try {
@@ -165,16 +206,13 @@ public class BluetoothService extends Service {
         return null;
     }
 
-
     public void closeConnection() {
         try {
             if (inputStream != null) {
                 inputStream.close();
-                inputStream = null;
             }
             if (bluetoothSocket != null) {
                 bluetoothSocket.close();
-                bluetoothSocket = null;
             }
         } catch (IOException e) {
             Log.e(TAG, "Error closing connection", e);
