@@ -1,5 +1,6 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -40,6 +41,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private Button btnGoingOut;
     private Button btnHealth;
     private Button btnBluetooth;
+    private Button btnPairDevices;  // New Button
     private TextView bluetoothStatusDisplay;
 
     private BluetoothService bluetoothService;
@@ -92,6 +94,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         btnGoingOut = findViewById(R.id.btn_more_info);
         btnHealth = findViewById(R.id.btn_health);
         btnBluetooth = findViewById(R.id.btn_bluetooth);
+        btnPairDevices = findViewById(R.id.btn_pairdevices);
         bluetoothStatusDisplay = findViewById(R.id.bluetooth_status_display);
 
         btnGoingOut.setOnClickListener(v -> {
@@ -106,6 +109,14 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             setupBluetoothService();
         });
 
+        btnPairDevices.setOnClickListener(v -> {
+            if (!allPermissionsGranted()) {
+                ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
+            } else {
+                showDeviceListDialog();
+            }
+        });
+
         Intent serviceIntent = new Intent(this, BluetoothService.class);
         startService(serviceIntent);  // Use startService instead of startForegroundService
         bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
@@ -116,7 +127,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                 if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
                     drawerLayout.closeDrawer(GravityCompat.START);
                 } else {
-                    moveTaskToBack(true); 
+                    moveTaskToBack(true);
                 }
             }
         };
@@ -124,6 +135,21 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
 
         Log.d(TAG, "onCreate");
     }
+
+    private void showDeviceListDialog() {
+        DeviceListDialogFragment dialogFragment = new DeviceListDialogFragment();
+        dialogFragment.setDeviceListListener(device -> {
+            if (isBound && bluetoothService != null) {
+                if (bluetoothService.isDeviceConnected(device)) {
+                    Toast.makeText(HomeActivity.this, "Device is already paired and connected", Toast.LENGTH_SHORT).show();
+                } else {
+                    bluetoothService.pairDevice(this, device, bluetoothStatusDisplay);
+                }
+            }
+        });
+        dialogFragment.show(getSupportFragmentManager(), "deviceListDialog");
+    }
+
 
     @Override
     protected void onResume() {

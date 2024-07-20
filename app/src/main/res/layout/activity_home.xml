@@ -102,7 +102,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.497"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/time_until_sober_display" />
+            app:layout_constraintTop_toBottomOf="@id/time_until_sober_display"
+            app:layout_constraintVertical_bias="0.8" />
 
         <Button
             android:id="@+id/btn_more_info"
@@ -134,12 +135,26 @@
             android:id="@+id/btn_bluetooth"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
             android:text="Turn On/Off Bluetooth"
             app:layout_constraintBottom_toTopOf="@+id/bluetooth_status_display"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.139"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btn_health" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.97" />
+
+        <Button
+            android:id="@+id/btn_pairdevices"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="19dp"
+            android:text="Pair Devices"
+            app:layout_constraintBottom_toTopOf="@+id/bluetooth_status_display"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.832"
+            app:layout_constraintStart_toStartOf="@+id/btn_bluetooth"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.998" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
