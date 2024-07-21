@@ -298,7 +298,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             Toast.makeText(this, "Bluetooth service not connected", Toast.LENGTH_SHORT).show();
         }
     }
-    
+
 
     @Override
     public void onDataReceived(String data) {

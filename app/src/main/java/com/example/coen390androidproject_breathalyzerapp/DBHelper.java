@@ -8,7 +8,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DBHelper extends SQLiteOpenHelper {
 
-
     private static final String DATABASE_NAME = "breathalyzerApp.db";
     private static final int DATABASE_VERSION = 1;
 
@@ -33,7 +32,6 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-
         String createAccountsTable = "CREATE TABLE " + TABLE_ACCOUNTS + " (" +
                 COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COLUMN_FULL_NAME + " TEXT, " +
@@ -45,7 +43,6 @@ public class DBHelper extends SQLiteOpenHelper {
                 COLUMN_BMI + " REAL" +
                 ")";
         db.execSQL(createAccountsTable);
-
 
         String createHistoryTable = "CREATE TABLE " + TABLE_HISTORY + " (" +
                 COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -59,7 +56,6 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_ACCOUNTS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_HISTORY);
         onCreate(db);
@@ -76,7 +72,6 @@ public class DBHelper extends SQLiteOpenHelper {
         values.put(COLUMN_EMAIL, email);
         values.put(COLUMN_BMI, bmi);
         return db.insert(TABLE_ACCOUNTS, null, values);
-
     }
 
     public boolean updateAccount(int id,
