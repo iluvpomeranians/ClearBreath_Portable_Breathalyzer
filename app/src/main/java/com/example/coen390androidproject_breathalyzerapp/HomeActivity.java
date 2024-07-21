@@ -217,7 +217,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     @Override
     protected void onResume() {
         super.onResume();
-        applySettings();
+        SettingsUtils.applySettings(this, bacDisplay,bacMlDisplay, timeUntilSoberDisplay, btnHealth, btnGoingOut);
         updateBluetoothStatus();
         Log.d(TAG, "onResume");
 
@@ -298,30 +298,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             Toast.makeText(this, "Bluetooth service not connected", Toast.LENGTH_SHORT).show();
         }
     }
-
-    private void applySettings() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        int textSize = sharedPreferences.getInt("text_size", 16); // Default text size 16
-        String font = sharedPreferences.getString("font", "default");
-        int toolbarColor = sharedPreferences.getInt("toolbar_color", Color.BLUE);
-
-        // Apply text size to TextViews
-        bacDisplay.setTextSize(textSize);
-        bacMlDisplay.setTextSize(textSize);
-        timeUntilSoberDisplay.setTextSize(textSize);
-
-        // Apply font
-        if (!font.equals("default")) {
-            Typeface typeface = Typeface.createFromAsset(getAssets(), font);
-            bacDisplay.setTypeface(typeface);
-            bacMlDisplay.setTypeface(typeface);
-            timeUntilSoberDisplay.setTypeface(typeface);
-        }
-
-        // Apply toolbar color
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setBackgroundColor(toolbarColor);
-    }
+    
 
     @Override
     public void onDataReceived(String data) {
