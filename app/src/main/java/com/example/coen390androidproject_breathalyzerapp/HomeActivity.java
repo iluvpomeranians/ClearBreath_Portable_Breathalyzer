@@ -1,7 +1,16 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
+import android.Manifest;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
+
+
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -13,7 +22,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+
+import android.view.Menu;
+import android.view.MenuItem;
+
 import android.util.Log;
+
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -31,7 +45,9 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.navigation.NavigationView;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
+
 public class HomeActivity extends AppCompatActivity implements BluetoothService.BluetoothDataListener {
+
 
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle toggle;
@@ -42,14 +58,16 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private CircularProgressBar circularProgressBar;
     private Button btnGoingOut;
     private Button btnHealth;
+
     private Button btnBluetooth;
     private Button btnPairDevices;  // New Button
     private TextView bluetoothStatusDisplay;
 
+
     private BluetoothService bluetoothService;
     private boolean isBound = false;
-
     private static final String TAG = "HomeActivity";
+
     private static final int REQUEST_CODE_PERMISSIONS = 101;
     private static final String[] REQUIRED_PERMISSIONS = new String[]{
             android.Manifest.permission.BLUETOOTH_SCAN,
@@ -76,7 +94,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         );
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
-
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
@@ -86,6 +104,10 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                 return true;
             } else if (id == R.id.nav_settings) {
                 Intent intent = new Intent(HomeActivity.this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
+            } else if (id == R.id.nav_manage_account) {
+                Intent intent = new Intent(HomeActivity.this, ManageAccountActivity.class);
                 startActivity(intent);
                 return true;
             }
@@ -111,11 +133,12 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         btnPairDevices = findViewById(R.id.btn_pairdevices);
         bluetoothStatusDisplay = findViewById(R.id.bluetooth_status_display);
 
+
         btnGoingOut.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, MoreInfoActivity.class);
             startActivity(intent);
         });
-
+        SettingsUtils.applySettings(this, bacDisplay,bacMlDisplay, timeUntilSoberDisplay, btnHealth, btnGoingOut);
         btnBluetooth.setOnClickListener(v -> {
             if (!allPermissionsGranted()) {
                 ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
@@ -134,7 +157,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         Intent serviceIntent = new Intent(this, BluetoothService.class);
         startService(serviceIntent);  // Use startService instead of startForegroundService
         bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-
         OnBackPressedCallback callback = new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -149,6 +171,33 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
 
         Log.d(TAG, "onCreate");
     }
+
+
+
+
+    private void updateMenuItems() {
+        boolean isLoggedIn = sharedPreferences.getBoolean("is_logged_in", false);
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        Menu menu = navigationView.getMenu();
+        menu.findItem(R.id.nav_manage_account).setVisible(isLoggedIn);
+    }
+
+    private void logOut() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("is_logged_in", false);
+        editor.apply();
+        updateMenuItems();
+        Toast.makeText(HomeActivity.this, "Logged out successfully", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(HomeActivity.this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+
+    }
+
+
+
+
 
     private void showDeviceListDialog() {
         DeviceListDialogFragment dialogFragment = new DeviceListDialogFragment();
@@ -171,6 +220,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         applySettings();
         updateBluetoothStatus();
         Log.d(TAG, "onResume");
+
     }
 
     @Override
@@ -189,6 +239,37 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.drawer_menu, menu);
+        return true;
+    }
+
+    private String calculateTimeUntilSober(double bac) {
+        double soberTimeHours = bac / 0.015; // On average, BAC decreases by 0.015% per hour
+        int hours = (int) soberTimeHours;
+        int minutes = (int) ((soberTimeHours - hours) * 60);
+        return String.format("Time until sober: %d hours %d minutes", hours, minutes);
+    }
+
+    private void scheduleSoberNotification() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, SoberNotificationReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        long soberTimeMillis = System.currentTimeMillis() + (long) (calculateSoberTimeInMillis());
+        if (alarmManager != null) {
+            alarmManager.set(AlarmManager.RTC_WAKEUP, soberTimeMillis, pendingIntent);
+        }
+    }
+
+    private long calculateSoberTimeInMillis() {
+        double bac = 0.1; // Example BAC value, replace with actual value from your sensor
+        double soberTimeHours = bac / 0.015; // On average, BAC decreases by 0.015% per hour
+        return (long) (soberTimeHours * 3600 * 1000); // Convert hours to milliseconds
+    }
+
+
     private boolean allPermissionsGranted() {
         for (String permission : REQUIRED_PERMISSIONS) {
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
@@ -197,6 +278,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         }
         return true;
     }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -221,7 +303,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         int textSize = sharedPreferences.getInt("text_size", 16); // Default text size 16
         String font = sharedPreferences.getString("font", "default");
-        int toolbarColor = sharedPreferences.getInt("toolbar_color", Color.BLACK);
+        int toolbarColor = sharedPreferences.getInt("toolbar_color", Color.BLUE);
 
         // Apply text size to TextViews
         bacDisplay.setTextSize(textSize);

@@ -1,8 +1,12 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -23,9 +27,10 @@ public class AccountActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle toggle;
     private TextView textViewWelcome;
-    private Button btnLogin, btnRegister, btnLogout;
+    private Button btnLogin, btnRegister;
     private NavigationView navigationView;
     private DBHelper dbHelper;
+    private Button btnLogout;
     private int currentUserId = -1;
 
     @Override
@@ -35,6 +40,11 @@ public class AccountActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle("Account Management");
+        }
+        dbHelper = new DBHelper(this);
 
         drawerLayout = findViewById(R.id.drawer_layout);
         toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -71,10 +81,12 @@ public class AccountActivity extends AppCompatActivity {
         textViewWelcome = findViewById(R.id.textViewWelcome);
         btnLogin = findViewById(R.id.btn_login);
         btnRegister = findViewById(R.id.btn_register);
+
         btnLogout = findViewById(R.id.btn_logout);
 
         currentUserId = getIntent().getIntExtra("currentUserId", -1);
         updateUI(currentUserId);
+
 
         btnLogin.setOnClickListener(v -> {
             Intent intent = new Intent(AccountActivity.this, LoginActivity.class);
@@ -82,10 +94,11 @@ public class AccountActivity extends AppCompatActivity {
         });
 
         btnRegister.setOnClickListener(v -> {
-            Intent intent = new Intent(AccountActivity.this, RegisterActivity.class);
+            Intent intent = new Intent(AccountActivity.this, ConsentActivity.class);
             startActivity(intent);
         });
 
+        SettingsUtils.applySettings(this, textViewWelcome);
         btnLogout.setOnClickListener(v -> {
             currentUserId = -1;
             Toast.makeText(AccountActivity.this, "Logged out successfully", Toast.LENGTH_SHORT).show();
@@ -133,6 +146,7 @@ public class AccountActivity extends AppCompatActivity {
                 accountMenuItem.setTitle(username);
                 cursor.close();
             }
+
         }
     }
 }

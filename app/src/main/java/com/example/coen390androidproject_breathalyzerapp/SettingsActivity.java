@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.SeekBar;
 import android.widget.Spinner;
@@ -28,6 +29,7 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView sampleTextView;
     private GridLayout colorGrid;
     private Toolbar toolbar;
+    private Button apply_button;
 
     private SharedPreferences sharedPreferences;
 
@@ -46,7 +48,6 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
-
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -59,13 +60,18 @@ public class SettingsActivity extends AppCompatActivity {
         fontSpinner = findViewById(R.id.font_spinner);
         sampleTextView = findViewById(R.id.sample_text_view);
         colorGrid = findViewById(R.id.color_grid);
+        apply_button = findViewById(R.id.apply_button);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         setupTextSizeSeekBar();
         setupFontSpinner();
         setupColorGrid();
-
+        apply_button.setOnClickListener(v ->
+        {
+            Intent intent = new Intent(SettingsActivity.this, HomeActivity.class);
+            startActivity(intent);
+        });
         OnBackPressedCallback callback = new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -73,6 +79,10 @@ public class SettingsActivity extends AppCompatActivity {
             }
         };
         getOnBackPressedDispatcher().addCallback(this, callback);
+    }
+
+    public static String[] getFonts() {
+        return FONTS;
     }
 
     private void setupTextSizeSeekBar() {

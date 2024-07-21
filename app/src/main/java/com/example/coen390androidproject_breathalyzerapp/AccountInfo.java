@@ -1,5 +1,4 @@
 package com.example.coen390androidproject_breathalyzerapp;
-
 import java.io.Serializable;
 
 public class AccountInfo implements Serializable {
@@ -38,6 +37,7 @@ public class AccountInfo implements Serializable {
     public String getPassword() {
         return password;
     }
+
 
     public String getGender() {
         return gender;

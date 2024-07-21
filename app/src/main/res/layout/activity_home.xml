@@ -41,30 +41,19 @@
             app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
         <!-- Sober Label -->
-        <TextView
-            android:id="@+id/isSober"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="Sober?:"
-            android:textSize="32dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/circularProgressBar" />
 
 
         <TextView
             android:id="@+id/bac_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="48dp"
             android:text="BAC: 0.00%"
             android:textSize="24sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/isSober" />
+            app:layout_constraintTop_toBottomOf="@+id/circularProgressBar" />
 
         <TextView
             android:id="@+id/bac_ml_display"
@@ -90,6 +79,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/bac_ml_display" />
 
+
         <TextView
             android:id="@+id/bluetooth_status_display"
             android:layout_width="wrap_content"
@@ -105,18 +95,17 @@
             app:layout_constraintTop_toBottomOf="@id/time_until_sober_display"
             app:layout_constraintVertical_bias="0.8" />
 
+
         <Button
             android:id="@+id/btn_more_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="More Info"
-            app:layout_constraintBottom_toTopOf="@+id/bluetooth_status_display"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/time_until_sober_display"
-            app:layout_constraintVertical_bias="0.168" />
+            app:layout_constraintTop_toBottomOf="@+id/time_until_sober_display" />
 
         <Button
             android:id="@+id/btn_health"
@@ -124,9 +113,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="Health"
-            app:layout_constraintBottom_toTopOf="@+id/bluetooth_status_display"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/btn_more_info"
             app:layout_constraintVertical_bias="0.078" />
@@ -155,6 +143,7 @@
             app:layout_constraintStart_toStartOf="@+id/btn_bluetooth"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.998" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
