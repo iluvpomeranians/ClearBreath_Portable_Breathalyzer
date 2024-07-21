@@ -1,4 +1,5 @@
 package com.example.coen390androidproject_breathalyzerapp;
+
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -16,11 +17,11 @@ public class ManageAccountActivity extends AppCompatActivity {
     private Button buttonSaveChanges, buttonDeleteAccount;
     private DBHelper dbHelper;
     private int currentUserId = -1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manage_account);
-
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -51,13 +52,12 @@ public class ManageAccountActivity extends AppCompatActivity {
             double bmi = Double.parseDouble(editTextBMI.getText().toString().trim());
 //            String password = editTextPassword.getText().toString().trim();
 
-
             boolean isUpdated = dbHelper.updateAccount(currentUserId,
                     null,
-                     username,
+                    username,
                     null,
                     null,
-                     age,
+                    age,
                     null, bmi);
             if (isUpdated) {
                 Toast.makeText(this, "Account updated successfully", Toast.LENGTH_SHORT).show();
@@ -92,6 +92,5 @@ public class ManageAccountActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
-
     }
 }
