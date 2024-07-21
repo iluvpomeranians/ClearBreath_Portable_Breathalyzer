@@ -1,10 +1,12 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
+
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.content.Intent;
+
 import android.os.Bundle;
-import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -14,8 +16,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 public class RegisterActivity extends AppCompatActivity {
+    private EditText editTextFullName, editTextUsername, editTextPassword, editTextConfirmPassword, editTextAge, editTextGender, editTextBMI;
+    private Button btnRegister;
 
-    private EditText fullNameEditText, usernameEditText, passwordEditText, confirmPasswordEditText, ageEditText, genderEditText, bmiEditText;
     private DBHelper dbHelper;
 
     @Override
@@ -26,31 +29,28 @@ public class RegisterActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("Register");
-        }
+        editTextFullName = findViewById(R.id.editTextFullName);
+        editTextUsername = findViewById(R.id.editTextUsername);
+        editTextPassword = findViewById(R.id.editTextPassword);
+        editTextConfirmPassword = findViewById(R.id.editTextConfirmPassword);
+        editTextAge = findViewById(R.id.editTextAge);
+        editTextGender = findViewById(R.id.editTextGender);
+        editTextBMI = findViewById(R.id.editTextBMI);
+        btnRegister = findViewById(R.id.buttonRegister);
 
-        // Initialize DBHelper
+
         dbHelper = new DBHelper(this);
 
-        fullNameEditText = findViewById(R.id.editTextFullName);
-        usernameEditText = findViewById(R.id.editTextUsername);
-        passwordEditText = findViewById(R.id.editTextPassword);
-        confirmPasswordEditText = findViewById(R.id.editTextConfirmPassword);
-        ageEditText = findViewById(R.id.editTextAge);
-        genderEditText = findViewById(R.id.editTextGender);
-        bmiEditText = findViewById(R.id.editTextBMI);
 
         Button registerButton = findViewById(R.id.buttonRegister);
         registerButton.setOnClickListener(v -> {
-            String fullName = fullNameEditText.getText().toString().trim();
-            String username = usernameEditText.getText().toString().trim();
-            String password = passwordEditText.getText().toString().trim();
-            String confirmPassword = confirmPasswordEditText.getText().toString().trim();
-            int age = Integer.parseInt(ageEditText.getText().toString().trim());
-            boolean gender = genderEditText.getText().toString().trim().equalsIgnoreCase("Male");
-            double bmi = Double.parseDouble(bmiEditText.getText().toString().trim());
+            String fullName = editTextFullName.getText().toString().trim();
+            String username = editTextUsername.getText().toString().trim();
+            String password = editTextPassword.getText().toString().trim();
+            String confirmPassword = editTextConfirmPassword.getText().toString().trim();
+            int age = Integer.parseInt(editTextAge.getText().toString().trim());
+            boolean gender = editTextGender.getText().toString().trim().equalsIgnoreCase("Male");
+            double bmi = Double.parseDouble(editTextBMI.getText().toString().trim());
 
             if (password.equals(confirmPassword)) {
                 ContentValues values = new ContentValues();
@@ -61,7 +61,7 @@ public class RegisterActivity extends AppCompatActivity {
                 values.put(DBHelper.COLUMN_GENDER, gender ? "Male" : "Female");
                 values.put(DBHelper.COLUMN_BMI, bmi);
 
-                long id = dbHelper.insertAccount(values);
+                /*long id = dbHelper.insertAccount(values);
                 if (id != -1) {
                     Toast.makeText(RegisterActivity.this, "Registration successful", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
@@ -71,48 +71,45 @@ public class RegisterActivity extends AppCompatActivity {
                 }
             } else {
                 Toast.makeText(RegisterActivity.this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+            }*/
             }
+
         });
+        btnRegister.setOnClickListener(v -> register());
+        SettingsUtils.applySettings(this, editTextFullName, editTextUsername, editTextPassword, editTextConfirmPassword, editTextAge, editTextGender, editTextBMI, btnRegister);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            Intent intent = new Intent(RegisterActivity.this, HomeActivity.class);
+
+
+
+    private void register() {
+        String fullName = editTextFullName.getText().toString().trim();
+        String username = editTextUsername.getText().toString().trim();
+        String password = editTextPassword.getText().toString().trim();
+        String confirmPassword = editTextConfirmPassword.getText().toString().trim();
+        String gender = editTextGender.getText().toString().trim();
+        int age = Integer.parseInt(editTextAge.getText().toString().trim());
+        double bmi = Double.parseDouble(editTextBMI.getText().toString().trim());
+
+        if (!password.equals(confirmPassword)) {
+            Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        long id = dbHelper.insertAccount(fullName, username, password, gender, age, null, bmi);
+        if (id > 0) {
+            Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(RegisterActivity.this, AccountActivity.class);
+            intent.putExtra("currentUserId", (int) id);
             startActivity(intent);
             finish();
-            return true;
+        } else {
+            Toast.makeText(this, "Registration failed", Toast.LENGTH_SHORT).show();
         }
-        return super.onOptionsItemSelected(item);
-    }
-}
-
-/*
-    private void register() {
-        String username = editTextUsername.getText().toString();
-        String password = editTextPassword.getText().toString();
-        String birthday = editTextBirthday.getText().toString();
-
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS_NAME, MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-
-        Set<String> accounts = sharedPreferences.getStringSet(KEY_ACCOUNTS, new HashSet<>());
-        accounts.add(username);
-        editor.putStringSet(KEY_ACCOUNTS, accounts);
-        editor.putString(username, password);
-        editor.putString("birthday_" + username, birthday);
-        editor.putString("id_" + username, UUID.randomUUID().toString());
-        editor.putString(KEY_CURRENT_USER, username);
-        editor.apply();
-
-        Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(RegisterActivity.this, AccountActivity.class);
-        startActivity(intent);
-        finish();
     }
 
     @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull android.view.MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             Intent intent = new Intent(RegisterActivity.this, AccountActivity.class);
             startActivity(intent);
@@ -121,5 +118,7 @@ public class RegisterActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-    */
+
+}
+
 

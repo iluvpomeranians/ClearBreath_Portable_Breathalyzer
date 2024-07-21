@@ -1,127 +1,57 @@
 package com.example.coen390androidproject_breathalyzerapp;
+import java.io.Serializable;
 
-public class AccountInfo {
-    private String accountFullName;
-    // To find the user easier, set from creation date, such as 1st user is number 1
-    // 2nd user is number 2 etc etc
-    private int accountNumber;
-    private float accountPhoneNumber;
-    private String accountBirthday;
-    private String accountAddress;
-    private String accountEmail;
-    private String accountPassword;
-    private String accountConfirmPassword;
-    private float accountBMI;
-    private int accountAge;
-    private boolean accountGender;
+public class AccountInfo implements Serializable {
+    private int id;
+    private String fullName;
+    private String username;
+    private String password;
+    private String gender;
+    private int age;
+    private String email;
+    private double bmi;
 
-    public AccountInfo(String accountFullName, int accountNumber,
-                       float accountPhoneNumber, String accountBirthday,
-                       String accountAddress, String accountEmail, String accountPassword,
-                       String accountConfirmPassword, int accountBMI,
-                       int accountAge, boolean accountGender) {
-        this.accountFullName = accountFullName;
-
-        this.accountNumber = accountNumber;
-        this.accountPhoneNumber = accountPhoneNumber;
-        this.accountBirthday = accountBirthday;
-        this.accountAddress = accountAddress;
-        this.accountEmail = accountEmail;
-        this.accountPassword = accountPassword;
-        this.accountConfirmPassword = accountConfirmPassword;
-        this.accountBMI = accountBMI;
-        this.accountAge = accountAge;
-        this.accountGender = accountGender;
+    public AccountInfo(int id, String fullName, String username, String password, String gender, int age, String email, double bmi) {
+        this.id = id;
+        this.fullName = fullName;
+        this.username = username;
+        this.password = password;
+        this.gender = gender;
+        this.age = age;
+        this.email = email;
+        this.bmi = bmi;
     }
 
-    public String getAccountFullName() {
-        return accountFullName;
+    public int getId() {
+        return id;
     }
 
-    public void setAccountName(String accountFullName) {
-        this.accountFullName = accountFullName;
+    public String getFullName() {
+        return fullName;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
 
-    public int getAccountNumber() {
-        return accountNumber;
+    public String getGender() {
+        return gender;
     }
 
-    public void setAccountNumber(int accountNumber) {
-        this.accountNumber = accountNumber;
+    public int getAge() {
+        return age;
     }
 
-    public float getAccountPhoneNumber() {
-        return accountPhoneNumber;
+    public String getEmail() {
+        return email;
     }
 
-    public void setAccountPhoneNumber(float accountPhoneNumber) {
-        this.accountPhoneNumber = accountPhoneNumber;
-    }
-
-    public String getAccountBirthday() {
-        return accountBirthday;
-    }
-
-    public void setAccountBirthday(String accountBirthday) {
-        this.accountBirthday = accountBirthday;
-    }
-
-    public String getAccountAddress() {
-        return accountAddress;
-    }
-
-    public void setAccountAddress(String accountAddress) {
-        this.accountAddress = accountAddress;
-    }
-
-    public String getAccountEmail() {
-        return accountEmail;
-    }
-
-    public void setAccountEmail(String accountEmail) {
-        this.accountEmail = accountEmail;
-    }
-
-    public String getAccountPassword() {
-        return accountPassword;
-    }
-
-    public void setAccountPassword(String accountPassword) {
-        this.accountPassword = accountPassword;
-    }
-
-    public String getAccountConfirmPassword() {
-        return accountConfirmPassword;
-    }
-
-    public void setAccountConfirmPassword(String accountConfirmPassword) {
-        this.accountConfirmPassword = accountConfirmPassword;
-    }
-
-    public float getAccountBMI()
-    {
-        return accountBMI;
-    }
-    public void setAccountBMI()
-    {
-        this.accountBMI = accountBMI;
-    }
-
-    public int getAccountAge() {
-        return accountAge;
-    }
-
-    public void setAccountAge(int accountAge) {
-        this.accountAge = accountAge;
-    }
-
-    public boolean isAccountGender() {
-        return accountGender;
-    }
-
-    public void setAccountGender(boolean accountGender) {
-        this.accountGender = accountGender;
+    public double getBmi() {
+        return bmi;
     }
 }
-

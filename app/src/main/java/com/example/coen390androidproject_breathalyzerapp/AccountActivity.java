@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.MenuItem;
@@ -21,9 +22,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
 
-import java.util.HashSet;
-import java.util.Set;
-
 public class AccountActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
@@ -31,12 +29,9 @@ public class AccountActivity extends AppCompatActivity {
     private TextView textViewWelcome;
     private Button btnLogin, btnRegister;
     private NavigationView navigationView;
-    private static final String SHARED_PREFS = "sharedPrefs";
-    private static final String KEY_USER_ID = "userId";
-    private static final String SHARED_PREFS_NAME = "sharedPrefs"; // Ensure this matches your actual preference name
-    private static final String KEY_ACCOUNTS = "accounts"; // Ensure this matches your actual accounts key
-    private static final String KEY_CURRENT_USER = "currentUser"; // Ensure this matches your actual current user key
     private DBHelper dbHelper;
+    private Button btnLogout;
+    private int currentUserId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,11 +64,19 @@ public class AccountActivity extends AppCompatActivity {
                 return true;
             } else if (id == R.id.nav_manage_account) {
                 Intent intent = new Intent(AccountActivity.this, ManageAccountActivity.class);
+                intent.putExtra("currentUserId", currentUserId);
+                startActivity(intent);
+                return true;
+            } else if (id == R.id.nav_bac_data) {
+                Intent intent = new Intent(AccountActivity.this, BACDataActivity.class);
+                intent.putExtra("currentUserId", currentUserId);
                 startActivity(intent);
                 return true;
             }
             return false;
         });
+
+        dbHelper = new DBHelper(this);
 
         textViewWelcome = findViewById(R.id.textViewWelcome);
         btnLogin = findViewById(R.id.btn_login);
@@ -82,6 +85,10 @@ public class AccountActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS_NAME, MODE_PRIVATE);
         String currentUser = sharedPreferences.getString(KEY_USER_ID, null);
         updateUI(currentUser);
+
+        currentUserId = getIntent().getIntExtra("currentUserId", -1);
+        updateUI(currentUserId);
+
 
         btnLogin.setOnClickListener(v -> {
             Intent intent = new Intent(AccountActivity.this, LoginActivity.class);
@@ -94,6 +101,11 @@ public class AccountActivity extends AppCompatActivity {
         });
 
         SettingsUtils.applySettings(this, textViewWelcome);
+        btnLogout.setOnClickListener(v -> {
+            currentUserId = -1;
+            Toast.makeText(AccountActivity.this, "Logged out successfully", Toast.LENGTH_SHORT).show();
+            updateUI(currentUserId);
+        });
     }
 
     @Override
@@ -114,33 +126,29 @@ public class AccountActivity extends AppCompatActivity {
         }
     }
 
-    public void deleteAccount(String username) {
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS_NAME, MODE_PRIVATE);
-        Set<String> accounts = sharedPreferences.getStringSet(KEY_ACCOUNTS, new HashSet<>());
-        accounts.remove(username);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putStringSet(KEY_ACCOUNTS, accounts);
-        editor.remove(username);
-        editor.remove("birthday_" + username);
-        editor.remove("id_" + username);
-        editor.remove(KEY_CURRENT_USER);
-        editor.apply();
-        Toast.makeText(this, "Account deleted successfully", Toast.LENGTH_SHORT).show();
-        updateUI(null);
-    }
-
-    public void updateUI(String currentUser) {
-        if (currentUser == null) {
+    private void updateUI(int currentUserId) {
+        if (currentUserId == -1) {
             textViewWelcome.setText("Welcome");
             btnLogin.setVisibility(View.VISIBLE);
             btnRegister.setVisibility(View.VISIBLE);
-        } else {
-            textViewWelcome.setText("Welcome, " + currentUser);
-            btnLogin.setVisibility(View.GONE);
-            btnRegister.setVisibility(View.GONE);
-        }
+            btnLogout.setVisibility(View.GONE);
 
-        MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
-        accountMenuItem.setTitle(currentUser != null ? currentUser : "Account");
+            MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
+            accountMenuItem.setTitle("Account");
+        } else {
+            Cursor cursor = dbHelper.getAccount(currentUserId);
+            if (cursor != null && cursor.moveToFirst()) {
+                String username = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_USERNAME));
+                textViewWelcome.setText("Welcome, " + username);
+                btnLogin.setVisibility(View.GONE);
+                btnRegister.setVisibility(View.GONE);
+                btnLogout.setVisibility(View.VISIBLE);
+
+                MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
+                accountMenuItem.setTitle(username);
+                cursor.close();
+            }
+
+        }
     }
 }

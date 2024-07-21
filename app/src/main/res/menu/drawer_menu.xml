@@ -13,10 +13,11 @@
         android:title="Account" />
     <item
         android:id="@+id/nav_manage_account"
-        android:title="Manage Account"
-        android:visible="false"/>
+
+        android:icon="@drawable/ic_manage_account"
+        android:title="Manage Account" />
     <item
-        android:id="@+id/nav_logout"
-        android:title="Logout"
-        android:visible="false"/>
+        android:id="@+id/nav_bac_data"
+        android:icon="@drawable/ic_bac_data"
+        android:title="BAC Data" />
 </menu>

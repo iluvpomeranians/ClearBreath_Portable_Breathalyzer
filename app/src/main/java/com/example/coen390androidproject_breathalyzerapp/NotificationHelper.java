@@ -10,6 +10,7 @@ public class NotificationHelper {
     private static final String CHANNEL_ID = "SOBER_NOTIFICATION_CHANNEL";
     private static final String CHANNEL_NAME = "Sober Notification";
     private static final String CHANNEL_DESC = "Notifications for when you are sober";
+
     public static void createNotification(Context context, String title, String message) {
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
