@@ -2,6 +2,7 @@ package com.example.coen390androidproject_breathalyzerapp;
 
 import android.app.Dialog;
 import android.os.Bundle;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
@@ -24,7 +25,7 @@ public class ConfirmDeleteDialogFragment extends DialogFragment {
                 .setMessage("Are you sure you want to delete the account: " + username + "?")
                 .setPositiveButton("Yes", (dialog, which) -> {
                     if (getActivity() instanceof AccountActivity) {
-                        ((AccountActivity) getActivity()).deleteAccount(username);
+//  THIS DOESNT WORK AND NEEDS TO BE UPDATED TO SUIT THE CURRENT FILES                      ((AccountActivity) getActivity()).deleteAccount(username);
                     }
                 })
                 .setNegativeButton("No", null)

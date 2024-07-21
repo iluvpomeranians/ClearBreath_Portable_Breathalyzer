@@ -1,12 +1,8 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
-import android.app.DatePickerDialog;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.MenuItem;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -14,21 +10,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
 public class RegisterActivity extends AppCompatActivity {
 
-    private EditText editTextUsername;
-    private EditText editTextPassword;
-    private EditText editTextBirthday;
+    private EditText editTextFullName, editTextUsername, editTextPassword, editTextConfirmPassword, editTextAge, editTextGender, editTextBMI;
     private Button btnRegister;
-
-    private static final String SHARED_PREFS_NAME = "UserPrefs";
-    private static final String KEY_ACCOUNTS = "accounts";
-    private static final String KEY_CURRENT_USER = "current_user";
+    private DBHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,59 +24,48 @@ public class RegisterActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("Register");
-        }
+        editTextFullName = findViewById(R.id.editTextFullName);
+        editTextUsername = findViewById(R.id.editTextUsername);
+        editTextPassword = findViewById(R.id.editTextPassword);
+        editTextConfirmPassword = findViewById(R.id.editTextConfirmPassword);
+        editTextAge = findViewById(R.id.editTextAge);
+        editTextGender = findViewById(R.id.editTextGender);
+        editTextBMI = findViewById(R.id.editTextBMI);
+        btnRegister = findViewById(R.id.buttonRegister);
 
-        editTextUsername = findViewById(R.id.et_username);
-        editTextPassword = findViewById(R.id.et_password);
-        editTextBirthday = findViewById(R.id.et_birthday);
-        btnRegister = findViewById(R.id.btn_register);
-
-        editTextBirthday.setOnClickListener(v -> showDatePickerDialog());
+        dbHelper = new DBHelper(this);
 
         btnRegister.setOnClickListener(v -> register());
     }
 
-    private void showDatePickerDialog() {
-        final Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
-
-        DatePickerDialog datePickerDialog = new DatePickerDialog(this, (view, year1, monthOfYear, dayOfMonth) -> {
-            String selectedDate = year1 + "-" + (monthOfYear + 1) + "-" + dayOfMonth;
-            editTextBirthday.setText(selectedDate);
-        }, year, month, day);
-        datePickerDialog.show();
-    }
-
     private void register() {
-        String username = editTextUsername.getText().toString();
-        String password = editTextPassword.getText().toString();
-        String birthday = editTextBirthday.getText().toString();
+        String fullName = editTextFullName.getText().toString().trim();
+        String username = editTextUsername.getText().toString().trim();
+        String password = editTextPassword.getText().toString().trim();
+        String confirmPassword = editTextConfirmPassword.getText().toString().trim();
+        String gender = editTextGender.getText().toString().trim();
+        int age = Integer.parseInt(editTextAge.getText().toString().trim());
+        double bmi = Double.parseDouble(editTextBMI.getText().toString().trim());
 
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS_NAME, MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+        if (!password.equals(confirmPassword)) {
+            Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        Set<String> accounts = sharedPreferences.getStringSet(KEY_ACCOUNTS, new HashSet<>());
-        accounts.add(username);
-        editor.putStringSet(KEY_ACCOUNTS, accounts);
-        editor.putString(username, password);
-        editor.putString("birthday_" + username, birthday);
-        editor.putString("id_" + username, UUID.randomUUID().toString());
-        editor.putString(KEY_CURRENT_USER, username);
-        editor.apply();
-
-        Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(RegisterActivity.this, AccountActivity.class);
-        startActivity(intent);
-        finish();
+        long id = dbHelper.insertAccount(fullName, username, password, gender, age, null, bmi);
+        if (id > 0) {
+            Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(RegisterActivity.this, AccountActivity.class);
+            intent.putExtra("currentUserId", (int) id);
+            startActivity(intent);
+            finish();
+        } else {
+            Toast.makeText(this, "Registration failed", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull android.view.MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             Intent intent = new Intent(RegisterActivity.this, AccountActivity.class);
             startActivity(intent);

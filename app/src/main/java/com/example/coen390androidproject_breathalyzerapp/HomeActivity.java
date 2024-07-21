@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -34,6 +35,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
 
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle toggle;
+    private SharedPreferences sharedPreferences;
     private TextView bacDisplay;
     private TextView bacMlDisplay;
     private TextView timeUntilSoberDisplay;
@@ -55,6 +57,9 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             android.Manifest.permission.ACCESS_FINE_LOCATION,
             android.Manifest.permission.ACCESS_COARSE_LOCATION
     };
+
+    private DBHelper dbHelper;
+    private int accountId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,8 +89,17 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                 startActivity(intent);
                 return true;
             }
+//            else if (id == R.id.nav_manage_account)
+//            {
+//                Intent intent = new Intent(HomeActivity.this, ManageAccountActivity.class);
+//                startActivity(intent);
+//                return true;
+//            }
             return false;
         });
+
+        dbHelper = new DBHelper(this);
+        accountId = getIntent().getIntExtra("accountId", -1);
 
         circularProgressBar = findViewById(R.id.circularProgressBar);
         bacDisplay = findViewById(R.id.bac_display);
@@ -307,4 +321,45 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             updateBluetoothStatus();
         }
     };
+
+    private void scheduleSoberNotification(double currentBAC) {
+        long timeUntilSober = (long) (currentBAC / 0.015 * 3600000); // Convert to milliseconds
+
+
+
+        //ATTENTION
+            double bac = 2.3;
+
+
+            //made bac 2.3 for now. Double.parseDouble(data)
+
+
+            try{
+            int bacProgress = (int) (bac * 1000); // Convert BAC to integer representation
+
+            int progressBarColor;
+            if (bac < 0.02) {
+                progressBarColor = Color.GREEN;
+            } else if (bac < 0.05) {
+                progressBarColor = Color.YELLOW;
+            } else if (bac < 0.08) {
+                progressBarColor = Color.rgb(255, 165, 0); // Orange color
+            } else {
+                progressBarColor = Color.RED;
+            }
+
+            bacDisplay.setText(String.format("BAC: %.2f%%", bac));
+            circularProgressBar.setProgressWithAnimation(bacProgress, 1000L); // Animation duration of 1 second
+            circularProgressBar.setProgressBarColor(progressBarColor);
+
+            double bacMl = bac * 1000; // Convert BAC to mL
+            bacMlDisplay.setText(String.format("BAC in mL: %.2f mL", bacMl));
+
+            double hoursUntilSober = bac / 0.015;
+            timeUntilSoberDisplay.setText(String.format("Time Until Sober: %.1f hours", hoursUntilSober));
+
+        } catch (NumberFormatException e) {
+            Log.e(TAG, "Invalid BAC data received", e);
+        }
+    }
 }
