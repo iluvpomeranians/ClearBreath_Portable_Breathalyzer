@@ -43,6 +43,7 @@ public class LoginActivity extends AppCompatActivity {
         btnLogin = findViewById(R.id.btn_login);
 
         btnLogin.setOnClickListener(v -> login());
+
     }
 
     private void login() {
