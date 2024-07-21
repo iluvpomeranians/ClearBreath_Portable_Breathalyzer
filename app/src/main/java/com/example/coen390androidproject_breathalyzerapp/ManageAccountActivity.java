@@ -13,7 +13,7 @@ import androidx.appcompat.widget.Toolbar;
 
 public class ManageAccountActivity extends AppCompatActivity {
 
-    private EditText editTextUsername, editTextAge, editTextBMI, editTextPassword;
+    private EditText editTextUsername, editTextAge, editTextBMI;
     private Button buttonSaveChanges, buttonDeleteAccount;
     private DBHelper dbHelper;
     private int currentUserId = -1;
@@ -50,15 +50,8 @@ public class ManageAccountActivity extends AppCompatActivity {
             String username = editTextUsername.getText().toString().trim();
             int age = Integer.parseInt(editTextAge.getText().toString().trim());
             double bmi = Double.parseDouble(editTextBMI.getText().toString().trim());
-//            String password = editTextPassword.getText().toString().trim();
 
-            boolean isUpdated = dbHelper.updateAccount(currentUserId,
-                    null,
-                    username,
-                    null,
-                    null,
-                    age,
-                    null, bmi);
+            boolean isUpdated = dbHelper.updateAccount(currentUserId, null, username, null, null, age, null, bmi, null, null);
             if (isUpdated) {
                 Toast.makeText(this, "Account updated successfully", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(ManageAccountActivity.this, AccountActivity.class);
@@ -87,6 +80,7 @@ public class ManageAccountActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull android.view.MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             Intent intent = new Intent(ManageAccountActivity.this, AccountActivity.class);
+            intent.putExtra("currentUserId", currentUserId);
             startActivity(intent);
             finish();
             return true;

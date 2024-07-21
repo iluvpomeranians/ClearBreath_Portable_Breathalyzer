@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DBHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "breathalyzerApp.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     public static final String TABLE_ACCOUNTS = "accounts";
     public static final String COLUMN_ID = "id";
@@ -20,9 +20,6 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String COLUMN_AGE = "age";
     public static final String COLUMN_EMAIL = "email";
     public static final String COLUMN_BMI = "bmi";
-
-    public static final String TABLE_HISTORY = "history";
-    public static final String COLUMN_ACCOUNT_ID = "account_id";
     public static final String COLUMN_TIMESTAMP = "timestamp";
     public static final String COLUMN_BAC = "bac";
 
@@ -40,25 +37,19 @@ public class DBHelper extends SQLiteOpenHelper {
                 COLUMN_GENDER + " TEXT, " +
                 COLUMN_AGE + " INTEGER, " +
                 COLUMN_EMAIL + " TEXT, " +
-                COLUMN_BMI + " REAL" +
+                COLUMN_BMI + " REAL, " +
+                COLUMN_TIMESTAMP + " DATETIME DEFAULT CURRENT_TIMESTAMP, " +
+                COLUMN_BAC + " REAL" +
                 ")";
         db.execSQL(createAccountsTable);
-
-        String createHistoryTable = "CREATE TABLE " + TABLE_HISTORY + " (" +
-                COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                COLUMN_ACCOUNT_ID + " INTEGER, " +
-                COLUMN_TIMESTAMP + " DATETIME DEFAULT CURRENT_TIMESTAMP, " +
-                COLUMN_BAC + " REAL, " +
-                "FOREIGN KEY(" + COLUMN_ACCOUNT_ID + ") REFERENCES " + TABLE_ACCOUNTS + "(" + COLUMN_ID + ")" +
-                ")";
-        db.execSQL(createHistoryTable);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_ACCOUNTS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_HISTORY);
-        onCreate(db);
+        if (oldVersion < 2) {
+            db.execSQL("ALTER TABLE " + TABLE_ACCOUNTS + " ADD COLUMN " + COLUMN_TIMESTAMP + " DATETIME DEFAULT CURRENT_TIMESTAMP");
+            db.execSQL("ALTER TABLE " + TABLE_ACCOUNTS + " ADD COLUMN " + COLUMN_BAC + " REAL");
+        }
     }
 
     public long insertAccount(String fullName, String username, String password, String gender, int age, String email, double bmi) {
@@ -77,7 +68,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public boolean updateAccount(int id,
                                  String fullName,
                                  String username,
-                                 String password, String gender, Integer age, String email, Double bmi) {
+                                 String password, String gender, Integer age, String email, Double bmi, String timestamp, Double bac) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
 
@@ -102,11 +93,16 @@ public class DBHelper extends SQLiteOpenHelper {
         if (bmi != null) {
             values.put(COLUMN_BMI, bmi);
         }
+        if (timestamp != null) {
+            values.put(COLUMN_TIMESTAMP, timestamp);
+        }
+        if (bac != null) {
+            values.put(COLUMN_BAC, bac);
+        }
 
         int rowsAffected = db.update(TABLE_ACCOUNTS, values, COLUMN_ID + " = ?", new String[]{String.valueOf(id)});
         return rowsAffected > 0;
     }
-
 
     public boolean deleteAccount(int id) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -125,6 +121,6 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public Cursor getBACRecords(int accountId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.query(TABLE_HISTORY, null, COLUMN_ACCOUNT_ID + " = ?", new String[]{String.valueOf(accountId)}, null, null, COLUMN_TIMESTAMP + " DESC");
+        return db.query(TABLE_ACCOUNTS, new String[]{COLUMN_TIMESTAMP, COLUMN_BAC}, COLUMN_ID + " = ?", new String[]{String.valueOf(accountId)}, null, null, COLUMN_TIMESTAMP + " DESC");
     }
 }

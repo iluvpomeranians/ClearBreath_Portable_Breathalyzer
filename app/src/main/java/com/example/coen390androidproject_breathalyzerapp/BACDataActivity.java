@@ -26,6 +26,7 @@ public class BACDataActivity extends AppCompatActivity {
         currentUserId = getIntent().getIntExtra("currentUserId", -1);
 
         displayBACData();
+        SettingsUtils.applySettings(this, textViewBACData);
     }
 
     private void displayBACData() {

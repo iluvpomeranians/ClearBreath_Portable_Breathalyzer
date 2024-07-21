@@ -56,10 +56,12 @@ public class AccountActivity extends AppCompatActivity {
             int id = item.getItemId();
             if (id == R.id.nav_home) {
                 Intent intent = new Intent(AccountActivity.this, HomeActivity.class);
+                intent.putExtra("currentUserId", currentUserId);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_settings) {
                 Intent intent = new Intent(AccountActivity.this, SettingsActivity.class);
+                intent.putExtra("currentUserId", currentUserId);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_manage_account) {
@@ -86,7 +88,6 @@ public class AccountActivity extends AppCompatActivity {
 
         currentUserId = getIntent().getIntExtra("currentUserId", -1);
         updateUI(currentUserId);
-
 
         btnLogin.setOnClickListener(v -> {
             Intent intent = new Intent(AccountActivity.this, LoginActivity.class);
@@ -146,7 +147,6 @@ public class AccountActivity extends AppCompatActivity {
                 accountMenuItem.setTitle(username);
                 cursor.close();
             }
-
         }
     }
 }

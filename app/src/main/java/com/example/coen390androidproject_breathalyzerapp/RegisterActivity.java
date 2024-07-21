@@ -5,7 +5,6 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.content.Intent;
-
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,9 +15,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 public class RegisterActivity extends AppCompatActivity {
+
     private EditText editTextFullName, editTextUsername, editTextPassword, editTextConfirmPassword, editTextAge, editTextGender, editTextBMI;
     private Button btnRegister;
-
     private DBHelper dbHelper;
 
     @Override
@@ -38,49 +37,11 @@ public class RegisterActivity extends AppCompatActivity {
         editTextBMI = findViewById(R.id.editTextBMI);
         btnRegister = findViewById(R.id.buttonRegister);
 
-
         dbHelper = new DBHelper(this);
 
-
-        Button registerButton = findViewById(R.id.buttonRegister);
-        registerButton.setOnClickListener(v -> {
-            String fullName = editTextFullName.getText().toString().trim();
-            String username = editTextUsername.getText().toString().trim();
-            String password = editTextPassword.getText().toString().trim();
-            String confirmPassword = editTextConfirmPassword.getText().toString().trim();
-            int age = Integer.parseInt(editTextAge.getText().toString().trim());
-            boolean gender = editTextGender.getText().toString().trim().equalsIgnoreCase("Male");
-            double bmi = Double.parseDouble(editTextBMI.getText().toString().trim());
-
-            if (password.equals(confirmPassword)) {
-                ContentValues values = new ContentValues();
-                values.put(DBHelper.COLUMN_USERNAME, username);
-                values.put(DBHelper.COLUMN_PASSWORD, password);
-                values.put(DBHelper.COLUMN_FULL_NAME, fullName);
-                values.put(DBHelper.COLUMN_AGE, age);
-                values.put(DBHelper.COLUMN_GENDER, gender ? "Male" : "Female");
-                values.put(DBHelper.COLUMN_BMI, bmi);
-
-                /*long id = dbHelper.insertAccount(values);
-                if (id != -1) {
-                    Toast.makeText(RegisterActivity.this, "Registration successful", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
-                    finish();
-                } else {
-                    Toast.makeText(RegisterActivity.this, "Registration failed", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(RegisterActivity.this, "Passwords do not match", Toast.LENGTH_SHORT).show();
-            }*/
-            }
-
-        });
         btnRegister.setOnClickListener(v -> register());
         SettingsUtils.applySettings(this, editTextFullName, editTextUsername, editTextPassword, editTextConfirmPassword, editTextAge, editTextGender, editTextBMI, btnRegister);
     }
-
-
-
 
     private void register() {
         String fullName = editTextFullName.getText().toString().trim();
@@ -118,7 +79,4 @@ public class RegisterActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-
 }
-
-

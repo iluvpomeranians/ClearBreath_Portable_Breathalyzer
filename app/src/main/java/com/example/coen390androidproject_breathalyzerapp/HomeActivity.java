@@ -10,7 +10,6 @@ import android.bluetooth.BluetoothSocket;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -27,7 +26,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import android.util.Log;
-
+import android.view.Menu;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,9 +44,11 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.navigation.NavigationView;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class HomeActivity extends AppCompatActivity implements BluetoothService.BluetoothDataListener {
-
 
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle toggle;
@@ -58,11 +59,9 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private CircularProgressBar circularProgressBar;
     private Button btnGoingOut;
     private Button btnHealth;
-
     private Button btnBluetooth;
-    private Button btnPairDevices;  // New Button
+    private Button btnPairDevices;
     private TextView bluetoothStatusDisplay;
-
 
     private BluetoothService bluetoothService;
     private boolean isBound = false;
@@ -95,6 +94,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
@@ -108,20 +108,21 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                 return true;
             } else if (id == R.id.nav_manage_account) {
                 Intent intent = new Intent(HomeActivity.this, ManageAccountActivity.class);
+                intent.putExtra("currentUserId", accountId);
+                startActivity(intent);
+                return true;
+            } else if (id == R.id.nav_bac_data) {
+                Intent intent = new Intent(HomeActivity.this, BACDataActivity.class);
+                intent.putExtra("currentUserId", accountId);
                 startActivity(intent);
                 return true;
             }
-//            else if (id == R.id.nav_manage_account)
-//            {
-//                Intent intent = new Intent(HomeActivity.this, ManageAccountActivity.class);
-//                startActivity(intent);
-//                return true;
-//            }
             return false;
         });
 
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         dbHelper = new DBHelper(this);
-        accountId = getIntent().getIntExtra("accountId", -1);
+        accountId = getIntent().getIntExtra("currentUserId", -1);
 
         circularProgressBar = findViewById(R.id.circularProgressBar);
         bacDisplay = findViewById(R.id.bac_display);
@@ -133,17 +134,19 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         btnPairDevices = findViewById(R.id.btn_pairdevices);
         bluetoothStatusDisplay = findViewById(R.id.bluetooth_status_display);
 
-
         btnGoingOut.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, MoreInfoActivity.class);
             startActivity(intent);
         });
-        SettingsUtils.applySettings(this, bacDisplay,bacMlDisplay, timeUntilSoberDisplay, btnHealth, btnGoingOut);
+
+        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnHealth, btnGoingOut);
+
         btnBluetooth.setOnClickListener(v -> {
             if (!allPermissionsGranted()) {
                 ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
+            } else {
+                setupBluetoothService();
             }
-            setupBluetoothService();
         });
 
         btnPairDevices.setOnClickListener(v -> {
@@ -155,8 +158,9 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         });
 
         Intent serviceIntent = new Intent(this, BluetoothService.class);
-        startService(serviceIntent);  // Use startService instead of startForegroundService
+        startService(serviceIntent);
         bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+
         OnBackPressedCallback callback = new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -172,33 +176,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         Log.d(TAG, "onCreate");
     }
 
-
-
-
-    private void updateMenuItems() {
-        boolean isLoggedIn = sharedPreferences.getBoolean("is_logged_in", false);
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        Menu menu = navigationView.getMenu();
-        menu.findItem(R.id.nav_manage_account).setVisible(isLoggedIn);
-    }
-
-    private void logOut() {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean("is_logged_in", false);
-        editor.apply();
-        updateMenuItems();
-        Toast.makeText(HomeActivity.this, "Logged out successfully", Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(HomeActivity.this, LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
-
-    }
-
-
-
-
-
     private void showDeviceListDialog() {
         DeviceListDialogFragment dialogFragment = new DeviceListDialogFragment();
         dialogFragment.setDeviceListListener(device -> {
@@ -213,14 +190,12 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         dialogFragment.show(getSupportFragmentManager(), "deviceListDialog");
     }
 
-
     @Override
     protected void onResume() {
         super.onResume();
-        SettingsUtils.applySettings(this, bacDisplay,bacMlDisplay, timeUntilSoberDisplay, btnHealth, btnGoingOut);
+        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnHealth, btnGoingOut);
         updateBluetoothStatus();
         Log.d(TAG, "onResume");
-
     }
 
     @Override
@@ -279,7 +254,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         return true;
     }
 
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -298,7 +272,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             Toast.makeText(this, "Bluetooth service not connected", Toast.LENGTH_SHORT).show();
         }
     }
-
 
     @Override
     public void onDataReceived(String data) {
@@ -336,6 +309,10 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             double hoursUntilSober = bac / 0.015;
             timeUntilSoberDisplay.setText(String.format("Time Until Sober: %.1f hours", hoursUntilSober));
 
+            // Save BAC data to the account
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+            dbHelper.updateAccount(accountId, null, null, null, null, null, null, null, timestamp, bac);
+
         } catch (NumberFormatException e) {
             Log.e(TAG, "Invalid BAC data received", e);
         }
@@ -367,7 +344,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             isBound = true;
             updateBluetoothStatus();
 
-            // Call setupBluetooth here if permissions are already granted
             if (allPermissionsGranted()) {
                 bluetoothService.setupBluetooth(HomeActivity.this, bluetoothStatusDisplay);
             }
