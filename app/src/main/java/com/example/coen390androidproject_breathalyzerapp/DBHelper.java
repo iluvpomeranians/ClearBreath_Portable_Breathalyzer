@@ -79,18 +79,39 @@ public class DBHelper extends SQLiteOpenHelper {
 
     }
 
-    public boolean updateAccount(int id, String fullName, String username, String password, String gender, int age, String email, double bmi) {
+    public boolean updateAccount(int id,
+                                 String fullName,
+                                 String username,
+                                 String password, String gender, Integer age, String email, Double bmi) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(COLUMN_FULL_NAME, fullName);
-        values.put(COLUMN_USERNAME, username);
-        values.put(COLUMN_PASSWORD, password);
-        values.put(COLUMN_GENDER, gender);
-        values.put(COLUMN_AGE, age);
-        values.put(COLUMN_EMAIL, email);
-        values.put(COLUMN_BMI, bmi);
-        return db.update(TABLE_ACCOUNTS, values, COLUMN_ID + " = ?", new String[]{String.valueOf(id)}) > 0;
+
+        if (fullName != null) {
+            values.put(COLUMN_FULL_NAME, fullName);
+        }
+        if (username != null) {
+            values.put(COLUMN_USERNAME, username);
+        }
+        if (password != null) {
+            values.put(COLUMN_PASSWORD, password);
+        }
+        if (gender != null) {
+            values.put(COLUMN_GENDER, gender);
+        }
+        if (age != null) {
+            values.put(COLUMN_AGE, age);
+        }
+        if (email != null) {
+            values.put(COLUMN_EMAIL, email);
+        }
+        if (bmi != null) {
+            values.put(COLUMN_BMI, bmi);
+        }
+
+        int rowsAffected = db.update(TABLE_ACCOUNTS, values, COLUMN_ID + " = ?", new String[]{String.valueOf(id)});
+        return rowsAffected > 0;
     }
+
 
     public boolean deleteAccount(int id) {
         SQLiteDatabase db = this.getWritableDatabase();

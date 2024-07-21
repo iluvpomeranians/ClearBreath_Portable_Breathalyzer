@@ -12,7 +12,7 @@ import androidx.appcompat.widget.Toolbar;
 
 public class ManageAccountActivity extends AppCompatActivity {
 
-    private EditText editTextUsername, editTextAge, editTextBMI;
+    private EditText editTextUsername, editTextAge, editTextBMI, editTextPassword;
     private Button buttonSaveChanges, buttonDeleteAccount;
     private DBHelper dbHelper;
     private int currentUserId = -1;
@@ -49,9 +49,16 @@ public class ManageAccountActivity extends AppCompatActivity {
             String username = editTextUsername.getText().toString().trim();
             int age = Integer.parseInt(editTextAge.getText().toString().trim());
             double bmi = Double.parseDouble(editTextBMI.getText().toString().trim());
+//            String password = editTextPassword.getText().toString().trim();
 
 
-            boolean isUpdated = dbHelper.updateAccount(currentUserId, null, username, null, null, age, null, bmi);
+            boolean isUpdated = dbHelper.updateAccount(currentUserId,
+                    null,
+                     username,
+                    null,
+                    null,
+                     age,
+                    null, bmi);
             if (isUpdated) {
                 Toast.makeText(this, "Account updated successfully", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(ManageAccountActivity.this, AccountActivity.class);

@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MoreInfoActivity extends AppCompatActivity {
@@ -20,11 +22,23 @@ public class MoreInfoActivity extends AppCompatActivity {
         acknowledgeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Go back to HomeActivity
-                Intent intent = new Intent(MoreInfoActivity.this, HomeActivity.class);
-                startActivity(intent);
-                finish();
+                navigateBackToHome();
             }
         });
+
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                navigateBackToHome();
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(this, callback);
+    }
+
+    private void navigateBackToHome() {
+        Intent intent = new Intent(MoreInfoActivity.this, HomeActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        finish();
     }
 }
