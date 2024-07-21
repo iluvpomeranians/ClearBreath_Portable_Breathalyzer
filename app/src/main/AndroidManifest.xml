@@ -37,6 +37,8 @@
         <activity android:name=".AccountActivity" />
         <activity android:name=".LoginActivity" />
         <activity android:name=".RegisterActivity" />
+        <activity android:name=".ManageAccountActivity" />
+        <activity android:name=".BACDataActivity" />
 
         <service
             android:name=".BluetoothService"

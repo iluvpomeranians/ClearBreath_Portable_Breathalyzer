@@ -23,7 +23,7 @@ public class AccountActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle toggle;
     private TextView textViewWelcome;
-    private Button btnLogin, btnRegister, btnLogout, btnDeleteAccount;
+    private Button btnLogin, btnRegister, btnLogout;
     private NavigationView navigationView;
     private DBHelper dbHelper;
     private int currentUserId = -1;
@@ -72,7 +72,6 @@ public class AccountActivity extends AppCompatActivity {
         btnLogin = findViewById(R.id.btn_login);
         btnRegister = findViewById(R.id.btn_register);
         btnLogout = findViewById(R.id.btn_logout);
-        btnDeleteAccount = findViewById(R.id.btn_delete_account);
 
         currentUserId = getIntent().getIntExtra("currentUserId", -1);
         updateUI(currentUserId);
@@ -91,19 +90,6 @@ public class AccountActivity extends AppCompatActivity {
             currentUserId = -1;
             Toast.makeText(AccountActivity.this, "Logged out successfully", Toast.LENGTH_SHORT).show();
             updateUI(currentUserId);
-        });
-
-        btnDeleteAccount.setOnClickListener(v -> {
-            if (currentUserId != -1) {
-                boolean isDeleted = dbHelper.deleteAccount(currentUserId);
-                if (isDeleted) {
-                    Toast.makeText(AccountActivity.this, "Account deleted successfully", Toast.LENGTH_SHORT).show();
-                    currentUserId = -1;
-                    updateUI(currentUserId);
-                } else {
-                    Toast.makeText(AccountActivity.this, "Failed to delete account", Toast.LENGTH_SHORT).show();
-                }
-            }
         });
     }
 
@@ -131,7 +117,6 @@ public class AccountActivity extends AppCompatActivity {
             btnLogin.setVisibility(View.VISIBLE);
             btnRegister.setVisibility(View.VISIBLE);
             btnLogout.setVisibility(View.GONE);
-            btnDeleteAccount.setVisibility(View.GONE);
 
             MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
             accountMenuItem.setTitle("Account");
@@ -143,7 +128,6 @@ public class AccountActivity extends AppCompatActivity {
                 btnLogin.setVisibility(View.GONE);
                 btnRegister.setVisibility(View.GONE);
                 btnLogout.setVisibility(View.VISIBLE);
-                btnDeleteAccount.setVisibility(View.VISIBLE);
 
                 MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
                 accountMenuItem.setTitle(username);

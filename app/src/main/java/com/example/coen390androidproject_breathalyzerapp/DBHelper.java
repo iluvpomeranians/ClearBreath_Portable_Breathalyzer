@@ -84,36 +84,26 @@ public class DBHelper extends SQLiteOpenHelper {
         values.put(COLUMN_AGE, age);
         values.put(COLUMN_EMAIL, email);
         values.put(COLUMN_BMI, bmi);
-        int rows = db.update(TABLE_ACCOUNTS, values, COLUMN_ID + "=?", new String[]{String.valueOf(id)});
-        return rows > 0;
+        return db.update(TABLE_ACCOUNTS, values, COLUMN_ID + " = ?", new String[]{String.valueOf(id)}) > 0;
     }
 
     public boolean deleteAccount(int id) {
         SQLiteDatabase db = this.getWritableDatabase();
-        int rows = db.delete(TABLE_ACCOUNTS, COLUMN_ID + "=?", new String[]{String.valueOf(id)});
-        return rows > 0;
+        return db.delete(TABLE_ACCOUNTS, COLUMN_ID + " = ?", new String[]{String.valueOf(id)}) > 0;
     }
 
     public Cursor getAccount(int id) {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.query(TABLE_ACCOUNTS, null, COLUMN_ID + "=?", new String[]{String.valueOf(id)}, null, null, null);
+        return db.query(TABLE_ACCOUNTS, null, COLUMN_ID + " = ?", new String[]{String.valueOf(id)}, null, null, null);
     }
 
     public Cursor getAccountByUsername(String username) {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.query(TABLE_ACCOUNTS, null, COLUMN_USERNAME + "=?", new String[]{username}, null, null, null);
-    }
-
-    public long insertBACRecord(int accountId, double bac) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_ACCOUNT_ID, accountId);
-        values.put(COLUMN_BAC, bac);
-        return db.insert(TABLE_HISTORY, null, values);
+        return db.query(TABLE_ACCOUNTS, null, COLUMN_USERNAME + " = ?", new String[]{username}, null, null, null);
     }
 
     public Cursor getBACRecords(int accountId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.query(TABLE_HISTORY, null, COLUMN_ACCOUNT_ID + "=?", new String[]{String.valueOf(accountId)}, null, null, COLUMN_TIMESTAMP + " DESC");
+        return db.query(TABLE_HISTORY, null, COLUMN_ACCOUNT_ID + " = ?", new String[]{String.valueOf(accountId)}, null, null, COLUMN_TIMESTAMP + " DESC");
     }
 }

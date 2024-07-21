@@ -51,24 +51,15 @@ public class ManageAccountActivity extends AppCompatActivity {
             int age = Integer.parseInt(editTextAge.getText().toString().trim());
             double bmi = Double.parseDouble(editTextBMI.getText().toString().trim());
 
-            Cursor cursor = dbHelper.getAccount(currentUserId);
-            if (cursor != null && cursor.moveToFirst()) {
-                String fullName = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_FULL_NAME));
-                String password = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_PASSWORD));
-                String gender = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_GENDER));
-                String email = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_EMAIL));
-
-                boolean isUpdated = dbHelper.updateAccount(currentUserId, fullName, username, password, gender, age, email, bmi);
-                if (isUpdated) {
-                    Toast.makeText(this, "Account updated successfully", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(ManageAccountActivity.this, AccountActivity.class);
-                    intent.putExtra("currentUserId", currentUserId);
-                    startActivity(intent);
-                    finish();
-                } else {
-                    Toast.makeText(this, "Failed to update account", Toast.LENGTH_SHORT).show();
-                }
-                cursor.close();
+            boolean isUpdated = dbHelper.updateAccount(currentUserId, null, username, null, null, age, null, bmi);
+            if (isUpdated) {
+                Toast.makeText(this, "Account updated successfully", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(ManageAccountActivity.this, AccountActivity.class);
+                intent.putExtra("currentUserId", currentUserId);
+                startActivity(intent);
+                finish();
+            } else {
+                Toast.makeText(this, "Failed to update account", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -89,7 +80,6 @@ public class ManageAccountActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull android.view.MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             Intent intent = new Intent(ManageAccountActivity.this, AccountActivity.class);
-            intent.putExtra("currentUserId", currentUserId);
             startActivity(intent);
             finish();
             return true;
