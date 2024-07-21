@@ -2,7 +2,9 @@ package com.example.coen390androidproject_breathalyzerapp;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.nfc.Tag;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -42,6 +44,10 @@ public class LoginActivity extends AppCompatActivity {
         Cursor cursor = dbHelper.getAccountByUsername(username);
         if (cursor != null && cursor.moveToFirst()) {
             String storedPassword = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_PASSWORD));
+            if (storedPassword == null)
+            {
+                Log.d("Debug","password in databse does exist yet");
+            }
             if (storedPassword.equals(password)) {
                 int id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_ID));
                 Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show();
