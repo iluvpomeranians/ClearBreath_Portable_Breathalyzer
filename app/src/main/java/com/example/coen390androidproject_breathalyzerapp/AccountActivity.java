@@ -82,9 +82,7 @@ public class AccountActivity extends AppCompatActivity {
         btnLogin = findViewById(R.id.btn_login);
         btnRegister = findViewById(R.id.btn_register);
 
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS_NAME, MODE_PRIVATE);
-        String currentUser = sharedPreferences.getString(KEY_USER_ID, null);
-        updateUI(currentUser);
+        btnLogout = findViewById(R.id.btn_logout);
 
         currentUserId = getIntent().getIntExtra("currentUserId", -1);
         updateUI(currentUserId);
