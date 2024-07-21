@@ -129,7 +129,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void setupColorGrid() {
-        int savedColor = sharedPreferences.getInt("toolbar_color", Color.BLACK);
+        int savedColor = sharedPreferences.getInt("toolbar_color", Color.BLUE);
         toolbar.setBackgroundColor(savedColor);
 
         colorGrid.removeAllViews();  // Clear any existing views
