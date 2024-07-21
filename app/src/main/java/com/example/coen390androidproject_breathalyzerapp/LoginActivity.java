@@ -35,6 +35,7 @@ public class LoginActivity extends AppCompatActivity {
         dbHelper = new DBHelper(this);
 
         btnLogin.setOnClickListener(v -> login());
+
     }
 
     private void login() {
