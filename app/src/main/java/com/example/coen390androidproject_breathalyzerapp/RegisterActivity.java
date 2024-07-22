@@ -4,20 +4,24 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.InputFilter;
+import android.text.Spanned;
+import android.text.method.DigitsKeyListener;
+import android.widget.ArrayAdapter;
 import android.view.Menu;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
-
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-
 import com.google.android.material.navigation.NavigationView;
 
 public class RegisterActivity extends AppCompatActivity {
-    private EditText editTextFullName, editTextUsername, editTextPassword, editTextConfirmPassword, editTextAge, editTextGender, editTextBMI;
+    private EditText editTextFullName, editTextUsername, editTextPassword, editTextConfirmPassword, editTextAge, editTextBMI;
+    private Spinner spinnerGender;
     private Button btnRegister;
     private DBHelper dbHelper;
     private SharedPreferences sharedPreferences;
@@ -37,15 +41,24 @@ public class RegisterActivity extends AppCompatActivity {
         editTextPassword = findViewById(R.id.editTextPassword);
         editTextConfirmPassword = findViewById(R.id.editTextConfirmPassword);
         editTextAge = findViewById(R.id.editTextAge);
-        editTextGender = findViewById(R.id.editTextGender);
+        spinnerGender = findViewById(R.id.spinnerGender);
         editTextBMI = findViewById(R.id.editTextBMI);
         btnRegister = findViewById(R.id.buttonRegister);
 
         dbHelper = new DBHelper(this);
         sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE); // Initialize sharedPreferences here
 
+        // Apply restrictions
+        setInputRestrictions();
+
+        // Set up the gender spinner
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.gender_options, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerGender.setAdapter(adapter);
+
         btnRegister.setOnClickListener(v -> register());
-        SettingsUtils.applySettings(this, editTextFullName, editTextUsername, editTextPassword, editTextConfirmPassword, editTextAge, editTextGender, editTextBMI, btnRegister);
+        SettingsUtils.applySettings(this, editTextFullName, editTextUsername, editTextPassword, editTextConfirmPassword, editTextAge,editTextBMI, btnRegister);
 
         updateMenuItems();
 
@@ -61,13 +74,83 @@ public class RegisterActivity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
     }
 
+    private void setInputRestrictions() {
+        // Full Name: Only letters and spaces
+        editTextFullName.setFilters(new InputFilter[]{
+                new InputFilter() {
+                    @Override
+                    public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+                        for (int i = start; i < end; i++) {
+                            if (!Character.isLetter(source.charAt(i)) && !Character.isSpaceChar(source.charAt(i))) {
+                                return "";
+                            }
+                        }
+                        return null;
+                    }
+                }
+        });
+
+        // Username: Only alphanumeric characters
+        editTextUsername.setFilters(new InputFilter[]{
+                new InputFilter() {
+                    @Override
+                    public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+                        for (int i = start; i < end; i++) {
+                            if (!Character.isLetterOrDigit(source.charAt(i))) {
+                                return "";
+                            }
+                        }
+                        return null;
+                    }
+                }
+        });
+
+        // Password: Minimum length 6
+        editTextPassword.setFilters(new InputFilter[]{
+                new InputFilter.LengthFilter(6)
+        });
+
+        editTextConfirmPassword.setFilters(new InputFilter[]{
+                new InputFilter.LengthFilter(6)
+        });
+
+        // Age: Only numbers between 1 and 120
+        editTextAge.setKeyListener(DigitsKeyListener.getInstance("0123456789"));
+        editTextAge.setFilters(new InputFilter[]{
+                new InputFilter.LengthFilter(3)
+        });
+
+        // BMI: Only numbers with a single decimal point precision
+        editTextBMI.setKeyListener(DigitsKeyListener.getInstance("0123456789."));
+        editTextBMI.setFilters(new InputFilter[]{
+                new InputFilter() {
+                    @Override
+                    public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+                        String destText = dest.toString();
+                        String sourceText = source.toString();
+
+                        if (destText.contains(".") && sourceText.equals(".")) {
+                            return "";
+                        }
+
+                        if (destText.contains(".") && (destText.length() - destText.indexOf(".")) > 2) {
+                            return "";
+                        }
+
+                        return null;
+                    }
+                }
+        });
+    }
+
     private void register() {
         String fullName = editTextFullName.getText().toString().trim();
         String username = editTextUsername.getText().toString().trim();
         String password = editTextPassword.getText().toString().trim();
+        String gender = spinnerGender.getSelectedItem().toString();
         String confirmPassword = editTextConfirmPassword.getText().toString().trim();
+
         String ageStr = editTextAge.getText().toString().trim();
-        String gender = editTextGender.getText().toString().trim();
         String bmiStr = editTextBMI.getText().toString().trim();
 
         if (fullName.isEmpty() || username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() ||
@@ -94,6 +177,11 @@ public class RegisterActivity extends AppCompatActivity {
 
         if (!password.equals(confirmPassword)) {
             Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (age < 1 || age > 120) {
+            Toast.makeText(this, "Age must be between 1 and 120", Toast.LENGTH_SHORT).show();
             return;
         }
 
