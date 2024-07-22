@@ -11,9 +11,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
-
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
@@ -25,23 +22,29 @@
         android:theme="@style/Theme.YourAppName"
         android:enableOnBackInvokedCallback="true">
 
-        <activity android:name=".HomeActivity"
+        <!-- SplashActivity as the launcher activity -->
+        <activity
+            android:name=".SplashActivity"
+            android:theme="@style/SplashTheme"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MoreInfoActivity" />
-        <activity android:name=".HealthActivity" />
-        <activity android:name=".SettingsActivity"/>
-        <activity android:name=".AccountActivity" />
-        <activity android:name=".LoginActivity" />
-        <activity android:name=".RegisterActivity" />
-        <activity android:name=".ConsentActivity" />
-        <receiver android:name=".SoberNotificationReceiver"/>
-        <activity android:name=".ManageAccountActivity" />
-        <activity android:name=".BACDataActivity" />
+
+        <!-- Other activities -->
+        <activity android:name=".HomeActivity" android:exported="true" />
+        <activity android:name=".MoreInfoActivity" android:exported="false" />
+        <activity android:name=".HealthActivity" android:exported="false" />
+        <activity android:name=".SettingsActivity" android:exported="false"/>
+        <activity android:name=".AccountActivity" android:exported="false" />
+        <activity android:name=".LoginActivity" android:exported="false" />
+        <activity android:name=".RegisterActivity" android:exported="false" />
+        <activity android:name=".ConsentActivity" android:exported="false" />
+        <receiver android:name=".SoberNotificationReceiver" android:exported="false"/>
+        <activity android:name=".ManageAccountActivity" android:exported="false" />
+        <activity android:name=".BACDataActivity" android:exported="false" />
 
         <service
             android:name=".BluetoothService"
