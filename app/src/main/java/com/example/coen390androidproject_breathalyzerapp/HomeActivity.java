@@ -57,8 +57,8 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private TextView bacMlDisplay;
     private TextView timeUntilSoberDisplay;
     private CircularProgressBar circularProgressBar;
-    private Button btnGoingOut;
-    private Button btnHealth;
+    private Button btnInstructions;
+    private Button btnStartRecording;
     private Button btnBluetooth;
     private Button btnPairDevices;
     private TextView bluetoothStatusDisplay;
@@ -85,6 +85,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("Clear Breath");
 
         drawerLayout = findViewById(R.id.drawer_layout);
         toggle = new ActionBarDrawerToggle(
@@ -93,7 +94,9 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         );
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(item -> {
@@ -123,24 +126,32 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         dbHelper = new DBHelper(this);
         accountId = getIntent().getIntExtra("currentUserId", -1);
+        sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+        updateMenuItems();
 
         circularProgressBar = findViewById(R.id.circularProgressBar);
         bacDisplay = findViewById(R.id.bac_display);
         bacMlDisplay = findViewById(R.id.bac_ml_display);
         timeUntilSoberDisplay = findViewById(R.id.time_until_sober_display);
-        btnGoingOut = findViewById(R.id.btn_more_info);
-        btnHealth = findViewById(R.id.btn_health);
+        btnInstructions = findViewById(R.id.btn_more_info);
+        btnStartRecording = findViewById(R.id.btn_start_recording);
         btnBluetooth = findViewById(R.id.btn_bluetooth);
         btnPairDevices = findViewById(R.id.btn_pairdevices);
         bluetoothStatusDisplay = findViewById(R.id.bluetooth_status_display);
 
-        btnGoingOut.setOnClickListener(v -> {
+
+        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay);
+
+        btnInstructions.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, MoreInfoActivity.class);
             startActivity(intent);
         });
+        btnStartRecording.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, StartRecordingActivity.class);
+            startActivity(intent);
+        });
 
-        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnHealth, btnGoingOut);
-
+        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnStartRecording, btnInstructions);
         btnBluetooth.setOnClickListener(v -> {
             if (!allPermissionsGranted()) {
                 ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
@@ -176,6 +187,25 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         Log.d(TAG, "onCreate");
     }
 
+    private void updateMenuItems() {
+        boolean isLoggedIn = sharedPreferences.getBoolean("is_logged_in", false);
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        Menu menu = navigationView.getMenu();
+        menu.findItem(R.id.nav_manage_account).setVisible(isLoggedIn);
+    }
+
+    private void logOut() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("is_logged_in", false);
+        editor.apply();
+        updateMenuItems();
+        Toast.makeText(HomeActivity.this, "Logged out successfully", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(HomeActivity.this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
     private void showDeviceListDialog() {
         DeviceListDialogFragment dialogFragment = new DeviceListDialogFragment();
         dialogFragment.setDeviceListListener(device -> {
@@ -193,8 +223,10 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     @Override
     protected void onResume() {
         super.onResume();
-        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnHealth, btnGoingOut);
+        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay);
+        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnStartRecording, btnInstructions);
         updateBluetoothStatus();
+        updateMenuItems();
         Log.d(TAG, "onResume");
     }
 
@@ -243,7 +275,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         double soberTimeHours = bac / 0.015; // On average, BAC decreases by 0.015% per hour
         return (long) (soberTimeHours * 3600 * 1000); // Convert hours to milliseconds
     }
-
 
     private boolean allPermissionsGranted() {
         for (String permission : REQUIRED_PERMISSIONS) {
@@ -360,16 +391,12 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private void scheduleSoberNotification(double currentBAC) {
         long timeUntilSober = (long) (currentBAC / 0.015 * 3600000); // Convert to milliseconds
 
+        // ATTENTION
+        double bac = 2.3;
 
+        // Made bac 2.3 for now. Double.parseDouble(data)
 
-        //ATTENTION
-            double bac = 2.3;
-
-
-            //made bac 2.3 for now. Double.parseDouble(data)
-
-
-            try{
+        try {
             int bacProgress = (int) (bac * 1000); // Convert BAC to integer representation
 
             int progressBarColor;
