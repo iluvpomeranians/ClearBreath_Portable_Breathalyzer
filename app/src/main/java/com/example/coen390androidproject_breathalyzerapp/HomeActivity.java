@@ -1,10 +1,7 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
-import android.Manifest;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -13,11 +10,9 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,8 +39,8 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private TextView bacMlDisplay;
     private TextView timeUntilSoberDisplay;
     private CircularProgressBar circularProgressBar;
-    private Button btnGoingOut;
-    private Button btnHealth;
+    private Button btnInstructions;
+    private Button btnStartRecording;
     private Button btnBluetooth;
     private Button btnPairDevices;
     private TextView bluetoothStatusDisplay;
@@ -111,18 +106,22 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         bacDisplay = findViewById(R.id.bac_display);
         bacMlDisplay = findViewById(R.id.bac_ml_display);
         timeUntilSoberDisplay = findViewById(R.id.time_until_sober_display);
-        btnGoingOut = findViewById(R.id.btn_more_info);
-        btnHealth = findViewById(R.id.btn_health);
+        btnInstructions = findViewById(R.id.btn_more_info);
+        btnStartRecording = findViewById(R.id.btn_start_recording);
         btnBluetooth = findViewById(R.id.btn_bluetooth);
         btnPairDevices = findViewById(R.id.btn_pairdevices);
         bluetoothStatusDisplay = findViewById(R.id.bluetooth_status_display);
 
-        btnGoingOut.setOnClickListener(v -> {
+        btnInstructions.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, MoreInfoActivity.class);
             startActivity(intent);
         });
+        btnStartRecording.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, StartRecordingActivity.class);
+            startActivity(intent);
+        });
 
-        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnHealth, btnGoingOut);
+        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnStartRecording, btnInstructions);
         btnBluetooth.setOnClickListener(v -> {
             if (!allPermissionsGranted()) {
                 ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
@@ -192,7 +191,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     @Override
     protected void onResume() {
         super.onResume();
-        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnHealth, btnGoingOut);
+        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnStartRecording, btnInstructions);
         updateBluetoothStatus();
         updateMenuItems();
         Log.d(TAG, "onResume");
