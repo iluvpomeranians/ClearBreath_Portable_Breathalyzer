@@ -36,7 +36,7 @@
         <!-- Other activities -->
         <activity android:name=".HomeActivity" android:exported="true" />
         <activity android:name=".MoreInfoActivity" android:exported="false" />
-        <activity android:name=".HealthActivity" android:exported="false" />
+        <activity android:name=".StartRecordingActivity" android:exported="false" />
         <activity android:name=".SettingsActivity" android:exported="false"/>
         <activity android:name=".AccountActivity" android:exported="false" />
         <activity android:name=".LoginActivity" android:exported="false" />

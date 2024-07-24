@@ -16,17 +16,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:navigationIcon="?attr/homeAsUpIndicator" /><![CDATA[
-
-
-        android:id="@+id/linearLayout3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-
-
-
-        ]]>
+            app:navigationIcon="?attr/homeAsUpIndicator" />
 
         <EditText
             android:id="@+id/editTextFullName"
