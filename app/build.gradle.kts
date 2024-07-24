@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.google.material)
     implementation("com.mikhaellopez:circularprogressbar:3.1.0")
     implementation(libs.firebase.inappmessaging)
+    implementation(libs.androidx.preference)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
