@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -17,10 +16,11 @@ import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.preference.PreferenceManager;
+import androidx.activity.OnBackPressedCallback;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -131,6 +131,7 @@ public class SettingsActivity extends AppCompatActivity {
     private void setupColorGrid() {
         int savedColor = sharedPreferences.getInt("toolbar_color", Color.BLUE);
         toolbar.setBackgroundColor(savedColor);
+        setStatusBarColor(savedColor);
 
         colorGrid.removeAllViews();  // Clear any existing views
 
@@ -138,10 +139,11 @@ public class SettingsActivity extends AppCompatActivity {
             int colorRes = COLORS[i];
             View colorView = new View(this);
             colorView.setBackgroundColor(ContextCompat.getColor(this, colorRes));
+            colorView.setContentDescription("Color option " + (i + 1)); // Accessibility
 
-            GridLayout.Spec rowSpec = GridLayout.spec(i / 4, 1f); // Row span of 1
-            GridLayout.Spec colSpec = GridLayout.spec(i % 4, 1f); // Column span of 1
-            GridLayout.LayoutParams params = new GridLayout.LayoutParams(rowSpec, colSpec);
+            GridLayout.LayoutParams params = new GridLayout.LayoutParams(
+                    GridLayout.spec(i / 4, 1f), GridLayout.spec(i % 4, 1f)
+            );
             params.width = 0;
             params.height = 0;
             params.setMargins(8, 8, 8, 8); // Adjust margins as needed
@@ -151,6 +153,7 @@ public class SettingsActivity extends AppCompatActivity {
             final int finalColor = ContextCompat.getColor(this, colorRes);
             colorView.setOnClickListener(v -> {
                 toolbar.setBackgroundColor(finalColor);
+                setStatusBarColor(finalColor);
                 sharedPreferences.edit().putInt("toolbar_color", finalColor).apply();
             });
 
@@ -172,5 +175,11 @@ public class SettingsActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void setStatusBarColor(int color) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            getWindow().setStatusBarColor(color);
+        }
     }
 }
