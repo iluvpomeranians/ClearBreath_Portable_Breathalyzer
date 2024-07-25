@@ -19,11 +19,17 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import android.text.InputFilter;
+import android.text.Spanned;
+import android.text.method.DigitsKeyListener;
+import android.widget.ArrayAdapter;
+import android.view.Menu;
+import android.view.MenuItem;
 import com.google.android.material.navigation.NavigationView;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    private EditText editTextFullName, editTextUsername, editTextPassword, editTextConfirmPassword, editTextAge, editTextGender, editTextBMI;
+    private EditText editTextFullName, editTextUsername, editTextPassword, editTextConfirmPassword, editTextAge, editTextBMI;
     private Spinner spinnerGender;
     private Button btnRegister;
     private DBHelper dbHelper;
@@ -68,17 +74,18 @@ public class RegisterActivity extends AppCompatActivity {
         boolean loggedIn = sharedPreferences.getBoolean("loggedIn", false);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
 
-        onBackPressedCallback = new OnBackPressedCallback(true) {
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                moveTaskToBack(true);
+                Intent intent = new Intent(RegisterActivity.this, AccountActivity.class);
+                startActivity(intent);
+                finish();
             }
         };
-        getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
+        getOnBackPressedDispatcher().addCallback(this, callback);
     }
 
     private void setInputRestrictions() {
-        // Full Name: Only letters and spaces
         editTextFullName.setFilters(new InputFilter[]{
                 new InputFilter() {
                     @Override
@@ -229,7 +236,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(@NonNull android.view.MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             moveTaskToBack(true);
             return true;

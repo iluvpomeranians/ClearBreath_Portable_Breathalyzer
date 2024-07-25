@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
-
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.Context;
@@ -15,6 +14,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -62,10 +62,12 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private Button btnBluetooth;
     private Button btnPairDevices;
     private TextView bluetoothStatusDisplay;
-
+    private int currentUserId = -1;
     private BluetoothService bluetoothService;
     private boolean isBound = false;
     private static final String TAG = "HomeActivity";
+    private NavigationView navigationView, navigationViewUI;
+    private OnBackPressedCallback onBackPressedCallback;
 
     private static final int REQUEST_CODE_PERMISSIONS = 101;
     private static final String[] REQUIRED_PERMISSIONS = new String[]{
@@ -76,7 +78,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     };
 
     private DBHelper dbHelper;
-    private int accountId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,38 +86,41 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("Clear Breath");
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+            getSupportActionBar().setTitle("Clear Breath - Home");
+        }
+
+        dbHelper = new DBHelper(this);
 
         drawerLayout = findViewById(R.id.drawer_layout);
-        toggle = new ActionBarDrawerToggle(
-                this, drawerLayout, toolbar,
-                R.string.navigation_drawer_open, R.string.navigation_drawer_close
-        );
+        toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
-
-        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
             if (id == R.id.nav_account) {
                 Intent intent = new Intent(HomeActivity.this, AccountActivity.class);
+                intent.putExtra("currentUserId", currentUserId);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_settings) {
                 Intent intent = new Intent(HomeActivity.this, SettingsActivity.class);
+                intent.putExtra("currentUserId", currentUserId);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_manage_account) {
                 Intent intent = new Intent(HomeActivity.this, ManageAccountActivity.class);
-                intent.putExtra("currentUserId", accountId);
+                intent.putExtra("currentUserId", currentUserId);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_bac_data) {
                 Intent intent = new Intent(HomeActivity.this, BACDataActivity.class);
-                intent.putExtra("currentUserId", accountId);
+                intent.putExtra("currentUserId", currentUserId);
                 startActivity(intent);
                 return true;
             }
@@ -124,8 +128,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         });
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        dbHelper = new DBHelper(this);
-        accountId = getIntent().getIntExtra("currentUserId", -1);
+        currentUserId = getIntent().getIntExtra("currentUserId", -1);
         sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         updateMenuItems();
 
@@ -146,12 +149,14 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             Intent intent = new Intent(HomeActivity.this, MoreInfoActivity.class);
             startActivity(intent);
         });
+
         btnStartRecording.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, StartRecordingActivity.class);
             startActivity(intent);
         });
 
         SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnStartRecording, btnInstructions);
+
         btnBluetooth.setOnClickListener(v -> {
             if (!allPermissionsGranted()) {
                 ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
@@ -172,7 +177,10 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         startService(serviceIntent);
         bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
-        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+        Log.d(TAG, "onCreate");
+        updateUI(currentUserId);
+
+        onBackPressedCallback = new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
                 if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
@@ -182,9 +190,8 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                 }
             }
         };
-        getOnBackPressedDispatcher().addCallback(this, callback);
+        getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
 
-        Log.d(TAG, "onCreate");
     }
 
     private void updateMenuItems() {
@@ -244,12 +251,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             unbindService(serviceConnection);
             isBound = false;
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.drawer_menu, menu);
-        return true;
     }
 
     private String calculateTimeUntilSober(double bac) {
@@ -342,7 +343,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
 
             // Save BAC data to the account
             String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
-            dbHelper.updateAccount(accountId, null, null, null, null, null, null, null, timestamp, bac);
+            dbHelper.updateAccount(currentUserId, null, null, null, null, -1, null, -1.0);
 
         } catch (NumberFormatException e) {
             Log.e(TAG, "Invalid BAC data received", e);
@@ -424,4 +425,32 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             Log.e(TAG, "Invalid BAC data received", e);
         }
     }
+
+    private void updateUI(int currentUserId) {
+        if (currentUserId == -1) {
+            MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
+            accountMenuItem.setTitle("Account");
+        } else {
+            Cursor cursor = dbHelper.getAccount(currentUserId);
+            if (cursor != null && cursor.moveToFirst()) {
+                String username = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_USERNAME));
+                MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
+                accountMenuItem.setTitle(username);
+                cursor.close();
+            }
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            if (onBackPressedCallback != null && onBackPressedCallback.isEnabled()) {
+                onBackPressedCallback.handleOnBackPressed();
+                return true;
+            }
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+
 }

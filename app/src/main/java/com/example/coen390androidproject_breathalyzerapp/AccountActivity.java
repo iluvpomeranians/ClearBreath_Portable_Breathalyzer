@@ -44,8 +44,10 @@ public class AccountActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
             getSupportActionBar().setTitle("Account Management");
         }
 
@@ -59,34 +61,28 @@ public class AccountActivity extends AppCompatActivity {
         navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
-            Intent intent = null;
             if (id == R.id.nav_home) {
-                intent = new Intent(AccountActivity.this, HomeActivity.class);
+                Intent intent = new Intent(AccountActivity.this, HomeActivity.class);
                 intent.putExtra("currentUserId", currentUserId);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_settings) {
-                intent = new Intent(AccountActivity.this, SettingsActivity.class);
+                Intent intent = new Intent(AccountActivity.this, SettingsActivity.class);
                 intent.putExtra("currentUserId", currentUserId);
                 startActivity(intent);
                 return true;
-            } else if (id == R.id.nav_settings) {
-                intent = new Intent(AccountActivity.this, SettingsActivity.class);
             } else if (id == R.id.nav_manage_account) {
-                intent = new Intent(AccountActivity.this, ManageAccountActivity.class);
+                Intent intent = new Intent(AccountActivity.this, ManageAccountActivity.class);
                 intent.putExtra("currentUserId", currentUserId);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_bac_data) {
-                intent = new Intent(AccountActivity.this, BACDataActivity.class);
+                Intent intent = new Intent(AccountActivity.this, BACDataActivity.class);
                 intent.putExtra("currentUserId", currentUserId);
-            }
-            if (intent != null) {
-                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(intent);
+                return true;
             }
-            drawerLayout.closeDrawer(GravityCompat.START);
-            return true;
+            return false;
         });
 
         textViewWelcome = findViewById(R.id.textViewWelcome);

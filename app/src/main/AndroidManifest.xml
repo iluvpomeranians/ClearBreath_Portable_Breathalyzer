@@ -45,6 +45,7 @@
         <receiver android:name=".SoberNotificationReceiver" android:exported="false"/>
         <activity android:name=".ManageAccountActivity" android:exported="false" />
         <activity android:name=".BACDataActivity" android:exported="false" />
+        <activity android:name=".AccountHistoryActivity" android:exported="false" />
 
         <service
             android:name=".BluetoothService"

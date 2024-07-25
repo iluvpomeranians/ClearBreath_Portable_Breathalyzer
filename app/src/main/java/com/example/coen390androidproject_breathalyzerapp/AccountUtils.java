@@ -34,7 +34,7 @@ public class AccountUtils {
     }
 
     public boolean updateAccount(int id, String fullName, String username, String password, String gender, int age, String email, double bmi) {
-        return dbHelper.updateAccount(id, fullName, username, password, gender, age, email, bmi, null, null);
+        return dbHelper.updateAccount(id, fullName, username, password, gender, age, email, bmi);
     }
 
     public boolean deleteAccount(int id) {
