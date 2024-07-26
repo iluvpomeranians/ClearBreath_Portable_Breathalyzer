@@ -1,39 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MoreInfoActivity">
 
-    <TextView
-        android:id="@+id/device_info_text"
-        android:layout_width="379dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:text="Device Information:
-\nClearBreath Portable Breathalyzer
-\n\nThis device helps you monitor your BAC levels in real-time using advanced sensor technology.
-\n\nHere are the steps to follow to properly use this device:
-\n\n1. Connect the device to your phone via Bluetooth.
-\n\n2. Once paired, blow on the front of the device for more than 5 seconds.
-\n\n3. Carefully read the values and follow the instructions given by the device."
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
+        <TextView
+            android:id="@+id/device_info_text"
+            android:layout_width="379dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="Device Information:\nClearBreath Portable Breathalyzer\n\nThis device helps you monitor your BAC levels in real-time using advanced sensor technology.\n\nHere are the steps to follow to properly use this device:\n\n1. Connect the device to your phone via Bluetooth.\n\n2. Once paired, blow on the front of the device for more than 5 seconds.\n\n3. Carefully read the values and follow the instructions given by the device."
+            android:textSize="20dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        android:textSize="20dp"
+        <Button
+            android:id="@+id/acknowledge_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="68dp"
+            android:text="I Acknowledge This Information"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/device_info_text" />
 
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/acknowledge_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="68dp"
-        android:text="I Acknowledge This Information"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/device_info_text" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

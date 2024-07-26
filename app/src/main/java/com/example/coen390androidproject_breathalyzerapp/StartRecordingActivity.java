@@ -33,6 +33,8 @@ public class StartRecordingActivity extends AppCompatActivity {
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+            getSupportActionBar().setTitle("Record Breath");
         }
 
         progressBar = findViewById(R.id.progressBar);
@@ -56,7 +58,7 @@ public class StartRecordingActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        SettingsUtils.applySettings(this, textViewBlow, buttonStartRecording);
+        SettingsUtils.applySettings(this, textViewBlow, buttonStartRecording, btnAccountHistory);
     }
 
     private void startProgressBar() {

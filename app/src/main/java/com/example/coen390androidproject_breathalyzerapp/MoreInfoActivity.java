@@ -33,6 +33,8 @@ public class MoreInfoActivity extends AppCompatActivity {
             }
         };
         getOnBackPressedDispatcher().addCallback(this, callback);
+
+        SettingsUtils.applySettings(this, acknowledgeButton);
     }
 
     private void navigateBackToHome() {

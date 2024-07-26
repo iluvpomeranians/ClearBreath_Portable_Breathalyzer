@@ -104,7 +104,7 @@ public class AccountActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        SettingsUtils.applySettings(this, textViewWelcome);
+        SettingsUtils.applySettings(this, textViewWelcome, btnLogout, btnRegister, btnLogin);
 
         btnLogout.setOnClickListener(v -> {
             currentUserId = -1;

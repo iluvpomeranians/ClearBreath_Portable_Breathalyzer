@@ -14,6 +14,9 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class AccountHistoryActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
@@ -41,9 +44,7 @@ public class AccountHistoryActivity extends AppCompatActivity {
         dbHelper = new DBHelper(this);
         currentUserId = getIntent().getIntExtra("currentUserId", -1);
 
-
         SettingsUtils.applySettings(this, textViewBACData);
-
     }
 
     @Override

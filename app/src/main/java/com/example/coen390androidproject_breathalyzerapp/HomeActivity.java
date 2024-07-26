@@ -50,6 +50,8 @@ import java.util.Locale;
 
 public class HomeActivity extends AppCompatActivity implements BluetoothService.BluetoothDataListener {
 
+
+
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle toggle;
     private SharedPreferences sharedPreferences;
@@ -143,7 +145,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         bluetoothStatusDisplay = findViewById(R.id.bluetooth_status_display);
 
 
-        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay);
+        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnInstructions, btnStartRecording, btnBluetooth, btnPairDevices, bluetoothStatusDisplay);
 
         btnInstructions.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, MoreInfoActivity.class);
@@ -154,8 +156,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             Intent intent = new Intent(HomeActivity.this, StartRecordingActivity.class);
             startActivity(intent);
         });
-
-        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnStartRecording, btnInstructions);
 
         btnBluetooth.setOnClickListener(v -> {
             if (!allPermissionsGranted()) {
