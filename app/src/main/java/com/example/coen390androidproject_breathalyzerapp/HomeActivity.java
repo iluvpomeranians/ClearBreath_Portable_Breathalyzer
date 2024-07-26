@@ -312,13 +312,13 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
 
     private void processReceivedData(String data) {
         try {
-            data = data.replace("BAC:", "").trim(); // Remove "BAC:" prefix
+            data = data.replace("BAC:", "").trim();
             if (data.isEmpty()) {
                 return;
             }
 
             double bac = Double.parseDouble(data);
-            int bacProgress = (int) (bac * 1000); // Convert BAC to integer representation
+            int bacProgress = (int) (bac * 1000);
 
             int progressBarColor;
             if (bac < 0.02) {
@@ -326,24 +326,23 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             } else if (bac < 0.05) {
                 progressBarColor = Color.YELLOW;
             } else if (bac < 0.08) {
-                progressBarColor = Color.rgb(255, 165, 0); // Orange color
+                progressBarColor = Color.rgb(255, 165, 0);
             } else {
                 progressBarColor = Color.RED;
             }
 
             bacDisplay.setText(String.format("BAC: %.2f%%", bac));
-            circularProgressBar.setProgressWithAnimation(bacProgress, 1000L); // Animation duration of 1 second
+            circularProgressBar.setProgressWithAnimation(bacProgress, 1000L);
             circularProgressBar.setProgressBarColor(progressBarColor);
 
-            double bacMl = bac * 1000; // Convert BAC to mL
+            double bacMl = bac * 1000;
             bacMlDisplay.setText(String.format("BAC in mL: %.2f mL", bacMl));
 
             double hoursUntilSober = bac / 0.015;
             timeUntilSoberDisplay.setText(String.format("Time Until Sober: %.1f hours", hoursUntilSober));
 
-            // Save BAC data to the account
-            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
-            dbHelper.updateAccount(currentUserId, null, null, null, null, -1, null, -1.0);
+            // Save BAC data for the current user
+            dbHelper.insertBACRecord(currentUserId, bac);
 
         } catch (NumberFormatException e) {
             Log.e(TAG, "Invalid BAC data received", e);

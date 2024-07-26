@@ -28,8 +28,8 @@ public class AccountHistoryAdapter extends RecyclerView.Adapter<AccountHistoryAd
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         BACRecord record = bacRecordList.get(position);
-        holder.bacValue.setText(String.valueOf(record.getBac()));
-        holder.timestamp.setText(record.getTimestamp());
+        holder.bacTextView.setText(String.format("BAC: %.2f", record.getBacValue()));
+        holder.timestampTextView.setText(String.format("Timestamp: %s", record.getTimestamp()));
     }
 
     @Override
@@ -38,13 +38,13 @@ public class AccountHistoryAdapter extends RecyclerView.Adapter<AccountHistoryAd
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView bacValue;
-        public TextView timestamp;
+        TextView bacTextView;
+        TextView timestampTextView;
 
-        public ViewHolder(View itemView) {
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            bacValue = itemView.findViewById(R.id.bac_value);
-            timestamp = itemView.findViewById(R.id.timestamp);
+            bacTextView = itemView.findViewById(R.id.bacTextView);
+            timestampTextView = itemView.findViewById(R.id.timestampTextView);
         }
     }
 }

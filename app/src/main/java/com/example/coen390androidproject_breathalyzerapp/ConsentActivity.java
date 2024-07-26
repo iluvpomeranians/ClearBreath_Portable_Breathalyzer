@@ -29,10 +29,9 @@ public class ConsentActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-
-        SettingsUtils.applySettings(this, textViewConsent, textViewConsentDetails);
-
         textViewConsent.setText(String.format("We require your consent to collect and use your personal information, such as your gender, age and BMI. This information will be used solely for enhancing your experience within the application. By pressing 'I Acknowledge', you consent to provide this information."));
+
+        SettingsUtils.applySettings(this, textViewConsent, textViewConsentDetails, acknowledgeButton);
     }
 
 }

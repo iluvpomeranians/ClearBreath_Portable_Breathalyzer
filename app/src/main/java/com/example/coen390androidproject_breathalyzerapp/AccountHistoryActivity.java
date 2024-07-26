@@ -4,7 +4,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.MenuItem;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -24,11 +24,14 @@ import java.util.List;
 public class AccountHistoryActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
-    private ActionBarDrawerToggle toggle;
     private NavigationView navigationView;
+
     private RecyclerView recyclerView;
+    private AccountHistoryAdapter adapter;
     private DBHelper dbHelper;
     private int currentUserId;
+    private TextView textViewBACData;
+    private ActionBarDrawerToggle toggle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,53 +46,74 @@ public class AccountHistoryActivity extends AppCompatActivity {
             getSupportActionBar().setTitle("Account History");
         }
 
-        recyclerView = findViewById(R.id.recycler_view);
+        textViewBACData = findViewById(R.id.textViewBACData);
+        recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         dbHelper = new DBHelper(this);
         currentUserId = getIntent().getIntExtra("currentUserId", -1);
 
-        loadAccountHistory();
+        displayBACData();
 
+        SettingsUtils.applySettings(this, textViewBACData);
 
-        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                navigateBackToHome();
+        drawerLayout = findViewById(R.id.drawer_layout);
+        toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+
+        navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.nav_home) {
+                Intent intent = new Intent(AccountHistoryActivity.this, HomeActivity.class);
+                intent.putExtra("currentUserId", currentUserId);
+                startActivity(intent);
+                return true;
+            } else if (id == R.id.nav_settings) {
+                Intent intent = new Intent(AccountHistoryActivity.this, SettingsActivity.class);
+                intent.putExtra("currentUserId", currentUserId);
+                startActivity(intent);
+                return true;
+            } else if (id == R.id.nav_manage_account) {
+                Intent intent = new Intent(AccountHistoryActivity.this, ManageAccountActivity.class);
+                intent.putExtra("currentUserId", currentUserId);
+                startActivity(intent);
+                return true;
+            } else if (id == R.id.nav_account) {
+                Intent intent = new Intent(AccountHistoryActivity.this, AccountActivity.class);
+                intent.putExtra("currentUserId", currentUserId);
+                startActivity(intent);
+                return true;
             }
-        };
-        getOnBackPressedDispatcher().addCallback(this, callback);
-
-        SettingsUtils.applySettings(this);
+            return false;
+        });
     }
 
-    private void loadAccountHistory() {
+    private void displayBACData() {
         List<BACRecord> bacRecordList = new ArrayList<>();
         Cursor cursor = dbHelper.getBACRecords(currentUserId);
         if (cursor != null && cursor.moveToFirst()) {
+            StringBuilder data = new StringBuilder();
             do {
-                String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
                 double bac = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BAC_VALUE));
+                String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
                 bacRecordList.add(new BACRecord(bac, timestamp));
+                data.append("Timestamp: ").append(timestamp).append(", BAC: ").append(bac).append("\n");
             } while (cursor.moveToNext());
             cursor.close();
         }
-
-        AccountHistoryAdapter adapter = new AccountHistoryAdapter(bacRecordList);
+        adapter = new AccountHistoryAdapter(bacRecordList);
         recyclerView.setAdapter(adapter);
     }
 
-    private void navigateBackToHome() {
-        Intent intent = new Intent(AccountHistoryActivity.this, StartRecordingActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        startActivity(intent);
-        finish();
-    }
-
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull android.view.MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            navigateBackToHome();
+            Intent intent = new Intent(AccountHistoryActivity.this, StartRecordingActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            startActivity(intent);
+            finish();
             return true;
         }
         return super.onOptionsItemSelected(item);

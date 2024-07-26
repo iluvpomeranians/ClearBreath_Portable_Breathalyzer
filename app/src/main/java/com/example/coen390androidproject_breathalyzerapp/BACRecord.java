@@ -1,16 +1,16 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
 public class BACRecord {
-    private double bac;
+    private double bacValue;
     private String timestamp;
 
-    public BACRecord(double bac, String timestamp) {
-        this.bac = bac;
+    public BACRecord(double bacValue, String timestamp) {
+        this.bacValue = bacValue;
         this.timestamp = timestamp;
     }
 
-    public double getBac() {
-        return bac;
+    public double getBacValue() {
+        return bacValue;
     }
 
     public String getTimestamp() {

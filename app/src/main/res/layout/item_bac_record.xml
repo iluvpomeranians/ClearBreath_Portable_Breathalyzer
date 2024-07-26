@@ -6,19 +6,18 @@
     android:padding="8dp">
 
     <TextView
-        android:id="@+id/bac_value"
+        android:id="@+id/bacTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="BAC"
-        android:textSize="16sp" />
+        android:textSize="16sp"
+        android:text="BAC: " />
 
     <TextView
-        android:id="@+id/timestamp"
+        android:id="@+id/timestampTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="Timestamp"
-        android:textSize="16sp" />
-
+        android:textSize="16sp"
+        android:text="Timestamp: " />
 </LinearLayout>

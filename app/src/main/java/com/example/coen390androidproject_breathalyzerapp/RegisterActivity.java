@@ -74,15 +74,6 @@ public class RegisterActivity extends AppCompatActivity {
         boolean loggedIn = sharedPreferences.getBoolean("loggedIn", false);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
 
-        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                Intent intent = new Intent(RegisterActivity.this, AccountActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        };
-        getOnBackPressedDispatcher().addCallback(this, callback);
     }
 
     private void setInputRestrictions() {
@@ -236,9 +227,12 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull android.view.MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            moveTaskToBack(true);
+            Intent intent = new Intent(RegisterActivity.this, AccountActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            startActivity(intent);
+            finish();
             return true;
         }
         return super.onOptionsItemSelected(item);

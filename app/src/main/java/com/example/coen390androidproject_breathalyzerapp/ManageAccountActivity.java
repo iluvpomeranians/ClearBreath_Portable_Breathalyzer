@@ -58,6 +58,11 @@ public class ManageAccountActivity extends AppCompatActivity {
                 intent.putExtra("currentUserId", currentUserId);
                 startActivity(intent);
                 return true;
+            } else if (id == R.id.nav_account) {
+                Intent intent = new Intent(ManageAccountActivity.this, AccountActivity.class);
+                intent.putExtra("currentUserId", currentUserId);
+                startActivity(intent);
+                return true;
             }
             return false;
         });
