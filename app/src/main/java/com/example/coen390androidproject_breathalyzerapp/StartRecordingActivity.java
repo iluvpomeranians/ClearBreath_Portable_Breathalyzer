@@ -1,5 +1,6 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MenuItem;
@@ -14,9 +15,11 @@ public class StartRecordingActivity extends AppCompatActivity {
 
     private ProgressBar progressBar;
     private TextView textViewBlow;
-    private Button buttonStartRecording;
+    private Button buttonStartRecording, btnAccountHistory;
     private int progressStatus = 0;
     private Handler handler = new Handler();
+    private int currentUserId;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,13 +29,18 @@ public class StartRecordingActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        currentUserId = getIntent().getIntExtra("currentUserId", -1);
+
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+            getSupportActionBar().setTitle("Record Breath");
         }
 
         progressBar = findViewById(R.id.progressBar);
         textViewBlow = findViewById(R.id.textView_blow);
         buttonStartRecording = findViewById(R.id.button_start_recording);
+        btnAccountHistory = findViewById(R.id.button_account_history);
 
         buttonStartRecording.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -43,7 +51,14 @@ public class StartRecordingActivity extends AppCompatActivity {
                 startProgressBar();
             }
         });
-        SettingsUtils.applySettings(this, textViewBlow, buttonStartRecording);
+
+        btnAccountHistory.setOnClickListener(v -> {
+            Intent intent = new Intent(StartRecordingActivity.this, AccountHistoryActivity.class);
+            intent.putExtra("currentUserId", currentUserId);
+            startActivity(intent);
+        });
+
+        SettingsUtils.applySettings(this, textViewBlow, buttonStartRecording, btnAccountHistory);
     }
 
     private void startProgressBar() {

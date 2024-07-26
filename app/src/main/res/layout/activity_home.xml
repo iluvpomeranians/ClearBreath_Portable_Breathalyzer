@@ -19,9 +19,9 @@
             android:background="?attr/colorPrimary"
             android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <com.mikhaellopez.circularprogressbar.CircularProgressBar
             android:id="@+id/circularProgressBar"
@@ -39,9 +39,6 @@
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/toolbar" />
-
-        <!-- Sober Label -->
-
 
         <TextView
             android:id="@+id/bac_display"
@@ -143,7 +140,6 @@
             app:layout_constraintStart_toStartOf="@+id/btn_bluetooth"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.998" />
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

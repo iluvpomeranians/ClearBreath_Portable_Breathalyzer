@@ -28,11 +28,17 @@ public class LoginActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle("Account Login");
+        }
+
         editTextUsername = findViewById(R.id.et_username);
         editTextPassword = findViewById(R.id.et_password);
         btnLogin = findViewById(R.id.btn_login);
         dbHelper = new DBHelper(this);
         btnLogin.setOnClickListener(v -> login());
+        SettingsUtils.applySettings(this, editTextUsername, editTextPassword, btnLogin);
     }
 
     private void saveLoginState(int userId, boolean loggedIn) {

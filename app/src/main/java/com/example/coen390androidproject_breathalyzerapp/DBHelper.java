@@ -21,10 +21,10 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String COLUMN_EMAIL = "email";
     public static final String COLUMN_BMI = "bmi";
 
-    public static final String TABLE_HISTORY = "history";
+    public static final String TABLE_BAC_DATA = "bac_data";
     public static final String COLUMN_ACCOUNT_ID = "account_id";
     public static final String COLUMN_TIMESTAMP = "timestamp";
-    public static final String COLUMN_BAC = "bac";
+    public static final String COLUMN_BAC_VALUE = "bac_value";
 
     public DBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -44,20 +44,20 @@ public class DBHelper extends SQLiteOpenHelper {
                 ")";
         db.execSQL(createAccountsTable);
 
-        String createHistoryTable = "CREATE TABLE " + TABLE_HISTORY + " (" +
+        String createBACDataTable = "CREATE TABLE " + TABLE_BAC_DATA + " (" +
                 COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COLUMN_ACCOUNT_ID + " INTEGER, " +
                 COLUMN_TIMESTAMP + " DATETIME DEFAULT CURRENT_TIMESTAMP, " +
-                COLUMN_BAC + " REAL, " +
+                COLUMN_BAC_VALUE + " REAL, " +
                 "FOREIGN KEY(" + COLUMN_ACCOUNT_ID + ") REFERENCES " + TABLE_ACCOUNTS + "(" + COLUMN_ID + ")" +
                 ")";
-        db.execSQL(createHistoryTable);
+        db.execSQL(createBACDataTable);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_ACCOUNTS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_HISTORY);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_BAC_DATA);
         onCreate(db);
     }
 
@@ -74,39 +74,19 @@ public class DBHelper extends SQLiteOpenHelper {
         return db.insert(TABLE_ACCOUNTS, null, values);
     }
 
-    public boolean updateAccount(int id,
-                                 String fullName,
-                                 String username,
-                                 String password, String gender, Integer age, String email, Double bmi) {
+    public boolean updateAccount(int id, String fullName, String username, String password, String gender, Integer age, String email, Double bmi) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-
-        if (fullName != null) {
-            values.put(COLUMN_FULL_NAME, fullName);
-        }
-        if (username != null) {
-            values.put(COLUMN_USERNAME, username);
-        }
-        if (password != null) {
-            values.put(COLUMN_PASSWORD, password);
-        }
-        if (gender != null) {
-            values.put(COLUMN_GENDER, gender);
-        }
-        if (age != null) {
-            values.put(COLUMN_AGE, age);
-        }
-        if (email != null) {
-            values.put(COLUMN_EMAIL, email);
-        }
-        if (bmi != null) {
-            values.put(COLUMN_BMI, bmi);
-        }
-
+        if (fullName != null) values.put(COLUMN_FULL_NAME, fullName);
+        if (username != null) values.put(COLUMN_USERNAME, username);
+        if (password != null) values.put(COLUMN_PASSWORD, password);
+        if (gender != null) values.put(COLUMN_GENDER, gender);
+        if (age != null) values.put(COLUMN_AGE, age);
+        if (email != null) values.put(COLUMN_EMAIL, email);
+        if (bmi != null) values.put(COLUMN_BMI, bmi);
         int rowsAffected = db.update(TABLE_ACCOUNTS, values, COLUMN_ID + " = ?", new String[]{String.valueOf(id)});
         return rowsAffected > 0;
     }
-
 
     public boolean deleteAccount(int id) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -125,6 +105,14 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public Cursor getBACRecords(int accountId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.query(TABLE_HISTORY, null, COLUMN_ACCOUNT_ID + " = ?", new String[]{String.valueOf(accountId)}, null, null, COLUMN_TIMESTAMP + " DESC");
+        return db.query(TABLE_BAC_DATA, null, COLUMN_ACCOUNT_ID + " = ?", new String[]{String.valueOf(accountId)}, null, null, COLUMN_TIMESTAMP + " DESC");
+    }
+
+    public long insertBACRecord(int accountId, double bacValue) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_ACCOUNT_ID, accountId);
+        values.put(COLUMN_BAC_VALUE, bacValue);
+        return db.insert(TABLE_BAC_DATA, null, values);
     }
 }

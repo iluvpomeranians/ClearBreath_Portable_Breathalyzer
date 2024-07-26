@@ -2,6 +2,8 @@ package com.example.coen390androidproject_breathalyzerapp;
 
 import android.content.ContentValues;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.InputFilter;
@@ -17,9 +19,16 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import android.text.InputFilter;
+import android.text.Spanned;
+import android.text.method.DigitsKeyListener;
+import android.widget.ArrayAdapter;
+import android.view.Menu;
+import android.view.MenuItem;
 import com.google.android.material.navigation.NavigationView;
 
 public class RegisterActivity extends AppCompatActivity {
+
     private EditText editTextFullName, editTextUsername, editTextPassword, editTextConfirmPassword, editTextAge, editTextBMI;
     private Spinner spinnerGender;
     private Button btnRegister;
@@ -35,6 +44,12 @@ public class RegisterActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+            getSupportActionBar().setTitle("Account Registration");
+        }
 
         editTextFullName = findViewById(R.id.editTextFullName);
         editTextUsername = findViewById(R.id.editTextUsername);
@@ -65,17 +80,9 @@ public class RegisterActivity extends AppCompatActivity {
         boolean loggedIn = sharedPreferences.getBoolean("loggedIn", false);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
 
-        onBackPressedCallback = new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                moveTaskToBack(true);
-            }
-        };
-        getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
     }
 
     private void setInputRestrictions() {
-        // Full Name: Only letters and spaces
         editTextFullName.setFilters(new InputFilter[]{
                 new InputFilter() {
                     @Override
@@ -228,7 +235,10 @@ public class RegisterActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull android.view.MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            moveTaskToBack(true);
+            Intent intent = new Intent(RegisterActivity.this, AccountActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            startActivity(intent);
+            finish();
             return true;
         }
         return super.onOptionsItemSelected(item);
