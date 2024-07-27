@@ -22,7 +22,7 @@ public class BluetoothHelper {
         void onDataReceived(String data);
     }
 
-    private static final String DEVICE_NAME = "ESP32_Sensor";
+    private static final String DEVICE_NAME = "ClearBreath";
     private static final String TAG = "BluetoothHelper";
     private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // Standard SPP UUID
 

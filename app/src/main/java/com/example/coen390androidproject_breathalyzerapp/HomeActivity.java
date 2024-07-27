@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -43,14 +44,13 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
+import app.juky.squircleview.views.SquircleButton;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
 public class HomeActivity extends AppCompatActivity implements BluetoothService.BluetoothDataListener {
-
-
 
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle toggle;
@@ -59,10 +59,10 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private TextView bacMlDisplay;
     private TextView timeUntilSoberDisplay;
     private CircularProgressBar circularProgressBar;
-    private Button btnInstructions;
-    private Button btnStartRecording;
-    private Button btnBluetooth;
-    private Button btnPairDevices;
+    private SquircleButton btnInstructions;
+    private SquircleButton btnStartRecording;
+    private SquircleButton btnBluetooth;
+    private SquircleButton btnPairDevices;
     private TextView bluetoothStatusDisplay;
     private int currentUserId = -1;
     private BluetoothService bluetoothService;
@@ -70,6 +70,8 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private static final String TAG = "HomeActivity";
     private NavigationView navigationView, navigationViewUI;
     private OnBackPressedCallback onBackPressedCallback;
+    private boolean isBluetoothOn = false; // check if it is on or off
+
 
     private static final int REQUEST_CODE_PERMISSIONS = 101;
     private static final String[] REQUIRED_PERMISSIONS = new String[]{
@@ -86,8 +88,10 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+            Toolbar toolbar = findViewById(R.id.toolbar);
+            setSupportActionBar(toolbar);
+
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -162,6 +166,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                 ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
             } else {
                 setupBluetoothService();
+                toggleBluetooth(btnBluetooth);
             }
         });
 
@@ -289,10 +294,22 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (!allPermissionsGranted()) {
-                ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
+            boolean allPermissionsGranted = true;
+
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    allPermissionsGranted = false;
+                    break;
+                }
+            }
+
+            // check if the user accepts essential permissions
+            if (allPermissionsGranted) {
                 setupBluetoothService();
+            } else {
+                Toast.makeText(this, "Permissions not granted", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -304,6 +321,9 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             Toast.makeText(this, "Bluetooth service not connected", Toast.LENGTH_SHORT).show();
         }
     }
+
+
+
 
     @Override
     public void onDataReceived(String data) {
@@ -451,5 +471,13 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         return super.onOptionsItemSelected(item);
     }
 
-
-}
+    // method change the bluetooth On/off button depending the use case of the user
+    private void toggleBluetooth(SquircleButton button) {
+        if (isBluetoothOn) {
+            button.setText("Bluetooth On");
+        } else {
+            button.setText("Bluetooth Off");
+        }
+        isBluetoothOn = !isBluetoothOn;
+    }
+    }

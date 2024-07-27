@@ -29,18 +29,22 @@ public class SettingsUtils {
             textView.setTypeface(typeface);
         }
 
-        // Retrieving and applying toolbar color to the status bar so it matches the toolbar colour
+        // Retrieving and applying toolbar color
         int toolbarColor = sharedPreferences.getInt("toolbar_color", Color.BLUE);
         if (context instanceof AppCompatActivity) {
             AppCompatActivity activity = (AppCompatActivity) context;
             Toolbar toolbar = activity.findViewById(R.id.toolbar);
             if (toolbar != null) {
                 toolbar.setBackgroundColor(toolbarColor);
-                // Set the status bar color to the same as the toolbar color with for API33 (Android 13)
-                if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    activity.getWindow().setStatusBarColor(toolbarColor);
-                }
             }
+            // Apply status bar color
+            setStatusBarColor(activity, toolbarColor);
+        }
+    }
+
+    public static void setStatusBarColor(AppCompatActivity activity, int color) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            activity.getWindow().setStatusBarColor(color);
         }
     }
 }

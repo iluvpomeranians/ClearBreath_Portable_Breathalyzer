@@ -8,83 +8,104 @@
     android:layout_height="match_parent"
     tools:context=".ManageAccountActivity">
 
-    <ScrollView
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/linearLayout2"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/linearLayout2"
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimary"
+            android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="?attr/colorPrimary"
-                android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-                android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+        <EditText
+            android:id="@+id/editTextUsername"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:hint="Username"
+            android:inputType="text"
+            android:minWidth="400dp"
+            android:minHeight="40dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.545"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar" />
 
-            <EditText
-                android:id="@+id/editTextUsername"
-                android:layout_width="379dp"
-                android:layout_height="wrap_content"
-                android:hint="Username"
-                android:inputType="text"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                tools:layout_editor_absoluteY="149dp" />
+        <EditText
+            android:id="@+id/editTextAge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="400dp"
+            android:minHeight="40dp"
+            android:hint="Age"
+            android:inputType="number"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/editTextUsername" />
 
-            <EditText
-                android:id="@+id/editTextAge"
-                android:layout_width="379dp"
-                android:layout_height="wrap_content"
-                android:hint="Age"
-                android:inputType="number"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/editTextUsername" />
+        <EditText
+            android:id="@+id/editTextBMI"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="400dp"
+            android:minHeight="40dp"
+            android:hint="BMI"
+            android:inputType="numberDecimal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/editTextAge" />
 
-            <EditText
-                android:id="@+id/editTextBMI"
-                android:layout_width="379dp"
-                android:layout_height="wrap_content"
-                android:hint="BMI"
-                android:inputType="numberDecimal"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/editTextAge" />
+        <app.juky.squircleview.views.SquircleButton
+            android:id="@+id/buttonSaveChanges"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:minWidth="200dp"
+            android:minHeight="30dp"
+            android:text="Save Changes"
+            android:textColor="@android:color/white"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.497"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/editTextBMI"
+            app:squircle_background_color="@android:color/holo_green_light" />
 
-            <Button
-                android:id="@+id/buttonSaveChanges"
-                android:layout_width="379dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="252dp"
-                android:background="@android:color/holo_green_light"
-                android:text="Save Changes"
-                android:textColor="@android:color/white"
-                android:textSize="16sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/editTextBMI" />
+        <app.juky.squircleview.views.SquircleButton
+            android:id="@+id/buttonDeleteAccount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="200dp"
+            android:minHeight="30dp"
+            android:text="Delete Account"
+            android:textColor="@android:color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.497"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/buttonSaveChanges"
+            app:layout_constraintVertical_bias="0.0"
+            app:squircle_background_color="@android:color/holo_red_light" />
 
-            <Button
-                android:id="@+id/buttonDeleteAccount"
-                android:layout_width="379dp"
-                android:layout_height="wrap_content"
-                android:background="@android:color/holo_red_light"
-                android:text="Delete Account"
-                android:textColor="@android:color/white"
-                android:textSize="16sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/buttonSaveChanges"
-                app:layout_constraintVertical_bias="0.171" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </ScrollView>
+        <ImageView
+            android:id="@+id/mascots_image"
+            android:layout_width="350dp"
+            android:layout_height="350dp"
+            android:layout_marginBottom="28dp"
+            android:src="@drawable/ic_appicon"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.491"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/buttonDeleteAccount"
+            app:layout_constraintVertical_bias="1.0" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"

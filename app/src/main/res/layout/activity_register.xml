@@ -9,7 +9,7 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content" >
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
@@ -25,9 +25,9 @@
 
         <EditText
             android:id="@+id/editTextFullName"
-            android:layout_width="379dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="36dp"
+            android:layout_marginTop="16dp"
             android:hint="Full Name"
             android:inputType="textPersonName"
             app:layout_constraintEnd_toEndOf="parent"
@@ -36,8 +36,9 @@
 
         <EditText
             android:id="@+id/editTextUsername"
-            android:layout_width="379dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:hint="Username"
             android:inputType="text"
             app:layout_constraintEnd_toEndOf="parent"
@@ -46,9 +47,9 @@
 
         <EditText
             android:id="@+id/editTextPassword"
-            android:layout_width="379dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="8dp"
             android:hint="Password"
             android:inputType="textPassword"
             app:layout_constraintEnd_toEndOf="parent"
@@ -57,8 +58,9 @@
 
         <EditText
             android:id="@+id/editTextConfirmPassword"
-            android:layout_width="379dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:hint="Confirm Password"
             android:inputType="textPassword"
             app:layout_constraintEnd_toEndOf="parent"
@@ -67,17 +69,29 @@
 
         <EditText
             android:id="@+id/editTextAge"
-            android:layout_width="379dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:hint="Age"
             android:inputType="number"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/editTextConfirmPassword" />
 
+        <TextView
+            android:id="@+id/GenderTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Gender"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/editTextAge" />
+
         <Spinner
             android:id="@+id/spinnerGender"
-            android:layout_width="379dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:entries="@array/gender_options"
@@ -88,39 +102,31 @@
 
         <EditText
             android:id="@+id/editTextBMI"
-            android:layout_width="379dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:hint="BMI"
             android:inputType="numberDecimal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/spinnerGender" />
 
-        <Button
+        <app.juky.squircleview.views.SquircleButton
             android:id="@+id/buttonRegister"
-            android:layout_width="379dp"
-            android:layout_height="wrap_content"
-            android:background="?attr/colorPrimary"
-            android:text="Register"
-            android:textColor="@android:color/black"
-            android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editTextBMI"
-            app:layout_constraintVertical_bias="0.25" />
-
-        <TextView
-            android:id="@+id/GenderTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Gender"
-            android:textSize="16sp"
+            android:minWidth="300dp"
+            android:minHeight="60dp"
+            android:layout_marginTop="16dp"
+            android:background="?attr/colorPrimary"
+            android:text="Register"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.044"
+            app:layout_constraintHorizontal_bias="0.495"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editTextAge"
-            tools:ignore="MissingConstraints" />
+            app:layout_constraintTop_toBottomOf="@+id/editTextBMI"
+            app:layout_constraintVertical_bias="1.0"
+            app:squircle_background_color="#D3D3D3" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
