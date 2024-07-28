@@ -2,6 +2,7 @@ package com.example.coen390androidproject_breathalyzerapp;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,16 +22,17 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
+import app.juky.squircleview.views.SquircleButton;
 
 public class AccountActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle toggle;
     private TextView textViewWelcome;
-    private Button btnLogin, btnRegister;
+    private SquircleButton btnLogin, btnRegister;
     private NavigationView navigationView;
     private DBHelper dbHelper;
-    private Button btnLogout;
+    private SquircleButton btnLogout;
     private int currentUserId = -1;
     private OnBackPressedCallback onBackPressedCallback;
 
@@ -38,6 +40,9 @@ public class AccountActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_account);
+
+        // lock our app to portrait
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);

@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.google.material)
     implementation("com.mikhaellopez:circularprogressbar:3.1.0")
+    implementation("app.juky:squircleview:0.6.1")
     implementation(libs.firebase.inappmessaging)
     implementation(libs.androidx.preference)
     testImplementation(libs.junit)
