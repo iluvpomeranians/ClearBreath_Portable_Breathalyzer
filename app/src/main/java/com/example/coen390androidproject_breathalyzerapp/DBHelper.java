@@ -108,10 +108,11 @@ public class DBHelper extends SQLiteOpenHelper {
         return db.query(TABLE_BAC_DATA, null, COLUMN_ACCOUNT_ID + " = ?", new String[]{String.valueOf(accountId)}, null, null, COLUMN_TIMESTAMP + " DESC");
     }
 
-    public long insertBACRecord(int accountId, double bacValue) {
+    public long insertBACRecord(int accountId, String timestamp, double bacValue) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COLUMN_ACCOUNT_ID, accountId);
+        values.put(COLUMN_TIMESTAMP, timestamp); // Add timestamp
         values.put(COLUMN_BAC_VALUE, bacValue);
         return db.insert(TABLE_BAC_DATA, null, values);
     }

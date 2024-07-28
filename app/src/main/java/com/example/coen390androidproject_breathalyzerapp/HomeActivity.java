@@ -341,8 +341,9 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             double hoursUntilSober = bac / 0.015;
             timeUntilSoberDisplay.setText(String.format("Time Until Sober: %.1f hours", hoursUntilSober));
 
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH).format(new Date());
             // Save BAC data for the current user
-            dbHelper.insertBACRecord(currentUserId, bac);
+            dbHelper.insertBACRecord(currentUserId, timestamp, bac);
 
         } catch (NumberFormatException e) {
             Log.e(TAG, "Invalid BAC data received", e);
