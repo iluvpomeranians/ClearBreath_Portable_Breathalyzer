@@ -28,7 +28,9 @@ import android.view.MenuItem;
 
 import android.util.Log;
 import android.view.Menu;
+import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -56,6 +58,9 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private ActionBarDrawerToggle toggle;
     private SharedPreferences sharedPreferences;
     private TextView bacDisplay;
+    private ProgressBar progressBar;
+    private TextView textViewBlow;
+    private SquircleButton buttonStartRecording, btnAccountHistory;
     private TextView bacMlDisplay;
     private TextView timeUntilSoberDisplay;
     private CircularProgressBar circularProgressBar;
@@ -71,6 +76,9 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private NavigationView navigationView, navigationViewUI;
     private OnBackPressedCallback onBackPressedCallback;
     private boolean isBluetoothOn = false; // check if it is on or off
+    private Handler handler = new Handler();
+    private int progressStatus = 0;
+
 
 
     private static final int REQUEST_CODE_PERMISSIONS = 101;
@@ -138,28 +146,45 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         updateMenuItems();
 
+        progressBar = findViewById(R.id.progressBar);
+        textViewBlow = findViewById(R.id.textView_blow);
+        buttonStartRecording = findViewById(R.id.btn_start_recording);
+        btnAccountHistory = findViewById(R.id.button_account_history);
         circularProgressBar = findViewById(R.id.circularProgressBar);
         bacDisplay = findViewById(R.id.bac_display);
         bacMlDisplay = findViewById(R.id.bac_ml_display);
         timeUntilSoberDisplay = findViewById(R.id.time_until_sober_display);
         btnInstructions = findViewById(R.id.btn_more_info);
-        btnStartRecording = findViewById(R.id.btn_start_recording);
         btnBluetooth = findViewById(R.id.btn_bluetooth);
         btnPairDevices = findViewById(R.id.btn_pairdevices);
         bluetoothStatusDisplay = findViewById(R.id.bluetooth_status_display);
 
 
-        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnInstructions, btnStartRecording, btnBluetooth, btnPairDevices, bluetoothStatusDisplay);
+        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, buttonStartRecording, btnBluetooth, btnAccountHistory, btnPairDevices, bluetoothStatusDisplay, textViewBlow);
+
+        buttonStartRecording.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                progressBar.setVisibility(View.VISIBLE);
+                textViewBlow.setVisibility(View.VISIBLE);
+                buttonStartRecording.setEnabled(false);
+                startProgressBar();
+            }
+        });
+
+        btnAccountHistory.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, AccountHistoryActivity.class);
+            intent.putExtra("currentUserId", currentUserId);
+            startActivity(intent);
+        });
+
+
 
         btnInstructions.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, MoreInfoActivity.class);
             startActivity(intent);
         });
 
-        btnStartRecording.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, StartRecordingActivity.class);
-            startActivity(intent);
-        });
 
         btnBluetooth.setOnClickListener(v -> {
             if (!allPermissionsGranted()) {
@@ -198,7 +223,41 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
 
     }
+    private void startProgressBar() {
+        // Reset progress status
+        progressStatus = 0;
+        progressBar.setProgress(progressStatus);
 
+        // Start long running operation in a background thread
+        new Thread(new Runnable() {
+            public void run() {
+                while (progressStatus < 100) {
+                    progressStatus += 1;
+
+                    // Update the progress bar and display the current value
+                    handler.post(new Runnable() {
+                        public void run() {
+                            progressBar.setProgress(progressStatus);
+                        }
+                    });
+                    try {
+                        // Sleep for 150 milliseconds to simulate the progress
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                // When the progress is completed
+                handler.post(new Runnable() {
+                    public void run() {
+                        textViewBlow.setVisibility(View.GONE);
+                        buttonStartRecording.setEnabled(true);
+                    }
+                });
+            }
+        }).start();
+    }
     private void updateMenuItems() {
         boolean isLoggedIn = sharedPreferences.getBoolean("is_logged_in", false);
         NavigationView navigationView = findViewById(R.id.nav_view);
@@ -232,15 +291,15 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         dialogFragment.show(getSupportFragmentManager(), "deviceListDialog");
     }
 
-    @Override
+    /*@Override
     protected void onResume() {
         super.onResume();
-        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay);
-        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnStartRecording, btnInstructions);
+        //SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnStartRecording, btnInstructions);
         updateBluetoothStatus();
         updateMenuItems();
         Log.d(TAG, "onResume");
-    }
+    }*/
+
 
     @Override
     protected void onPause() {
