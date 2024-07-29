@@ -19,9 +19,9 @@
             android:background="?attr/colorPrimary"
             android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.mikhaellopez.circularprogressbar.CircularProgressBar
             android:id="@+id/circularProgressBar"
@@ -44,7 +44,7 @@
             android:id="@+id/bac_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="4dp"
             android:text="BAC: 0.00%"
             android:textSize="32sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -56,7 +56,7 @@
             android:id="@+id/bac_ml_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="4dp"
             android:text="BAC in mL: 0.00 mL"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -68,7 +68,7 @@
             android:id="@+id/time_until_sober_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="4dp"
             android:text="Time Until Sober: 0.0 hours"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -80,7 +80,7 @@
             android:id="@+id/bluetooth_status_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="4dp"
             android:text="Status: Not connected"
             android:textColor="#FF0000"
             android:textSize="16sp"
@@ -93,7 +93,7 @@
             android:id="@+id/btn_more_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="4dp"
             android:minWidth="160dp"
             android:minHeight="30dp"
             android:text="Instructions"
@@ -108,8 +108,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:minWidth="160dp"
-            android:minHeight="100dp"
+            android:minWidth="200dp"
+            android:minHeight="40dp"
             android:text="Start Recording"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
@@ -118,10 +118,50 @@
             app:squircle_background_color="#D3D3D3" />
 
         <app.juky.squircleview.views.SquircleButton
+            android:id="@+id/button_account_history"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Account History"
+            android:minWidth="160dp"
+            android:minHeight="30dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:squircle_background_color="#D3D3D3"
+            app:layout_constraintTop_toBottomOf="@+id/textView_blow"
+            app:layout_constraintVertical_bias="0.081" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btn_start_recording" />
+
+        <TextView
+            android:id="@+id/textView_blow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="BLOW!"
+            android:textAllCaps="true"
+            android:textSize="24sp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/progressBar" />
+
+        <app.juky.squircleview.views.SquircleButton
             android:id="@+id/btn_bluetooth"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="112dp"
             android:minWidth="140dp"
             android:minHeight="40dp"
             android:text="Bluetooth On"
@@ -134,7 +174,7 @@
             android:id="@+id/btn_pairdevices"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="112dp"
             android:minWidth="140dp"
             android:minHeight="40dp"
             android:text="Pair Devices"
@@ -150,6 +190,6 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        app:headerLayout="@layout/nav_header"
         app:menu="@menu/drawer_menu" />
-
 </androidx.drawerlayout.widget.DrawerLayout>
