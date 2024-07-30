@@ -16,6 +16,8 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
+import app.juky.squircleview.views.SquircleButton;
+
 
 public class ManageAccountActivity extends AppCompatActivity {
 
@@ -23,7 +25,7 @@ public class ManageAccountActivity extends AppCompatActivity {
     private ActionBarDrawerToggle toggle;
     private NavigationView navigationView;
     private EditText editTextUsername, editTextAge, editTextBMI;
-    private Button buttonSaveChanges, buttonDeleteAccount;
+    private SquircleButton buttonSaveChanges, buttonDeleteAccount;
     private DBHelper dbHelper;
     private int currentUserId = -1;
 

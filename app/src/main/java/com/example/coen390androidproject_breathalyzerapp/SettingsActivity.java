@@ -3,8 +3,11 @@ package com.example.coen390androidproject_breathalyzerapp;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,6 +24,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
 import androidx.activity.OnBackPressedCallback;
+import app.juky.squircleview.views.SquircleButton;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -29,7 +33,7 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView sampleTextView;
     private GridLayout colorGrid;
     private Toolbar toolbar;
-    private Button apply_button;
+    private SquircleButton apply_button;
 
     private SharedPreferences sharedPreferences;
 
@@ -51,6 +55,9 @@ public class SettingsActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        // lock our app to portrait
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setTitle("Settings");
@@ -67,11 +74,18 @@ public class SettingsActivity extends AppCompatActivity {
         setupTextSizeSeekBar();
         setupFontSpinner();
         setupColorGrid();
-        apply_button.setOnClickListener(v ->
-        {
+        apply_button.setOnClickListener(v -> {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            int selectedColor = ((ColorDrawable) toolbar.getBackground()).getColor();
+            editor.putInt("toolbar_color", selectedColor);
+            editor.apply();
+
+            SettingsUtils.setStatusBarColor(SettingsActivity.this, selectedColor);
+
             Intent intent = new Intent(SettingsActivity.this, HomeActivity.class);
             startActivity(intent);
         });
+
         OnBackPressedCallback callback = new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -86,8 +100,11 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void setupTextSizeSeekBar() {
-        textSizeSeekBar.setMax(50);
-        textSizeSeekBar.setProgress(sharedPreferences.getInt("text_size", 16));
+        textSizeSeekBar.setMax(20);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            textSizeSeekBar.setMin(10);
+        }
+        textSizeSeekBar.setProgress(sharedPreferences.getInt("text_size", 15));
         sampleTextView.setTextSize(textSizeSeekBar.getProgress());
 
         textSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {

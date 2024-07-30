@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -27,7 +28,9 @@ import android.view.MenuItem;
 
 import android.util.Log;
 import android.view.Menu;
+import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,6 +46,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
+import app.juky.squircleview.views.SquircleButton;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -50,19 +54,20 @@ import java.util.Locale;
 
 public class HomeActivity extends AppCompatActivity implements BluetoothService.BluetoothDataListener {
 
-
-
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle toggle;
     private SharedPreferences sharedPreferences;
     private TextView bacDisplay;
+    private ProgressBar progressBar;
+    private TextView textViewBlow;
+    private SquircleButton buttonStartRecording, btnAccountHistory;
     private TextView bacMlDisplay;
     private TextView timeUntilSoberDisplay;
     private CircularProgressBar circularProgressBar;
-    private Button btnInstructions;
-    private Button btnStartRecording;
-    private Button btnBluetooth;
-    private Button btnPairDevices;
+    private SquircleButton btnInstructions;
+    private SquircleButton btnStartRecording;
+    private SquircleButton btnBluetooth;
+    private SquircleButton btnPairDevices;
     private TextView bluetoothStatusDisplay;
     private int currentUserId = -1;
     private BluetoothService bluetoothService;
@@ -70,6 +75,11 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private static final String TAG = "HomeActivity";
     private NavigationView navigationView, navigationViewUI;
     private OnBackPressedCallback onBackPressedCallback;
+    private boolean isBluetoothOn = false; // check if it is on or off
+    private Handler handler = new Handler();
+    private int progressStatus = 0;
+
+
 
     private static final int REQUEST_CODE_PERMISSIONS = 101;
     private static final String[] REQUIRED_PERMISSIONS = new String[]{
@@ -86,8 +96,10 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+            Toolbar toolbar = findViewById(R.id.toolbar);
+            setSupportActionBar(toolbar);
+
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -134,34 +146,52 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         updateMenuItems();
 
+        progressBar = findViewById(R.id.progressBar);
+        textViewBlow = findViewById(R.id.textView_blow);
+        buttonStartRecording = findViewById(R.id.btn_start_recording);
+        btnAccountHistory = findViewById(R.id.button_account_history);
         circularProgressBar = findViewById(R.id.circularProgressBar);
         bacDisplay = findViewById(R.id.bac_display);
         bacMlDisplay = findViewById(R.id.bac_ml_display);
         timeUntilSoberDisplay = findViewById(R.id.time_until_sober_display);
         btnInstructions = findViewById(R.id.btn_more_info);
-        btnStartRecording = findViewById(R.id.btn_start_recording);
         btnBluetooth = findViewById(R.id.btn_bluetooth);
         btnPairDevices = findViewById(R.id.btn_pairdevices);
         bluetoothStatusDisplay = findViewById(R.id.bluetooth_status_display);
 
 
-        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnInstructions, btnStartRecording, btnBluetooth, btnPairDevices, bluetoothStatusDisplay);
+        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, buttonStartRecording, btnBluetooth, btnAccountHistory, btnPairDevices, bluetoothStatusDisplay, textViewBlow);
+
+        buttonStartRecording.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                progressBar.setVisibility(View.VISIBLE);
+                textViewBlow.setVisibility(View.VISIBLE);
+                buttonStartRecording.setEnabled(false);
+                startProgressBar();
+            }
+        });
+
+        btnAccountHistory.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, AccountHistoryActivity.class);
+            intent.putExtra("currentUserId", currentUserId);
+            startActivity(intent);
+        });
+
+
 
         btnInstructions.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, MoreInfoActivity.class);
             startActivity(intent);
         });
 
-        btnStartRecording.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, StartRecordingActivity.class);
-            startActivity(intent);
-        });
 
         btnBluetooth.setOnClickListener(v -> {
             if (!allPermissionsGranted()) {
                 ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
             } else {
                 setupBluetoothService();
+                toggleBluetooth(btnBluetooth);
             }
         });
 
@@ -193,7 +223,41 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
 
     }
+    private void startProgressBar() {
+        // Reset progress status
+        progressStatus = 0;
+        progressBar.setProgress(progressStatus);
 
+        // Start long running operation in a background thread
+        new Thread(new Runnable() {
+            public void run() {
+                while (progressStatus < 100) {
+                    progressStatus += 1;
+
+                    // Update the progress bar and display the current value
+                    handler.post(new Runnable() {
+                        public void run() {
+                            progressBar.setProgress(progressStatus);
+                        }
+                    });
+                    try {
+                        // Sleep for 150 milliseconds to simulate the progress
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                // When the progress is completed
+                handler.post(new Runnable() {
+                    public void run() {
+                        textViewBlow.setVisibility(View.GONE);
+                        buttonStartRecording.setEnabled(true);
+                    }
+                });
+            }
+        }).start();
+    }
     private void updateMenuItems() {
         boolean isLoggedIn = sharedPreferences.getBoolean("is_logged_in", false);
         NavigationView navigationView = findViewById(R.id.nav_view);
@@ -227,15 +291,15 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         dialogFragment.show(getSupportFragmentManager(), "deviceListDialog");
     }
 
-    @Override
+    /*@Override
     protected void onResume() {
         super.onResume();
-        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay);
-        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnStartRecording, btnInstructions);
+        //SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnStartRecording, btnInstructions);
         updateBluetoothStatus();
         updateMenuItems();
         Log.d(TAG, "onResume");
-    }
+    }*/
+
 
     @Override
     protected void onPause() {
@@ -289,10 +353,22 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (!allPermissionsGranted()) {
-                ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
+            boolean allPermissionsGranted = true;
+
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    allPermissionsGranted = false;
+                    break;
+                }
+            }
+
+            // check if the user accepts essential permissions
+            if (allPermissionsGranted) {
                 setupBluetoothService();
+            } else {
+                Toast.makeText(this, "Permissions not granted", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -304,6 +380,9 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             Toast.makeText(this, "Bluetooth service not connected", Toast.LENGTH_SHORT).show();
         }
     }
+
+
+
 
     @Override
     public void onDataReceived(String data) {
@@ -452,5 +531,13 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         return super.onOptionsItemSelected(item);
     }
 
-
-}
+    // method change the bluetooth On/off button depending the use case of the user
+    private void toggleBluetooth(SquircleButton button) {
+        if (isBluetoothOn) {
+            button.setText("Bluetooth On");
+        } else {
+            button.setText("Bluetooth Off");
+        }
+        isBluetoothOn = !isBluetoothOn;
+    }
+    }

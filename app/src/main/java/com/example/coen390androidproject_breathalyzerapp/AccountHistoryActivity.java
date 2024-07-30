@@ -249,7 +249,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            Intent intent = new Intent(AccountHistoryActivity.this, StartRecordingActivity.class);
+            Intent intent = new Intent(AccountHistoryActivity.this, HomeActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             startActivity(intent);
             finish();

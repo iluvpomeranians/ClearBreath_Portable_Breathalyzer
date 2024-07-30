@@ -70,6 +70,7 @@ dependencies {
     implementation("com.patrykandpatrick.vico:compose-m3:2.0.0-alpha.25")
     implementation("com.patrykandpatrick.vico:core:2.0.0-alpha.25")
     implementation("com.patrykandpatrick.vico:views:2.0.0-alpha.25")
+    implementation("app.juky:squircleview:0.6.1")
     implementation(libs.firebase.inappmessaging)
     implementation(libs.androidx.preference)
     testImplementation(libs.junit)
