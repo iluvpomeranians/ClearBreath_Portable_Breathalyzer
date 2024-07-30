@@ -50,8 +50,9 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     private Handler handler;
     private Runnable runnable;
 
-    private static final long REFRESH_INTERVAL_MS = 2000; // 2 seconds
-    private static final long SAVE_INTERVAL_MS = 5000; // 5 seconds
+    private static final long REFRESH_INTERVAL_MS = 10000; // 10 seconds
+    private static final int SAMPLE_COUNT = 10;
+    private List<BACRecord> bacRecordBuffer = new ArrayList<>();
     private long lastSaveTimestamp = 0;
 
     @Override
@@ -81,12 +82,12 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
             @Override
             public void run() {
                 long currentTime = System.currentTimeMillis();
-                if (currentTime - lastSaveTimestamp >= SAVE_INTERVAL_MS) {
-                    saveBACData();
+                if (currentTime - lastSaveTimestamp >= REFRESH_INTERVAL_MS) {
+                    fetchAndSaveAverageBACData();
                     lastSaveTimestamp = currentTime;
                 }
                 displayBACData();
-                handler.postDelayed(this, REFRESH_INTERVAL_MS); // Update every 2 seconds
+                handler.postDelayed(this, REFRESH_INTERVAL_MS); // Update every 10 seconds
             }
         };
     }
@@ -127,6 +128,9 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         xl.setAvoidFirstLastClipping(true);
         xl.setEnabled(true);
         xl.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xl.setGranularityEnabled(true);
+        xl.setGranularity(1f);
+        xl.setLabelCount(5, true); // Show max 5 labels, avoid overlapping
         xl.setValueFormatter(new ValueFormatter() {
             private final SimpleDateFormat mFormat = new SimpleDateFormat("HH:mm:ss", Locale.ENGLISH);
 
@@ -199,12 +203,29 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         }
     }
 
-    private void saveBACData() {
-        // Simulate saving BAC data
-        // In a real scenario, this would be fetched from a sensor or another data source
-        double bacValue = Math.random() * 0.150; // Generate a random BAC value between 0.000 and 0.150
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH).format(new Date());
-        dbHelper.insertBACRecord(currentUserId, timestamp, bacValue);
+    private void fetchAndSaveAverageBACData() {
+        Cursor cursor = dbHelper.getBACRecords(currentUserId);
+        if (cursor != null && cursor.moveToFirst()) {
+            List<BACRecord> tempBuffer = new ArrayList<>();
+            do {
+                String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
+                double bac = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BAC_VALUE));
+                tempBuffer.add(new BACRecord(bac, timestamp));
+
+                if (tempBuffer.size() >= SAMPLE_COUNT) {
+                    double averageBac = 0;
+                    for (BACRecord record : tempBuffer) {
+                        averageBac += record.getBacValue();
+                    }
+                    averageBac /= SAMPLE_COUNT;
+
+                    String firstTimestamp = tempBuffer.get(0).getTimestamp();
+                    dbHelper.insertBACRecord(currentUserId, firstTimestamp, averageBac);
+                    tempBuffer.clear();
+                }
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
     }
 
     private float convertTimestampToMillis(String timestamp) {

@@ -112,7 +112,7 @@ public class DBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COLUMN_ACCOUNT_ID, accountId);
-        values.put(COLUMN_TIMESTAMP, timestamp); // Add timestamp
+        values.put(COLUMN_TIMESTAMP, timestamp);
         values.put(COLUMN_BAC_VALUE, bacValue);
         return db.insert(TABLE_BAC_DATA, null, values);
     }

@@ -3,8 +3,6 @@ package com.example.coen390androidproject_breathalyzerapp;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
