@@ -66,6 +66,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private CircularProgressBar circularProgressBar;
     private SquircleButton btnInstructions;
     private SquircleButton btnStartRecording;
+    private SquircleButton btnCancelRecording;
     private SquircleButton btnBluetooth;
     private SquircleButton btnPairDevices;
     private TextView bluetoothStatusDisplay;
@@ -78,6 +79,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private boolean isBluetoothOn = false; // check if it is on or off
     private Handler handler = new Handler();
     private int progressStatus = 0;
+    private boolean isRecording = false;
 
 
 
@@ -149,6 +151,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         progressBar = findViewById(R.id.progressBar);
         textViewBlow = findViewById(R.id.textView_blow);
         buttonStartRecording = findViewById(R.id.btn_start_recording);
+        btnCancelRecording = findViewById(R.id.btn_cancel_recording);
         btnAccountHistory = findViewById(R.id.button_account_history);
         circularProgressBar = findViewById(R.id.circularProgressBar);
         bacDisplay = findViewById(R.id.bac_display);
@@ -160,7 +163,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         bluetoothStatusDisplay = findViewById(R.id.bluetooth_status_display);
 
 
-        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, buttonStartRecording, btnBluetooth, btnAccountHistory, btnPairDevices, bluetoothStatusDisplay, textViewBlow);
+        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, buttonStartRecording, btnBluetooth, btnInstructions, btnCancelRecording,  btnAccountHistory, btnPairDevices, bluetoothStatusDisplay, textViewBlow);
 
         buttonStartRecording.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -168,9 +171,12 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                 progressBar.setVisibility(View.VISIBLE);
                 textViewBlow.setVisibility(View.VISIBLE);
                 buttonStartRecording.setEnabled(false);
+                btnCancelRecording.setVisibility(View.VISIBLE);
+                isRecording = true;
                 startProgressBar();
             }
         });
+        btnCancelRecording.setOnClickListener(v -> cancelRecording());
 
         btnAccountHistory.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, AccountHistoryActivity.class);
@@ -223,6 +229,16 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
 
     }
+    private void cancelRecording() {
+        isRecording = false;
+        progressBar.setProgress(0);
+        progressBar.setVisibility(View.GONE);
+        textViewBlow.setVisibility(View.GONE);
+        buttonStartRecording.setEnabled(true);
+        btnCancelRecording.setVisibility(View.GONE);
+        Toast.makeText(this, "Recording cancelled", Toast.LENGTH_SHORT).show();
+    }
+
     private void startProgressBar() {
         // Reset progress status
         progressStatus = 0;
@@ -252,6 +268,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                 handler.post(new Runnable() {
                     public void run() {
                         textViewBlow.setVisibility(View.GONE);
+                        btnCancelRecording.setVisibility(View.GONE);
                         buttonStartRecording.setEnabled(true);
                     }
                 });
