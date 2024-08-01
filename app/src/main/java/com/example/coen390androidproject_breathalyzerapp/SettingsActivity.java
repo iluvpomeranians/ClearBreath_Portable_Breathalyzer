@@ -7,6 +7,7 @@ import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -99,8 +100,11 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void setupTextSizeSeekBar() {
-        textSizeSeekBar.setMax(50);
-        textSizeSeekBar.setProgress(sharedPreferences.getInt("text_size", 16));
+        textSizeSeekBar.setMax(20);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            textSizeSeekBar.setMin(10);
+        }
+        textSizeSeekBar.setProgress(sharedPreferences.getInt("text_size", 15));
         sampleTextView.setTextSize(textSizeSeekBar.getProgress());
 
         textSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {

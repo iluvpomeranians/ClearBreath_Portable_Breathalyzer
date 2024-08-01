@@ -19,15 +19,15 @@
             android:background="?attr/colorPrimary"
             android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.mikhaellopez.circularprogressbar.CircularProgressBar
             android:id="@+id/circularProgressBar"
             android:layout_width="225dp"
             android:layout_height="225dp"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="12dp"
             app:cpb_background_progressbar_color="#D3D3D3"
             app:cpb_background_progressbar_width="10dp"
             app:cpb_progress="0"
@@ -36,7 +36,6 @@
             app:cpb_progressbar_color="#FF6347"
             app:cpb_progressbar_width="10dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
@@ -44,7 +43,7 @@
             android:id="@+id/bac_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="4dp"
             android:text="BAC: 0.00%"
             android:textSize="32sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -56,11 +55,10 @@
             android:id="@+id/bac_ml_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="4dp"
             android:text="BAC in mL: 0.00 mL"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/bac_display" />
 
@@ -68,11 +66,10 @@
             android:id="@+id/time_until_sober_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="4dp"
             android:text="Time Until Sober: 0.0 hours"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/bac_ml_display" />
 
@@ -80,12 +77,12 @@
             android:id="@+id/bluetooth_status_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="4dp"
             android:text="Status: Not connected"
             android:textColor="#FF0000"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_bias="0.498"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/time_until_sober_display" />
 
@@ -93,12 +90,12 @@
             android:id="@+id/btn_more_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="4dp"
             android:minWidth="160dp"
             android:minHeight="30dp"
             android:text="Instructions"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_bias="0.494"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/bluetooth_status_display"
             app:squircle_background_color="#D3D3D3" />
@@ -107,9 +104,9 @@
             android:id="@+id/btn_start_recording"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:minWidth="160dp"
-            android:minHeight="100dp"
+            android:layout_marginTop="8dp"
+            android:minWidth="200dp"
+            android:minHeight="40dp"
             android:text="Start Recording"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
@@ -118,10 +115,63 @@
             app:squircle_background_color="#D3D3D3" />
 
         <app.juky.squircleview.views.SquircleButton
+            android:id="@+id/button_account_history"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:minWidth="160dp"
+            android:minHeight="30dp"
+            android:text="Account History"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.505"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btn_cancel_recording"
+            app:squircle_background_color="#D3D3D3" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.497"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btn_start_recording" />
+
+        <TextView
+            android:id="@+id/textView_blow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="BLOW!"
+            android:textAllCaps="true"
+            android:textSize="24sp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/progressBar" />
+
+        <app.juky.squircleview.views.SquircleButton
+            android:id="@+id/btn_cancel_recording"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:minWidth="160dp"
+            android:minHeight="30dp"
+            android:text="Cancel"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.501"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView_blow"
+            app:squircle_background_color="#D3D3D3" />
+
+        <app.juky.squircleview.views.SquircleButton
             android:id="@+id/btn_bluetooth"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="148dp"
             android:minWidth="140dp"
             android:minHeight="40dp"
             android:text="Bluetooth On"
@@ -134,7 +184,7 @@
             android:id="@+id/btn_pairdevices"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="148dp"
             android:minWidth="140dp"
             android:minHeight="40dp"
             android:text="Pair Devices"
@@ -150,6 +200,6 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        app:headerLayout="@layout/nav_header"
         app:menu="@menu/drawer_menu" />
-
 </androidx.drawerlayout.widget.DrawerLayout>
