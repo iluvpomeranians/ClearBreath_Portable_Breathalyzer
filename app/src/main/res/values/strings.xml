@@ -2,6 +2,7 @@
     <string name="app_name">Clearbreath</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="default_notification_channel_id">ClearBreath_Channel_Id</string>
     <string-array name="gender_options">
         <item>Male</item>
         <item>Female</item>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "432294119828",
+    "project_id": "clearbreath-e78ed",
+    "storage_bucket": "clearbreath-e78ed.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:432294119828:android:d2235d18203f885bbc2781",
+        "android_client_info": {
+          "package_name": "com.example.coen390androidproject_breathalyzerapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFnIR94Z15SonS5FAqnYoR2kS3GJ3y1k8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

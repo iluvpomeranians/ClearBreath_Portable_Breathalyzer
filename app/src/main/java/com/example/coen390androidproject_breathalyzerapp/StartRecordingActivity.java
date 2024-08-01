@@ -1,8 +1,12 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -10,6 +14,11 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
+import com.google.firebase.messaging.FirebaseMessagingService;
+import com.google.firebase.messaging.RemoteMessage;
 
 public class StartRecordingActivity extends AppCompatActivity {
 
@@ -104,5 +113,42 @@ public class StartRecordingActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public static class MyFirebaseMessagingService extends FirebaseMessagingService {
+
+        private static final String TAG = "MyFirebaseMsgService";
+        private static final String CHANNEL_ID = "default";
+
+        @Override
+        public void onMessageReceived(RemoteMessage remoteMessage) {
+            Log.d(TAG, "From: " + remoteMessage.getFrom());
+
+            if (remoteMessage.getNotification() != null) {
+                Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
+                sendNotification(remoteMessage.getNotification().getBody());
+            }
+        }
+
+        private void sendNotification(String messageBody) {
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel channel = new NotificationChannel(
+                        CHANNEL_ID,
+                        "Channel human readable title",
+                        NotificationManager.IMPORTANCE_DEFAULT);
+                notificationManager.createNotificationChannel(channel);
+            }
+
+            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setSmallIcon(android.R.drawable.ic_notification_overlay)
+                    .setContentTitle("FCM Message")
+                    .setContentText(messageBody)
+                    .setAutoCancel(true)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+            notificationManager.notify(0, notificationBuilder.build());
+        }
     }
 }
