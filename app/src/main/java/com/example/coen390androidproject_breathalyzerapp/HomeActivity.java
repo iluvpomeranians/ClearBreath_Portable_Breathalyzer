@@ -203,6 +203,12 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             }
         });
 
+        Button buttonEmergency = findViewById(R.id.button_emergency);
+        buttonEmergency.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, EmergencyActivity.class);
+            startActivity(intent);
+        });
+
         Intent serviceIntent = new Intent(this, BluetoothService.class);
         startService(serviceIntent);
         bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
