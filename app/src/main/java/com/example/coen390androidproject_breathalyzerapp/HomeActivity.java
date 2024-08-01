@@ -1,6 +1,7 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.os.Build;
 import android.os.Handler;
@@ -21,9 +22,7 @@ import android.util.Log;
 
 import android.view.Menu;
 import android.view.MenuItem;
-import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ProgressBar;
 
 import android.widget.TextView;
@@ -43,7 +42,7 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
-import java.io.IOException;
+import java.util.Locale;
 
 import app.juky.squircleview.views.SquircleButton;
 
@@ -352,21 +351,23 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         }
     }
 
-    private void scheduleSoberNotification() {
+    /*private void scheduleSoberNotification() {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(this, SoberNotificationReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        long soberTimeMillis = System.currentTimeMillis() + (long) (calculateSoberTimeInMillis());
+        double bacValue = 2;
+        long soberTimeMillis = System.currentTimeMillis() + (long) (calculateTimeUntilSober(bacValue));
         if (alarmManager != null) {
             alarmManager.set(AlarmManager.RTC_WAKEUP, soberTimeMillis, pendingIntent);
         }
-    }
+    }*/
 
-    private long calculateSoberTimeInMillis() {
-        double bac = 0.1; // Example BAC value, replace with actual value from your sensor
+    private String calculateTimeUntilSober(double bac) {
         double soberTimeHours = bac / 0.015; // On average, BAC decreases by 0.015% per hour
-        return (long) (soberTimeHours * 3600 * 1000); // Convert hours to milliseconds
+        int hours = (int) soberTimeHours;
+        int minutes = (int) ((soberTimeHours - hours) * 60);
+        return String.format(Locale.getDefault(), "%d hours %d minutes", hours, minutes);
     }
 
     private boolean allPermissionsGranted() {
@@ -549,8 +550,37 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                 String username = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_USERNAME));
                 MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
                 accountMenuItem.setTitle(username);
+                @SuppressLint("Range") int age = cursor.getInt(cursor.getColumnIndex(DBHelper.COLUMN_AGE));
+                @SuppressLint("Range") String gender = cursor.getString(cursor.getColumnIndex(DBHelper.COLUMN_GENDER));
+                @SuppressLint("Range") double bmi = cursor.getDouble(cursor.getColumnIndex(DBHelper.COLUMN_BMI));
+
+                // Adjust BAC display based on age, gender, and BMI
+                double adjustedBac = adjustBACForUserDetails(bacValue, age, gender, bmi);
+                bacDisplay.setText(String.format(Locale.getDefault(), "%.2f%%", adjustedBac));
+
+                // Calculate BAC in mL and time until sober
+                double bacMl = adjustedBac * 1000; // Assuming the adjustment leads to a straightforward conversion
+                bacMlDisplay.setText(String.format(Locale.getDefault(), "%.2f mL", bacMl));
+                timeUntilSoberDisplay.setText(calculateTimeUntilSober(adjustedBac));
                 cursor.close();
             }
+        }
+    }
+    private double adjustBACForUserDetails(double bac, int age, String gender, double bmi) {
+        // Adjust BAC
+        double beta = 0.2; // coefficient for BMI adjustment, changeable
+        double gamma = 0.1; // coefficient for age adjustment, changeable
+        double rBase = gender.equalsIgnoreCase("male") ? 0.7 : 0.85; // rBase value based on gender
+
+        // Calculate the adjusted BAC
+        double adjustedBac = bac * (1 + beta * ((25.0 / bmi) - 1)) * (1 + gamma * ((30.0 / age) - 1)) * rBase;
+        return adjustedBac;
+    }
+    @Override
+    public void onBluetoothDataReceived(double bacValue) {
+        if (currentUserId != -1) {
+            this.bacValue = bacValue; // Store the BAC value received, need this from sensor
+            updateUI(currentUserId);
         }
     }
 
