@@ -13,6 +13,7 @@ constraintlayout = "2.1.4"
 material = "1.9.0"
 firebaseInappmessaging = "21.0.0"
 preference = "1.2.1"
+firebaseMessaging = "24.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -34,6 +35,7 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 google-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 firebase-inappmessaging = { group = "com.google.firebase", name = "firebase-inappmessaging", version.ref = "firebaseInappmessaging" }
 androidx-preference = { group = "androidx.preference", name = "preference", version.ref = "preference" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebaseMessaging" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
