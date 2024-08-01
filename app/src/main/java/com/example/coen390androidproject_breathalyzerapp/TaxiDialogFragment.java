@@ -23,7 +23,7 @@ public class TaxiDialogFragment extends DialogFragment {
 
     private void callTaxi() {
         Intent intent = new Intent(Intent.ACTION_CALL);
-        intent.setData(Uri.parse("tel:" + "514-366-3333"));
+        intent.setData(Uri.parse("tel:" + "999-999-9999"));
         if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.CALL_PHONE}, 2);
         } else {

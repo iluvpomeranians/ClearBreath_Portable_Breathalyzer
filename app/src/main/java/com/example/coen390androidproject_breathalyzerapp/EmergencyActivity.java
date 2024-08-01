@@ -3,8 +3,10 @@ package com.example.coen390androidproject_breathalyzerapp;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -20,10 +22,8 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.encoders.json.BuildConfig;
 
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import org.osmdroid.config.Configuration;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
@@ -36,6 +36,7 @@ public class EmergencyActivity extends AppCompatActivity {
     private MapView mapView;
     private Button buttonFindNearby, buttonFindHospitals, buttonCall, buttonSMS, buttonWhatsApp;
     private FusedLocationProviderClient fusedLocationClient;
+    private boolean pendingTaxiDialog = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,12 +76,28 @@ public class EmergencyActivity extends AppCompatActivity {
         });
 
         buttonCall.setOnClickListener(v -> {
-            makePhoneCall("911");
-            showTaxiDialog();
+            makePhoneCall("711");
+            pendingTaxiDialog = true;
         });
 
-        buttonSMS.setOnClickListener(v -> sendSMS("911", "I need help!"));
-        buttonWhatsApp.setOnClickListener(v -> openWhatsApp("911", "I need help!"));
+        buttonSMS.setOnClickListener(v -> {
+            sendSMS("911", "I need help!");
+            pendingTaxiDialog = true;
+        });
+
+        buttonWhatsApp.setOnClickListener(v -> {
+            openWhatsApp("911", "I have drank too much and I need help now!");
+            pendingTaxiDialog = true;
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (pendingTaxiDialog) {
+            showTaxiDialog();
+            pendingTaxiDialog = false;
+        }
     }
 
     private void findPlaces(String placeType) {
@@ -112,6 +129,11 @@ public class EmergencyActivity extends AppCompatActivity {
                             Marker marker = new Marker(mapView);
                             marker.setPosition(new GeoPoint(lat, lon));
                             marker.setTitle(name);
+                            marker.setOnMarkerClickListener((m, mv) -> {
+                                m.showInfoWindow();
+                                new Handler().postDelayed(this::showTaxiDialog, 5000); // Show taxi dialog after 5 seconds
+                                return true;
+                            });
                             mapView.getOverlays().add(marker);
 
                             if (i == 0) {
