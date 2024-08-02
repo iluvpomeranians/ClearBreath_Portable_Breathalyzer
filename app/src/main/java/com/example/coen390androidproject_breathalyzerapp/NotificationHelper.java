@@ -2,7 +2,9 @@ package com.example.coen390androidproject_breathalyzerapp;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import androidx.core.app.NotificationCompat;
 import android.util.Log;
@@ -30,13 +32,19 @@ public class NotificationHelper {
             Log.d("NotificationHelper", "Skipping notification channel creation as the API level is below 26.");
         }
 
+        // Create an intent to open HomeActivity when the notification is clicked
+        Intent intent = new Intent(context, HomeActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
         Log.d("NotificationHelper", "Building the notification with title: " + title + " and message: " + message);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_info)
                 .setContentTitle(title)
                 .setContentText(message)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true);
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent); // Set the pending intent
 
         int notificationId = (int) System.currentTimeMillis();
         Log.d("NotificationHelper", "Displaying notification with ID: " + notificationId);

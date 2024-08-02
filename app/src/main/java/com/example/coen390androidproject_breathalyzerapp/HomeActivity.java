@@ -39,11 +39,26 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import app.juky.squircleview.views.SquircleButton;
 
@@ -227,17 +242,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_CODE_NOTIFICATIONS);
             }
         }
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Log.d("HomeActivity", "Attempting to create notification.");
-                NotificationHelper.createNotification(
-                        HomeActivity.this,
-                        "Test Notification",
-                        "This is a test notification after 20 seconds."
-                );
-            }
-        }, 20000);
 
         FirebaseMessaging.getInstance().getToken()
                 .addOnCompleteListener(task -> {
@@ -251,11 +255,62 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
 
                     // Log and toast the token
                     Log.d(TAG, "FCM Token: " + token);
+
+                    sendTokenToServer(token);
                 });
 
+        if (!isBound) {
+            Intent btserviceIntent = new Intent(this, BluetoothService.class);
+            bindService(btserviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        }
 
-
+        if (bluetoothService != null) {
+            bluetoothService.setBluetoothDataListener(this);
+            updateBluetoothStatus();
+        }
     }
+
+    private void sendTokenToServer(String token) {
+        String url = "https://clearbreath-14b67f8b2024.herokuapp.com/send-notification";
+        RequestQueue queue = Volley.newRequestQueue(this);
+
+        JSONObject payload = new JSONObject();
+        try {
+            payload.put("token", token);
+            payload.put("title", "Hello from Clearbreath");
+            payload.put("body", "Have you updated to the latest version of Clearbreath?");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
+                Request.Method.POST,
+                url,
+                payload,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Log.d(TAG, "Token sent successfully: " + response.toString());
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e(TAG, "Failed to send token", error);
+                    }
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Content-Type", "application/json");
+                return headers;
+            }
+        };
+
+        queue.add(jsonObjectRequest);
+    }
+
     private void cancelRecording() {
         isRecording = false;
         progressBar.setProgress(0);
@@ -331,24 +386,47 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         } else {
             Log.e(TAG, "One or more UI elements are null");
         }
-        updateBluetoothStatus();
         updateMenuItems();
+        updateBluetoothStatus();
         Log.d(TAG, "onResume");
+
+        if (!isBound) {
+            Intent serviceIntent = new Intent(this, BluetoothService.class);
+            bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        }
+
+        if (bluetoothService != null) {
+            bluetoothService.setBluetoothDataListener(this);
+            updateBluetoothStatus();
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");
+
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
-        if (isBound) {
-            unbindService(serviceConnection);
-            isBound = false;
+//        if (isBound) {
+//            unbindService(serviceConnection);
+//            isBound = false;
+//        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent); // Update the intent
+
+        // Reinitialize any necessary components here if needed
+        if (bluetoothService != null) {
+            bluetoothService.setBluetoothDataListener(this);
+            updateBluetoothStatus();
         }
     }
 
@@ -455,8 +533,9 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             double hoursUntilSober = bac / 0.015;
             timeUntilSoberDisplay.setText(String.format("Time Until Sober: %.1f hours", hoursUntilSober));
 
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH).format(new Date());
             // Save BAC data for the current user
-            dbHelper.insertBACRecord(currentUserId, bac);
+            dbHelper.insertBACRecord(currentUserId, timestamp, bac);
 
         } catch (NumberFormatException e) {
             Log.e(TAG, "Invalid BAC data received", e);
@@ -567,9 +646,9 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
 
     private void toggleBluetooth(SquircleButton button) {
         if (isBluetoothOn) {
-            button.setText("Bluetooth On");
-        } else {
             button.setText("Bluetooth Off");
+        } else {
+            button.setText("Bluetooth On");
         }
         isBluetoothOn = !isBluetoothOn;
     }
