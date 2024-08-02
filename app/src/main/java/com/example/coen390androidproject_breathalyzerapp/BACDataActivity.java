@@ -5,9 +5,12 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.widget.TextView;
+import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.navigation.NavigationView;
 import java.util.concurrent.ExecutorService;
@@ -24,6 +27,8 @@ public class BACDataActivity extends AppCompatActivity {
     private NavigationView navigationView;
 
     private ExecutorService executorService;
+    private boolean isPaused = false;
+    private OnBackPressedCallback onBackPressedCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,35 +64,48 @@ public class BACDataActivity extends AppCompatActivity {
         navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
+            Intent intent;
             if (id == R.id.nav_home) {
-                Intent intent = new Intent(BACDataActivity.this, HomeActivity.class);
-                intent.putExtra("currentUserId", currentUserId);
-                startActivity(intent);
-                return true;
+                intent = new Intent(BACDataActivity.this, HomeActivity.class);
             } else if (id == R.id.nav_settings) {
-                Intent intent = new Intent(BACDataActivity.this, SettingsActivity.class);
-                intent.putExtra("currentUserId", currentUserId);
-                startActivity(intent);
-                return true;
+                intent = new Intent(BACDataActivity.this, SettingsActivity.class);
             } else if (id == R.id.nav_manage_account) {
-                Intent intent = new Intent(BACDataActivity.this, ManageAccountActivity.class);
-                intent.putExtra("currentUserId", currentUserId);
-                startActivity(intent);
-                return true;
+                intent = new Intent(BACDataActivity.this, ManageAccountActivity.class);
             } else if (id == R.id.nav_account) {
-                Intent intent = new Intent(BACDataActivity.this, AccountActivity.class);
-                intent.putExtra("currentUserId", currentUserId);
-                startActivity(intent);
-                return true;
+                intent = new Intent(BACDataActivity.this, AccountActivity.class);
+            } else {
+                return false;
             }
-            return false;
+            intent.putExtra("currentUserId", currentUserId);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+            return true;
         });
+
+        onBackPressedCallback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                } else {
+                    navigateBackToHome();
+                }
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
     }
 
     private void fetchBACData(int userId) {
         executorService.submit(() -> {
-            String data = getBACData(userId);
-            runOnUiThread(() -> textViewBACData.setText(data));
+            if (!isPaused) {
+                String data = getBACData(userId);
+                runOnUiThread(() -> {
+                    if (!isPaused) {
+                        textViewBACData.setText(data);
+                    }
+                });
+            }
         });
     }
 
@@ -106,9 +124,30 @@ public class BACDataActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        isPaused = true;
+        executorService.shutdownNow();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        isPaused = false;
+        executorService = Executors.newSingleThreadExecutor(); // Reinitialize the executor service
+        fetchBACData(currentUserId); // Re-fetch data if needed
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Shutdown the ExecutorService when the activity is destroyed
         executorService.shutdown();
+    }
+
+    private void navigateBackToHome() {
+        Intent intent = new Intent(BACDataActivity.this, HomeActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        finish();
     }
 }

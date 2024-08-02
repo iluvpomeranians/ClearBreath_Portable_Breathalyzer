@@ -14,6 +14,9 @@ material = "1.9.0"
 firebaseInappmessaging = "21.0.0"
 preference = "1.2.1"
 mpandroidchart = "v3.1.0"
+firebaseMessaging = "24.0.0"
+volley = "1.2.1"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -36,6 +39,9 @@ google-material = { group = "com.google.android.material", name = "material", ve
 firebase-inappmessaging = { group = "com.google.firebase", name = "firebase-inappmessaging", version.ref = "firebaseInappmessaging" }
 androidx-preference = { group = "androidx.preference", name = "preference", version.ref = "preference" }
 mpandroidchart = { group = "com.github.PhilJay", name = "MPAndroidChart", version.ref = "mpandroidchart" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebaseMessaging" }
+volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
