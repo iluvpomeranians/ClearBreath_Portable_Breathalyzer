@@ -38,6 +38,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class AccountHistoryActivity extends AppCompatActivity implements OnChartValueSelectedListener {
 
@@ -54,6 +56,8 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     private static final int SAMPLE_COUNT = 10;
     private List<BACRecord> bacRecordBuffer = new ArrayList<>();
     private long lastSaveTimestamp = 0;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,10 +87,17 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
             public void run() {
                 long currentTime = System.currentTimeMillis();
                 if (currentTime - lastSaveTimestamp >= REFRESH_INTERVAL_MS) {
-                    fetchAndSaveAverageBACData();
-                    lastSaveTimestamp = currentTime;
+                    executorService.submit(() -> {
+                        fetchAndSaveAverageBACData();
+                        lastSaveTimestamp = currentTime;
+
+                        // Update UI on the main thread
+                        handler.post(() -> displayBACData());
+                    });
+                } else {
+                    // Update UI on the main thread
+                    handler.post(() -> displayBACData());
                 }
-                displayBACData();
                 handler.postDelayed(this, REFRESH_INTERVAL_MS); // Update every 10 seconds
             }
         };
@@ -102,6 +113,12 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     protected void onPause() {
         super.onPause();
         handler.removeCallbacks(runnable); // Stop the updates
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        executorService.shutdown();
     }
 
     private void initializeChart() {

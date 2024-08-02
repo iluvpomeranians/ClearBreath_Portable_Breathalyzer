@@ -3,13 +3,15 @@ package com.example.coen390androidproject_breathalyzerapp;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.widget.TextView;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
-
 import com.google.android.material.navigation.NavigationView;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class BACDataActivity extends AppCompatActivity {
 
@@ -20,6 +22,8 @@ public class BACDataActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle toggle;
     private NavigationView navigationView;
+
+    private ExecutorService executorService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +37,12 @@ public class BACDataActivity extends AppCompatActivity {
         dbHelper = new DBHelper(this);
         currentUserId = getIntent().getIntExtra("currentUserId", -1);
 
-        displayBACData();
+        // Initialize the ExecutorService
+        executorService = Executors.newSingleThreadExecutor();
+
+        // Fetch and display BAC data in background
+        fetchBACData(currentUserId);
+
         SettingsUtils.applySettings(this, textViewBACData);
 
         if (getSupportActionBar() != null) {
@@ -73,20 +82,33 @@ public class BACDataActivity extends AppCompatActivity {
             }
             return false;
         });
-
     }
 
-    private void displayBACData() {
-        Cursor cursor = dbHelper.getBACRecords(currentUserId);
+    private void fetchBACData(int userId) {
+        executorService.submit(() -> {
+            String data = getBACData(userId);
+            runOnUiThread(() -> textViewBACData.setText(data));
+        });
+    }
+
+    private String getBACData(int userId) {
+        StringBuilder data = new StringBuilder();
+        Cursor cursor = dbHelper.getBACRecords(userId);
         if (cursor != null && cursor.moveToFirst()) {
-            StringBuilder data = new StringBuilder();
             do {
                 String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
                 double bac = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BAC_VALUE));
                 data.append("Timestamp: ").append(timestamp).append(", BAC: ").append(bac).append("\n");
             } while (cursor.moveToNext());
-            textViewBACData.setText(data.toString());
             cursor.close();
         }
+        return data.toString();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Shutdown the ExecutorService when the activity is destroyed
+        executorService.shutdown();
     }
 }
