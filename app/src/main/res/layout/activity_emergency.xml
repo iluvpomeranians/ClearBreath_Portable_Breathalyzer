@@ -1,57 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".EmergencyActivity">
+    android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/button_find_nearby"
-        android:layout_width="wrap_content"
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Find Police Stations"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"/>
-
-    <Button
-        android:id="@+id/button_find_hospitals"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Find Hospitals"
-        android:layout_below="@+id/button_find_nearby"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp"/>
-
-    <Button
-        android:id="@+id/button_call"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Make Emergency Call"
-        android:layout_below="@+id/button_find_hospitals"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp"/>
-
-    <Button
-        android:id="@+id/button_sms"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Send SMS"
-        android:layout_below="@+id/button_call"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp"/>
-
-    <Button
-        android:id="@+id/button_whatsapp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Open WhatsApp"
-        android:layout_below="@+id/button_sms"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp"/>
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <org.osmdroid.views.MapView
         android:id="@+id/mapView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/button_whatsapp"
-        android:layout_marginTop="16dp"/>
+        android:layout_height="400dp"
+        android:layout_below="@id/toolbar" />
+
+    <Button
+        android:id="@+id/button_find_nearby"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/mapView"
+        android:text="Find Nearby Police Stations" />
+
+    <Button
+        android:id="@+id/button_find_hospitals"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/button_find_nearby"
+        android:text="Find Nearby Hospitals" />
+
+    <Button
+        android:id="@+id/button_call"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/button_find_hospitals"
+        android:text="Make Emergency Call" />
+
+    <Button
+        android:id="@+id/button_sms"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/button_call"
+        android:text="Send SMS" />
+
+    <Button
+        android:id="@+id/button_whatsapp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/button_sms"
+        android:text="Open WhatsApp" />
+
 </RelativeLayout>

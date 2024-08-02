@@ -17,6 +17,7 @@ firebaseMessaging = "24.0.0"
 volley = "1.2.1"
 playServicesLocation = "21.3.0"
 playServicesMaps = "19.0.0"
+maps = "3.1.0-beta"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -42,6 +43,7 @@ firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging
 volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
+maps = { group = "com.google.android.libraries.maps", name = "maps", version.ref = "maps" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

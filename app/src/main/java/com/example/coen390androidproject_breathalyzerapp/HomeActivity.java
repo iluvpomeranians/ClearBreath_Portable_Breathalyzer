@@ -60,7 +60,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private TextView bacMlDisplay;
     private TextView timeUntilSoberDisplay;
     private CircularProgressBar circularProgressBar;
-    private SquircleButton btnInstructions;
+    private SquircleButton btnInstructions, buttonEmergency;
     private SquircleButton btnStartRecording;
     private SquircleButton btnCancelRecording;
     private SquircleButton btnBluetooth;
@@ -155,6 +155,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         btnBluetooth = findViewById(R.id.btn_bluetooth);
         btnPairDevices = findViewById(R.id.btn_pairdevices);
         bluetoothStatusDisplay = findViewById(R.id.bluetooth_status_display);
+        buttonEmergency = findViewById(R.id.button_emergency);
 
 
         SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, buttonStartRecording, btnBluetooth, btnInstructions, btnCancelRecording,  btnAccountHistory, btnPairDevices, bluetoothStatusDisplay, textViewBlow);
@@ -203,7 +204,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             }
         });
 
-        Button buttonEmergency = findViewById(R.id.button_emergency);
         buttonEmergency.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, EmergencyActivity.class);
             startActivity(intent);
@@ -333,7 +333,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     protected void onResume() {
         super.onResume();
         if (bacDisplay != null && bacMlDisplay != null && timeUntilSoberDisplay != null && btnStartRecording != null && btnInstructions != null) {
-            SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnStartRecording, btnInstructions);
+            SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnStartRecording, btnInstructions, buttonEmergency);
         } else {
             Log.e(TAG, "One or more UI elements are null");
         }

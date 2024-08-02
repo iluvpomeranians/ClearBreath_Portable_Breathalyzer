@@ -3,7 +3,6 @@ package com.example.coen390androidproject_breathalyzerapp;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,6 +10,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -29,7 +29,7 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 
-public class EmergencyActivity extends AppCompatActivity {
+public class EmergencyActivity extends AppCompatActivity implements Marker.OnMarkerClickListener {
 
     private static final int REQUEST_LOCATION_PERMISSION = 1;
 
@@ -43,6 +43,23 @@ public class EmergencyActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emergency);
 
+        // Set up the toolbar
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+            getSupportActionBar().setTitle("Emergency/Help Page");
+        }
+
+        toolbar.setNavigationOnClickListener(v -> {
+            Intent intent = new Intent(EmergencyActivity.this, HomeActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+        });
+
         // Initialize the osmdroid configuration
         Configuration.getInstance().setUserAgentValue(BuildConfig.APPLICATION_ID);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -51,7 +68,7 @@ public class EmergencyActivity extends AppCompatActivity {
         mapView.setBuiltInZoomControls(true);
         mapView.setMultiTouchControls(true);
         mapView.getController().setZoom(15.0);
-        mapView.getController().setCenter(new GeoPoint(46.8131, 71.2075)); // QUEBEC location
+        mapView.getController().setCenter(new GeoPoint(46.8131, -71.2075)); // Quebec location
 
         buttonFindNearby = findViewById(R.id.button_find_nearby);
         buttonFindHospitals = findViewById(R.id.button_find_hospitals);
@@ -63,7 +80,7 @@ public class EmergencyActivity extends AppCompatActivity {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION_PERMISSION);
             } else {
-                findPlaces("police station");
+                findPlaces("police", "Montreal");
             }
         });
 
@@ -71,7 +88,7 @@ public class EmergencyActivity extends AppCompatActivity {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION_PERMISSION);
             } else {
-                findPlaces("hospital");
+                findPlaces("hospital", "Montreal");
             }
         });
 
@@ -81,7 +98,7 @@ public class EmergencyActivity extends AppCompatActivity {
         });
 
         buttonSMS.setOnClickListener(v -> {
-            sendSMS("911", "I need help!");
+            sendSMS("711", "I been drinkin too much... can u help a brother much? Just a place to stay, ill be on the wayyy");
             pendingTaxiDialog = true;
         });
 
@@ -89,31 +106,24 @@ public class EmergencyActivity extends AppCompatActivity {
             openWhatsApp("911", "I have drank too much and I need help now!");
             pendingTaxiDialog = true;
         });
+
+        SettingsUtils.applySettings(this, buttonFindNearby, buttonFindHospitals, buttonCall, buttonSMS, buttonWhatsApp);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (pendingTaxiDialog) {
-            showTaxiDialog();
-            pendingTaxiDialog = false;
-        }
-    }
-
-    private void findPlaces(String placeType) {
+    private void findPlaces(String placeType, String city) {
         // Fetch the user's location and show places on the map
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             fusedLocationClient.getLastLocation()
                     .addOnSuccessListener(this, location -> {
                         if (location != null) {
-                            fetchNearbyPlaces(location.getLatitude(), location.getLongitude(), placeType);
+                            fetchNearbyPlaces(location.getLatitude(), location.getLongitude(), placeType, city);
                         }
                     });
         }
     }
 
-    private void fetchNearbyPlaces(double latitude, double longitude, String placeType) {
-        String url = "https://nominatim.openstreetmap.org/search?format=json&q=" + placeType + "&limit=10&lat=" + latitude + "&lon=" + longitude;
+    private void fetchNearbyPlaces(double latitude, double longitude, String placeType, String city) {
+        String url = "https://nominatim.openstreetmap.org/search?format=json&q=" + placeType + "+" + city + "&limit=10&lat=" + latitude + "&lon=" + longitude;
 
         RequestQueue queue = Volley.newRequestQueue(this);
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
@@ -172,8 +182,23 @@ public class EmergencyActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (pendingTaxiDialog) {
+            showTaxiDialog();
+            pendingTaxiDialog = false;
+        }
+    }
+
     private void showTaxiDialog() {
         TaxiDialogFragment dialogFragment = new TaxiDialogFragment();
         dialogFragment.show(getSupportFragmentManager(), "taxiDialog");
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker, MapView mapView) {
+        new Handler().postDelayed(this::showTaxiDialog, 5000);
+        return true;
     }
 }
