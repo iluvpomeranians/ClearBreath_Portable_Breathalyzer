@@ -112,7 +112,7 @@
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/btn_more_info"
-            app:squircle_background_color="#D3D3D3" />
+            app:squircle_background_color="#FF0000" />
 
         <app.juky.squircleview.views.SquircleButton
             android:id="@+id/button_account_history"
