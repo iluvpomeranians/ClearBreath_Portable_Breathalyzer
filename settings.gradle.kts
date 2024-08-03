@@ -21,8 +21,8 @@ pluginManagement {
         }
     }
     plugins {
-        id("com.android.application") version "8.0.0" apply false
-        id("org.jetbrains.kotlin.android") version "1.8.0" apply false
+        id("com.android.application") version "8.4.0" apply false
+        id("org.jetbrains.kotlin.android") version "1.9.0" apply false
     }
 }
 
@@ -41,6 +41,7 @@ dependencyResolutionManagement {
                 password = "pk.eyJ1IjoiYWhtYWRvYmVpZCIsImEiOiJjbHpiMXBvdnIwZnR3MmtzODFtY3VtdHl1In0.NYNn6VDL7NoKik0GYnV17w"
             }
         }
+        maven { url = uri("https://jitpack.io") }
     }
 }
 

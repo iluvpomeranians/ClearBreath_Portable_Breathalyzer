@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.coen390androidproject_breathalyzerapp"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -52,6 +52,8 @@ android {
 
 dependencies {
     implementation("androidx.core:core:1.7.0")
+    implementation("co.yml:ycharts:2.1.0")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -64,6 +66,11 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.google.material)
     implementation("com.mikhaellopez:circularprogressbar:3.1.0")
+    implementation("com.patrykandpatrick.vico:compose:2.0.0-alpha.25")
+    implementation("com.patrykandpatrick.vico:compose-m2:2.0.0-alpha.25")
+    implementation("com.patrykandpatrick.vico:compose-m3:2.0.0-alpha.25")
+    implementation("com.patrykandpatrick.vico:core:2.0.0-alpha.25")
+    implementation("com.patrykandpatrick.vico:views:2.0.0-alpha.25")
     implementation("app.juky:squircleview:0.6.1")
     implementation(libs.firebase.inappmessaging)
     implementation(libs.androidx.preference)
@@ -85,4 +92,3 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
-
