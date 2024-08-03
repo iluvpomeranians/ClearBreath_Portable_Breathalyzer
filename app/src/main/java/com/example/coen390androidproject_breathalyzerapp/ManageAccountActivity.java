@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -26,6 +27,7 @@ public class ManageAccountActivity extends AppCompatActivity {
     private NavigationView navigationView;
     private EditText editTextUsername, editTextAge, editTextBMI;
     private SquircleButton buttonSaveChanges, buttonDeleteAccount;
+    private OnBackPressedCallback onBackPressedCallback;
     private DBHelper dbHelper;
     private int currentUserId = -1;
 
@@ -63,6 +65,7 @@ public class ManageAccountActivity extends AppCompatActivity {
             }else{
                 return false;
             }
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             intent.putExtra("currentUserId", currentUserId);
             startActivity(intent);
             return true;
@@ -118,6 +121,18 @@ public class ManageAccountActivity extends AppCompatActivity {
         });
 
         SettingsUtils.applySettings(this, editTextUsername, editTextAge, editTextBMI, buttonSaveChanges, buttonDeleteAccount);
+
+        onBackPressedCallback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                } else {
+                    navigateBackToHome();
+                }
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
     }
 
     @Override
