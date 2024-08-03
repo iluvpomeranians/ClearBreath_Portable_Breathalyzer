@@ -1,9 +1,13 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.TextView;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -18,6 +22,7 @@ import java.util.concurrent.Executors;
 
 public class BACDataActivity extends AppCompatActivity {
 
+    private SharedPreferences sharedPreferences;
     private TextView textViewBACData;
     private DBHelper dbHelper;
     private int currentUserId;
@@ -38,14 +43,15 @@ public class BACDataActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+
         textViewBACData = findViewById(R.id.textViewBACData);
         dbHelper = new DBHelper(this);
         currentUserId = getIntent().getIntExtra("currentUserId", -1);
 
-        // Initialize the ExecutorService
         executorService = Executors.newSingleThreadExecutor();
 
-        // Fetch and display BAC data in background
         fetchBACData(currentUserId);
 
         SettingsUtils.applySettings(this, textViewBACData);
@@ -83,6 +89,8 @@ public class BACDataActivity extends AppCompatActivity {
             return true;
         });
 
+        updateMenuItems();
+
         onBackPressedCallback = new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -94,6 +102,7 @@ public class BACDataActivity extends AppCompatActivity {
             }
         };
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
+
     }
 
     private void fetchBACData(int userId) {
@@ -134,8 +143,10 @@ public class BACDataActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         isPaused = false;
-        executorService = Executors.newSingleThreadExecutor(); // Reinitialize the executor service
-        fetchBACData(currentUserId); // Re-fetch data if needed
+        executorService = Executors.newSingleThreadExecutor();
+        currentUserId = sharedPreferences.getInt("currentUserId", -1);
+        fetchBACData(currentUserId);
+        updateMenuItems();
     }
 
     @Override
@@ -149,5 +160,30 @@ public class BACDataActivity extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         startActivity(intent);
         finish();
+    }
+
+    private void updateUI(int currentUserId) {
+        MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
+        if (currentUserId == -1) {
+            accountMenuItem.setTitle("Account");
+        } else {
+            Cursor cursor = dbHelper.getAccount(currentUserId);
+            if (cursor != null && cursor.moveToFirst()) {
+                String username = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_USERNAME));
+                accountMenuItem.setTitle(username);
+                cursor.close();
+            } else {
+                accountMenuItem.setTitle("Account");
+            }
+        }
+    }
+
+    private void updateMenuItems() {
+        SharedPreferences preferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+        boolean isLoggedIn = preferences.getBoolean("loggedIn", false);
+        currentUserId = sharedPreferences.getInt("currentUserId", -1);
+        Menu menu = navigationView.getMenu();
+        menu.findItem(R.id.nav_manage_account).setVisible(isLoggedIn);
+        updateUI(currentUserId);
     }
 }
