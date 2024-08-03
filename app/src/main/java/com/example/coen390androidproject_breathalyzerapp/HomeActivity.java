@@ -93,6 +93,9 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private Handler handler = new Handler();
     private int progressStatus = 0;
     private boolean isRecording = false;
+    private boolean isFromNotification = false;
+    private static final String PREFS_NAME = "NotificationPrefs";
+    private static final String KEY_IS_FROM_NOTIFICATION = "isFromNotification";
     private static final int REQUEST_CODE_PERMISSIONS = 101;
     private static final int REQUEST_CODE_NOTIFICATIONS = 102;
     private static final String[] REQUIRED_PERMISSIONS = new String[]{
@@ -109,8 +112,12 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-            Toolbar toolbar = findViewById(R.id.toolbar);
-            setSupportActionBar(toolbar);
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+
+        Log.d(TAG, "onCreate: isFromNotification = " + isFromNotification);
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
@@ -259,6 +266,16 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
 
         updateBluetoothStatus();
 
+        if (sharedPreferences.getBoolean(KEY_IS_FROM_NOTIFICATION, false)) {
+            // Reset the flag
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean(KEY_IS_FROM_NOTIFICATION, false);
+            editor.apply();
+            Log.d(TAG, "onCreate: isFromNotification reset to false");
+        }
+
+        onNewIntent(getIntent());
+
     }
 
     private void sendTokenToServer(String token) {
@@ -371,6 +388,11 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     @Override
     protected void onResume() {
         super.onResume();
+
+        if (sharedPreferences == null) {
+            sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        }
+
         if (bacDisplay != null && bacMlDisplay != null && timeUntilSoberDisplay != null && btnStartRecording != null && btnInstructions != null) {
             SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnStartRecording, btnInstructions);
         } else {
@@ -396,20 +418,44 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "onDestroy");
+        Log.d(TAG, "onDestroy, is from Notification " + isFromNotification);
+        if (!isFromNotification) {
+            super.onDestroy();
+            if (isBound) {
+                unbindService(serviceConnection);
+                isBound = false;
+            }
+        }
+        isFromNotification = false;
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        Log.d(TAG, "onNewIntent");
         setIntent(intent);
+
+        Bundle extras = intent.getExtras();
+        if (extras != null) {
+            for (String key : extras.keySet()) {
+                Log.d(TAG, "Intent extra: " + key + " = " + extras.get(key));
+            }
+        }
+
+        String fromString = intent.getStringExtra("From");
+        if (fromString != null) {
+            Log.d(TAG, "DEBUG HOMEAC - FROMSTRING NEW INTENT: " + fromString);
+            isFromNotification = "Notification".equalsIgnoreCase(fromString);
+        } else {
+            Log.d(TAG, "DEBUG HOMEAC - FROMSTRING NEW INTENT: null");
+        }
 
         if (bluetoothService != null) {
             bluetoothService.setBluetoothDataListener(this);
             updateBluetoothStatus();
         }
     }
+
 
     private void scheduleSoberNotification() {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
