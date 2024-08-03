@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.gms.google-services")
-
 }
 
 android {
@@ -79,8 +78,12 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-messaging:23.1.0")
     implementation("com.google.android.gms:play-services-tasks:18.1.0")
+    implementation("com.mapbox.mapboxsdk:mapbox-android-core:3.1.0")
+    implementation("org.osmdroid:osmdroid-android:6.1.14")
     implementation(libs.firebase.messaging)
     implementation(libs.volley)
+    implementation(libs.play.services.location)
+    implementation(libs.play.services.maps)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -88,5 +91,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
 }

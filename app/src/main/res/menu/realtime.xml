@@ -6,18 +6,9 @@
         android:id="@+id/toggle_filled"
         android:title="Toggle Filled" />
     <item
-        android:id="@+id/toggle_start_zero"
-        android:title="Toggle Start Zero" />
-    <item
         android:id="@+id/animate_x"
         android:title="Animate X" />
     <item
         android:id="@+id/animate_y"
         android:title="Animate Y" />
-    <item
-        android:id="@+id/toggle_pinch_zoom"
-        android:title="Toggle Pinch Zoom" />
-    <item
-        android:id="@+id/toggle_adjust_x_legend"
-        android:title="Toggle Adjust X Legend" />
 </menu>
