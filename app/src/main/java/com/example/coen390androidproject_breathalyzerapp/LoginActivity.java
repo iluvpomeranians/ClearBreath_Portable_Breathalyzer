@@ -4,7 +4,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -16,6 +19,8 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
+
+import java.util.concurrent.Executors;
 
 import app.juky.squircleview.views.SquircleButton;
 
@@ -29,11 +34,17 @@ public class LoginActivity extends AppCompatActivity {
     private ActionBarDrawerToggle toggle;
     private NavigationView navigationView;
     private OnBackPressedCallback onBackPressedCallback;
+    private int currentUserId;
+    private boolean isPaused = false;
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -47,6 +58,7 @@ public class LoginActivity extends AppCompatActivity {
         editTextPassword = findViewById(R.id.et_password);
         btnLogin = findViewById(R.id.btn_login);
         dbHelper = new DBHelper(this);
+        currentUserId = getIntent().getIntExtra("currentUserId", -1);
         btnLogin.setOnClickListener(v -> login());
         SettingsUtils.applySettings(this, editTextUsername, editTextPassword, btnLogin);
 
@@ -70,11 +82,14 @@ public class LoginActivity extends AppCompatActivity {
             } else {
                 return false;
             }
+            intent.putExtra("currentUserId", currentUserId);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             startActivity(intent);
             finish();
             return true;
         });
+
+        updateMenuItems();
 
         onBackPressedCallback = new OnBackPressedCallback(true) {
             @Override
@@ -83,6 +98,20 @@ public class LoginActivity extends AppCompatActivity {
             }
         };
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        isPaused = false;
+        currentUserId = sharedPreferences.getInt("currentUserId", -1);
+        updateMenuItems();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        isPaused = true;
     }
 
     private void saveLoginState(int userId, boolean loggedIn) {
@@ -136,5 +165,30 @@ public class LoginActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void updateUI(int currentUserId) {
+        MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
+        if (currentUserId == -1) {
+            accountMenuItem.setTitle("Account");
+        } else {
+            Cursor cursor = dbHelper.getAccount(currentUserId);
+            if (cursor != null && cursor.moveToFirst()) {
+                String username = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_USERNAME));
+                accountMenuItem.setTitle(username);
+                cursor.close();
+            } else {
+                accountMenuItem.setTitle("Account");
+            }
+        }
+    }
+
+    private void updateMenuItems() {
+        SharedPreferences preferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+        boolean isLoggedIn = preferences.getBoolean("loggedIn", false);
+        currentUserId = sharedPreferences.getInt("currentUserId", -1);
+        Menu menu = navigationView.getMenu();
+        menu.findItem(R.id.nav_manage_account).setVisible(isLoggedIn);
+        updateUI(currentUserId);
     }
 }
