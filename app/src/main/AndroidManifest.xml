@@ -27,6 +27,10 @@
             android:name=".SplashActivity"
             android:theme="@style/SplashTheme"
             android:exported="true">
+        </activity>
+
+        <!-- HomeActivity is now the launcher activity -->
+        <activity android:name=".HomeActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -34,7 +38,6 @@
         </activity>
 
         <!-- Other activities -->
-        <activity android:name=".HomeActivity" android:exported="true" />
         <activity android:name=".MoreInfoActivity" android:exported="false" />
         <activity android:name=".StartRecordingActivity" android:exported="false" />
         <activity android:name=".SettingsActivity" android:exported="false"/>

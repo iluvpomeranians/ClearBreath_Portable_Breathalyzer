@@ -51,28 +51,21 @@ public class ManageAccountActivity extends AppCompatActivity {
         navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
+            Intent intent;
             if (id == R.id.nav_home) {
-                Intent intent = new Intent(ManageAccountActivity.this, HomeActivity.class);
-                intent.putExtra("currentUserId", currentUserId);
-                startActivity(intent);
-                return true;
+                intent = new Intent(ManageAccountActivity.this, HomeActivity.class);
             } else if (id == R.id.nav_settings) {
-                Intent intent = new Intent(ManageAccountActivity.this, SettingsActivity.class);
-                intent.putExtra("currentUserId", currentUserId);
-                startActivity(intent);
-                return true;
+                intent = new Intent(ManageAccountActivity.this, SettingsActivity.class);
             } else if (id == R.id.nav_bac_data) {
-                Intent intent = new Intent(ManageAccountActivity.this, BACDataActivity.class);
-                intent.putExtra("currentUserId", currentUserId);
-                startActivity(intent);
-                return true;
+                intent = new Intent(ManageAccountActivity.this, BACDataActivity.class);
             } else if (id == R.id.nav_account) {
-                Intent intent = new Intent(ManageAccountActivity.this, AccountActivity.class);
-                intent.putExtra("currentUserId", currentUserId);
-                startActivity(intent);
-                return true;
+                intent = new Intent(ManageAccountActivity.this, AccountActivity.class);
+            }else{
+                return false;
             }
-            return false;
+            intent.putExtra("currentUserId", currentUserId);
+            startActivity(intent);
+            return true;
         });
 
         dbHelper = new DBHelper(this);
@@ -130,12 +123,17 @@ public class ManageAccountActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            Intent intent = new Intent(ManageAccountActivity.this, AccountActivity.class);
-            intent.putExtra("currentUserId", currentUserId);
-            startActivity(intent);
-            finish();
+            navigateBackToHome();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void navigateBackToHome() {
+        Intent intent = new Intent(ManageAccountActivity.this, HomeActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra("currentUserId", currentUserId);
+        startActivity(intent);
+        finish();
     }
 }
