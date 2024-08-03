@@ -4,11 +4,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.TextView;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -16,14 +14,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.navigation.NavigationView;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class BACDataActivity extends AppCompatActivity {
 
     private SharedPreferences sharedPreferences;
-    private TextView textViewBACData;
+    private RecyclerView recyclerViewBACData;
     private DBHelper dbHelper;
     private int currentUserId;
 
@@ -46,7 +48,9 @@ public class BACDataActivity extends AppCompatActivity {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
 
-        textViewBACData = findViewById(R.id.textViewBACData);
+        recyclerViewBACData = findViewById(R.id.recyclerViewBACData);
+        recyclerViewBACData.setLayoutManager(new LinearLayoutManager(this));
+
         dbHelper = new DBHelper(this);
         currentUserId = getIntent().getIntExtra("currentUserId", -1);
 
@@ -54,12 +58,10 @@ public class BACDataActivity extends AppCompatActivity {
 
         fetchBACData(currentUserId);
 
-        SettingsUtils.applySettings(this, textViewBACData);
-
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
-            getSupportActionBar().setTitle("View RAW BAC Data - Account Details");
+            getSupportActionBar().setTitle("View RAW BAC Data");
         }
 
         drawerLayout = findViewById(R.id.drawer_layout);
@@ -108,28 +110,29 @@ public class BACDataActivity extends AppCompatActivity {
     private void fetchBACData(int userId) {
         executorService.submit(() -> {
             if (!isPaused) {
-                String data = getBACData(userId);
+                List<BACData> data = getBACData(userId);
                 runOnUiThread(() -> {
                     if (!isPaused) {
-                        textViewBACData.setText(data);
+                        BACDataAdapter adapter = new BACDataAdapter(data);
+                        recyclerViewBACData.setAdapter(adapter);
                     }
                 });
             }
         });
     }
 
-    private String getBACData(int userId) {
-        StringBuilder data = new StringBuilder();
+    private List<BACData> getBACData(int userId) {
+        List<BACData> data = new ArrayList<>();
         Cursor cursor = dbHelper.getBACRecords(userId);
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
                 double bac = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BAC_VALUE));
-                data.append("Timestamp: ").append(timestamp).append(", BAC: ").append(bac).append("\n");
+                data.add(new BACData(timestamp, bac));
             } while (cursor.moveToNext());
             cursor.close();
         }
-        return data.toString();
+        return data;
     }
 
     @Override
@@ -187,3 +190,6 @@ public class BACDataActivity extends AppCompatActivity {
         updateUI(currentUserId);
     }
 }
+
+
+
