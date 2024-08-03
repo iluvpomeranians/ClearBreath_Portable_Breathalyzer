@@ -59,7 +59,7 @@ public class BACDataActivity extends AppCompatActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
-            getSupportActionBar().setTitle("BAC Data Account Details");
+            getSupportActionBar().setTitle("View RAW BAC Data - Account Details");
         }
 
         drawerLayout = findViewById(R.id.drawer_layout);

@@ -77,7 +77,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private TextView bacMlDisplay;
     private TextView timeUntilSoberDisplay;
     private CircularProgressBar circularProgressBar;
-    private SquircleButton btnInstructions;
+    private SquircleButton btnInstructions, buttonEmergency;
     private SquircleButton btnStartRecording;
     private SquircleButton btnCancelRecording;
     private SquircleButton btnBluetooth;
@@ -177,6 +177,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         btnBluetooth = findViewById(R.id.btn_bluetooth);
         btnPairDevices = findViewById(R.id.btn_pairdevices);
         bluetoothStatusDisplay = findViewById(R.id.bluetooth_status_display);
+        buttonEmergency = findViewById(R.id.button_emergency);
 
         SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, buttonStartRecording, btnBluetooth, btnInstructions, btnCancelRecording,  btnAccountHistory, btnPairDevices, bluetoothStatusDisplay, textViewBlow);
 
@@ -218,6 +219,11 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             } else {
                 showDeviceListDialog();
             }
+        });
+
+        buttonEmergency.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, EmergencyActivity.class);
+            startActivity(intent);
         });
 
         Intent serviceIntent = new Intent(this, BluetoothService.class);
@@ -394,7 +400,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         }
 
         if (bacDisplay != null && bacMlDisplay != null && timeUntilSoberDisplay != null && btnStartRecording != null && btnInstructions != null) {
-            SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnStartRecording, btnInstructions);
+            SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnStartRecording, btnInstructions, buttonEmergency);
         } else {
             Log.e(TAG, "One or more UI elements are null");
         }
@@ -549,12 +555,12 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                 progressBarColor = Color.RED;
             }
 
-            bacDisplay.setText(String.format("BAC: %.2f%%", bac));
+            bacDisplay.setText(String.format("BAC: %.3f%%", bac));
             circularProgressBar.setProgressWithAnimation(bacProgress, 1000L);
             circularProgressBar.setProgressBarColor(progressBarColor);
 
             double bacMl = bac * 1000;
-            bacMlDisplay.setText(String.format("BAC in mL: %.2f mL", bacMl));
+            bacMlDisplay.setText(String.format("BAC in mL: %.3f mL", bacMl));
 
             double hoursUntilSober = bac / 0.015;
             timeUntilSoberDisplay.setText(String.format("Time Until Sober: %.1f hours", hoursUntilSober));
@@ -688,8 +694,4 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         }
         return super.onOptionsItemSelected(item);
     }
-
-
-
-
 }

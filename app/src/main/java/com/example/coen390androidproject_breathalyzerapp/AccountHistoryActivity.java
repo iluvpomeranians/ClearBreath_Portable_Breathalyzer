@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -18,6 +19,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.github.mikephil.charting.animation.Easing;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
@@ -51,6 +53,9 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     private int currentUserId;
     private Handler handler;
     private Runnable runnable;
+    private ChartMode currentMode = ChartMode.HOURLY;
+    private List<BACRecord> allBacRecords = new ArrayList<>(); // Global list to store all BAC records
+    private Button hourlyButton, dailyButton, weeklyButton;
 
     private static final long REFRESH_INTERVAL_MS = 10000; // 10 seconds
     private static final int SAMPLE_COUNT = 10;
@@ -58,6 +63,9 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     private long lastSaveTimestamp = 0;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
+    private enum ChartMode {
+        HOURLY, DAILY, WEEKLY
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,6 +109,8 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
                 handler.postDelayed(this, REFRESH_INTERVAL_MS); // Update every 10 seconds
             }
         };
+
+        SettingsUtils.applySettings(this, hourlyButton, dailyButton, weeklyButton);
     }
 
     @Override
@@ -128,7 +138,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         chart.setDragEnabled(true);
         chart.setScaleEnabled(true);
         chart.setDrawGridBackground(false);
-        chart.setPinchZoom(true);
+        chart.setPinchZoom(false); // Pinch Zoom Disabled
         chart.setBackgroundColor(Color.LTGRAY);
 
         LineData data = new LineData();
@@ -142,25 +152,16 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         XAxis xl = chart.getXAxis();
         xl.setTextColor(Color.WHITE);
         xl.setDrawGridLines(false);
-        xl.setAvoidFirstLastClipping(true);
+        xl.setAvoidFirstLastClipping(false);
         xl.setEnabled(true);
         xl.setPosition(XAxis.XAxisPosition.BOTTOM);
         xl.setGranularityEnabled(true);
         xl.setGranularity(1f);
-        xl.setLabelCount(5, true); // Show max 5 labels, avoid overlapping
-        xl.setValueFormatter(new ValueFormatter() {
-            private final SimpleDateFormat mFormat = new SimpleDateFormat("HH:mm:ss", Locale.ENGLISH);
-
-            @Override
-            public String getFormattedValue(float value) {
-                long millis = (long) value;
-                return mFormat.format(new Date(millis));
-            }
-        });
+        xl.setLabelCount(5, true);
 
         YAxis leftAxis = chart.getAxisLeft();
         leftAxis.setTextColor(Color.WHITE);
-        leftAxis.setAxisMaximum(0.150f);
+        leftAxis.setAxisMaximum(0.100f);
         leftAxis.setAxisMinimum(0.000f);
         leftAxis.setDrawGridLines(true);
         leftAxis.setGranularity(0.001f);
@@ -173,6 +174,15 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
 
         YAxis rightAxis = chart.getAxisRight();
         rightAxis.setEnabled(false);
+
+        // Add buttons for HOURLY, DAILY, WEEKLY
+        hourlyButton = findViewById(R.id.hourlyButton);
+        dailyButton = findViewById(R.id.dailyButton);
+        weeklyButton = findViewById(R.id.weeklyButton);
+
+        hourlyButton.setOnClickListener(v -> setChartMode(ChartMode.HOURLY));
+        dailyButton.setOnClickListener(v -> setChartMode(ChartMode.DAILY));
+        weeklyButton.setOnClickListener(v -> setChartMode(ChartMode.WEEKLY));
     }
 
     private void displayBACData() {
@@ -181,43 +191,45 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
             data.clearValues();
         }
 
-        Cursor cursor = dbHelper.getBACRecords(currentUserId);
-        if (cursor != null && cursor.moveToFirst()) {
-            List<Entry> entries = new ArrayList<>();
-            float minTimestamp = Float.MAX_VALUE;
-            float maxTimestamp = Float.MIN_VALUE;
-            do {
-                String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
-                double bac = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BAC_VALUE));
-                float timestampInMillis = convertTimestampToMillis(timestamp);
-                entries.add(new Entry(timestampInMillis, (float) bac));
-
-                if (timestampInMillis < minTimestamp) {
-                    minTimestamp = timestampInMillis;
-                }
-                if (timestampInMillis > maxTimestamp) {
-                    maxTimestamp = timestampInMillis;
-                }
-            } while (cursor.moveToNext());
-            cursor.close();
-
-            LineDataSet set = new LineDataSet(entries, "BAC Data");
-            set.setAxisDependency(YAxis.AxisDependency.LEFT);
-            set.setColor(ColorTemplate.getHoloBlue());
-            set.setLineWidth(2f);
-            set.setDrawFilled(true);
-            set.setFillDrawable(createGradientDrawable());
-            set.setHighLightColor(Color.rgb(244, 117, 117));
-            set.setDrawValues(true);
-
-            data.addDataSet(set);
-
-            chart.getXAxis().setAxisMinimum(minTimestamp);
-            chart.getXAxis().setAxisMaximum(maxTimestamp);
-            chart.setData(data);
-            chart.notifyDataSetChanged();
-            chart.invalidate();
+        if (allBacRecords.isEmpty()) {
+            Cursor cursor = dbHelper.getBACRecords(currentUserId);
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
+                    double bac = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BAC_VALUE));
+                    bac = roundToThreeDecimalPlaces(bac);
+                    allBacRecords.add(new BACRecord(bac, timestamp));
+                } while (cursor.moveToNext());
+                cursor.close();
+            }
         }
+
+        List<Entry> entries = new ArrayList<>();
+        switch (currentMode) {
+            case HOURLY:
+                entries = calculateAverageBAC(ChartMode.HOURLY);
+                break;
+            case DAILY:
+                entries = calculateAverageBAC(ChartMode.DAILY);
+                break;
+            case WEEKLY:
+                entries = calculateAverageBAC(ChartMode.WEEKLY);
+                break;
+        }
+
+        LineDataSet set = new LineDataSet(entries, "BAC Data");
+        set.setAxisDependency(YAxis.AxisDependency.LEFT);
+        set.setColor(ColorTemplate.getHoloBlue());
+        set.setLineWidth(2f);
+        set.setDrawFilled(true);
+        set.setFillDrawable(createGradientDrawable());
+        set.setHighLightColor(Color.rgb(244, 117, 117));
+        set.setDrawValues(true);
+
+        data.addDataSet(set);
+        chart.setData(data);
+        chart.notifyDataSetChanged();
+        chart.invalidate();
     }
 
     private void fetchAndSaveAverageBACData() {
@@ -263,6 +275,128 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         return gradientDrawable;
     }
 
+    private void setChartMode(ChartMode mode) {
+        currentMode = mode;
+        displayBACData(); // Refresh the chart with the new mode
+    }
+
+    private List<Entry> calculateAverageBAC(ChartMode mode) {
+        List<Entry> entries = new ArrayList<>();
+        switch (mode) {
+            case HOURLY:
+                entries = calculateHourlyBAC();
+                break;
+            case DAILY:
+                entries = calculateDailyBAC();
+                break;
+            case WEEKLY:
+                entries = calculateWeeklyBAC();
+                break;
+        }
+        return entries;
+    }
+
+    private List<Entry> calculateHourlyBAC() {
+        List<Entry> entries = new ArrayList<>();
+        double[] sumBAC = new double[12];
+        int[] countBAC = new int[12];
+        for (BACRecord record : allBacRecords) {
+            String timestamp = record.getTimestamp();
+            double bac = record.getBacValue();
+            int minute = getMinuteFromTimestamp(timestamp);
+            int interval = minute / 5;
+            sumBAC[interval] += bac;
+            countBAC[interval]++;
+        }
+
+        for (int i = 0; i < 12; i++) {
+            if (countBAC[i] > 0) {
+                double averageBAC = sumBAC[i] / countBAC[i];
+                entries.add(new Entry(i * 5, (float) averageBAC));
+            }
+        }
+        return entries;
+    }
+
+    private List<Entry> calculateDailyBAC() {
+        List<Entry> entries = new ArrayList<>();
+        double[] sumBAC = new double[24];
+        int[] countBAC = new int[24];
+        for (BACRecord record : allBacRecords) {
+            String timestamp = record.getTimestamp();
+            double bac = record.getBacValue();
+            int hour = getHourFromTimestamp(timestamp);
+            sumBAC[hour] += bac;
+            countBAC[hour]++;
+        }
+
+        for (int i = 0; i < 24; i++) {
+            if (countBAC[i] > 0) {
+                double averageBAC = sumBAC[i] / countBAC[i];
+                entries.add(new Entry(i, (float) averageBAC));
+            }
+        }
+        return entries;
+    }
+
+    private List<Entry> calculateWeeklyBAC() {
+        List<Entry> entries = new ArrayList<>();
+        double[] sumBAC = new double[7];
+        int[] countBAC = new int[7];
+        for (BACRecord record : allBacRecords) {
+            String timestamp = record.getTimestamp();
+            double bac = record.getBacValue();
+            int day = getDayFromTimestamp(timestamp);
+            sumBAC[day] += bac;
+            countBAC[day]++;
+        }
+
+        for (int i = 0; i < 7; i++) {
+            if (countBAC[i] > 0) {
+                double averageBAC = sumBAC[i] / countBAC[i];
+                entries.add(new Entry(i, (float) averageBAC));
+            }
+        }
+        return entries;
+    }
+
+    private int getMinuteFromTimestamp(String timestamp) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+            Date date = sdf.parse(timestamp);
+            return date != null ? date.getMinutes() : 0;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    private int getHourFromTimestamp(String timestamp) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+            Date date = sdf.parse(timestamp);
+            return date != null ? date.getHours() : 0;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    private int getDayFromTimestamp(String timestamp) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+            Date date = sdf.parse(timestamp);
+            return date != null ? date.getDay() : 0;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    private double roundToThreeDecimalPlaces(double value) {
+        return Math.round(value * 1000.0) / 1000.0;
+    }
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
@@ -278,17 +412,10 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
             toggleValues();
         } else if (itemId == R.id.toggle_filled) {
             toggleFilled();
-        } else if (itemId == R.id.toggle_start_zero) {
-            toggleStartZero();
         } else if (itemId == R.id.animate_x) {
-            chart.animateX(1000);
+            chart.animateX(1000, Easing.EaseInOutQuad);
         } else if (itemId == R.id.animate_y) {
-            chart.animateY(1000);
-        } else if (itemId == R.id.toggle_pinch_zoom) {
-            chart.setPinchZoom(!chart.isPinchZoomEnabled());
-        } else if (itemId == R.id.toggle_adjust_x_legend) {
-            XAxis xl = chart.getXAxis();
-            xl.setAvoidFirstLastClipping(!xl.isAvoidFirstLastClippingEnabled());
+            chart.animateY(1000, Easing.EaseInOutQuad);
         }
 
         return super.onOptionsItemSelected(item);
@@ -317,12 +444,6 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         chart.invalidate();
     }
 
-    private void toggleStartZero() {
-        YAxis leftAxis = chart.getAxisLeft();
-        leftAxis.setAxisMinimum(leftAxis.getAxisMinimum() == 0f ? -0.05f : 0f);
-        chart.invalidate();
-    }
-
     @Override
     public void onValueSelected(Entry e, Highlight h) {
         Toast.makeText(this, "Value Selected: " + e.getY(), Toast.LENGTH_SHORT).show();
@@ -336,6 +457,11 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.realtime, menu);
+        MenuItem refreshItem = menu.add("Refresh Chart");
+        refreshItem.setOnMenuItemClickListener(item -> {
+            displayBACData();
+            return true;
+        });
         return true;
     }
 }
