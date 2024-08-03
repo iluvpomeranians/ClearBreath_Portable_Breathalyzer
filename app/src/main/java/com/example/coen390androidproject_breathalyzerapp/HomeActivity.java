@@ -503,12 +503,12 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                 progressBarColor = Color.RED;
             }
 
-            bacDisplay.setText(String.format("BAC: %.2f%%", bac));
+            bacDisplay.setText(String.format("BAC: %.3f%%", bac));
             circularProgressBar.setProgressWithAnimation(bacProgress, 1000L);
             circularProgressBar.setProgressBarColor(progressBarColor);
 
             double bacMl = bac * 1000;
-            bacMlDisplay.setText(String.format("BAC in mL: %.2f mL", bacMl));
+            bacMlDisplay.setText(String.format("BAC in mL: %.3f mL", bacMl));
 
             double hoursUntilSober = bac / 0.015;
             timeUntilSoberDisplay.setText(String.format("Time Until Sober: %.1f hours", hoursUntilSober));
@@ -642,8 +642,4 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         }
         return super.onOptionsItemSelected(item);
     }
-
-
-
-
 }
