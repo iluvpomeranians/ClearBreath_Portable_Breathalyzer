@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import androidx.activity.OnBackPressedCallback;
@@ -42,7 +43,7 @@ public class BACDataActivity extends AppCompatActivity {
     private Handler refreshHandler = new Handler();
     private Runnable refreshRunnable;
 
-    private static final long REFRESH_INTERVAL_MS = 2000;
+    private static final long REFRESH_INTERVAL_MS = 2500;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,13 +53,15 @@ public class BACDataActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
-        currentUserId = sharedPreferences.getInt("currentUserId", -1); // Retrieve the current user ID from shared preferences
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         recyclerViewBACData = findViewById(R.id.recyclerViewBACData);
         recyclerViewBACData.setLayoutManager(new LinearLayoutManager(this));
 
         dbHelper = new DBHelper(this);
+
+        currentUserId = sharedPreferences.getInt("currentUserId", -1);
+        Log.d("BACDataActivity", "Attempting to fetch currentUserId from SharedPreferences.");
 
         executorService = Executors.newSingleThreadExecutor();
 
@@ -114,6 +117,8 @@ public class BACDataActivity extends AppCompatActivity {
         // Initialize and start the refresh runnable
         refreshRunnable = this::refreshBACData;
         refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL_MS);
+
+        SettingsUtils.applySettings(this);
     }
 
     private void refreshBACData() {
@@ -164,6 +169,7 @@ public class BACDataActivity extends AppCompatActivity {
         super.onResume();
         isPaused = false;
         executorService = Executors.newSingleThreadExecutor();
+        sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
         fetchBACData(currentUserId);
         refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL_MS);

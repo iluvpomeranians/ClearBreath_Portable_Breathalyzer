@@ -30,7 +30,8 @@
             android:hint="Full Name"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/toolbar" />
+            app:layout_constraintTop_toBottomOf="@id/toolbar"
+            android:digits="abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ"/>
 
         <EditText
             android:id="@+id/editTextUsername"
@@ -40,7 +41,8 @@
             android:hint="Username"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/editTextFullName" />
+            app:layout_constraintTop_toBottomOf="@id/editTextFullName"
+            android:digits="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"/>
 
         <EditText
             android:id="@+id/editTextPassword"
@@ -51,7 +53,8 @@
             android:inputType="textPassword"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/editTextUsername" />
+            app:layout_constraintTop_toBottomOf="@id/editTextUsername"
+            android:digits="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890@"/>
 
         <EditText
             android:id="@+id/editTextConfirmPassword"
@@ -62,7 +65,8 @@
             android:inputType="textPassword"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/editTextPassword" />
+            app:layout_constraintTop_toBottomOf="@id/editTextPassword"
+            android:digits="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890@"/>
 
         <EditText
             android:id="@+id/editTextAge"
@@ -72,7 +76,8 @@
             android:hint="Age"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/editTextConfirmPassword" />
+            app:layout_constraintTop_toBottomOf="@id/editTextConfirmPassword"
+            android:digits="1234567890"/>
 
         <Spinner
             android:id="@+id/spinnerGender"
@@ -91,12 +96,13 @@
             android:hint="BMI"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/spinnerGender" />
+            app:layout_constraintTop_toBottomOf="@id/spinnerGender"
+            android:digits="1234567890."/>
 
         <app.juky.squircleview.views.SquircleButton
             android:id="@+id/buttonRegister"
-            android:layout_width="90dp"
-            android:layout_height="37dp"
+            android:layout_width="117dp"
+            android:layout_height="49dp"
             android:layout_marginTop="24dp"
             android:text="Register"
             app:layout_constraintEnd_toEndOf="parent"

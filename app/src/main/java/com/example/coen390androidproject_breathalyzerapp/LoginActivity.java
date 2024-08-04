@@ -75,8 +75,8 @@ public class LoginActivity extends AppCompatActivity {
                 intent = new Intent(LoginActivity.this, HomeActivity.class);
             } else if (id == R.id.nav_settings) {
                 intent = new Intent(LoginActivity.this, SettingsActivity.class);
-            } else if (id == R.id.nav_manage_account) {
-                intent = new Intent(LoginActivity.this, ManageAccountActivity.class);
+            } else if (id == R.id.nav_bac_data) {
+                intent = new Intent(LoginActivity.this, BACDataActivity.class);
             } else if (id == R.id.nav_account) {
                 intent = new Intent(LoginActivity.this, AccountActivity.class);
             } else {
