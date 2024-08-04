@@ -52,14 +52,13 @@ public class BACDataActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+        currentUserId = sharedPreferences.getInt("currentUserId", -1); // Retrieve the current user ID from shared preferences
 
         recyclerViewBACData = findViewById(R.id.recyclerViewBACData);
         recyclerViewBACData.setLayoutManager(new LinearLayoutManager(this));
 
         dbHelper = new DBHelper(this);
-        currentUserId = getIntent().getIntExtra("currentUserId", -1);
 
         executorService = Executors.newSingleThreadExecutor();
 
@@ -167,7 +166,6 @@ public class BACDataActivity extends AppCompatActivity {
         executorService = Executors.newSingleThreadExecutor();
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
         fetchBACData(currentUserId);
-        updateMenuItems();
         refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL_MS);
     }
 

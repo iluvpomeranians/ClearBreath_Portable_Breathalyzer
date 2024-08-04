@@ -53,18 +53,18 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     private int currentUserId;
     private Handler handler;
     private Runnable runnable;
-    private ChartMode currentMode = ChartMode.HOURLY;
-    private List<BACRecord> allBacRecords = new ArrayList<>(); // Global list to store all BAC records
-    private Button hourlyButton, dailyButton, weeklyButton;
+    private ChartMode currentMode = ChartMode.SEC_15;
+    private List<BACRecord> allBacRecords = new ArrayList<>();
+    private Button sec15Button, minutelyButton, hourlyButton;
 
-    private static final long REFRESH_INTERVAL_MS = 2000; // 10 seconds
+    private static final long REFRESH_INTERVAL_MS = 2000;
     private static final int SAMPLE_COUNT = 10;
     private List<BACRecord> bacRecordBuffer = new ArrayList<>();
     private long lastSaveTimestamp = 0;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private enum ChartMode {
-        HOURLY, DAILY, WEEKLY
+        SEC_15, MINUTELY, HOURLY
     }
 
     @Override
@@ -88,7 +88,6 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
 
         initializeChart();
 
-        // Set up a handler for real-time updates
         handler = new Handler();
         runnable = new Runnable() {
             @Override
@@ -99,30 +98,28 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
                         fetchAndSaveAverageBACData();
                         lastSaveTimestamp = currentTime;
 
-                        // Update UI on the main thread
                         handler.post(() -> displayBACData());
                     });
                 } else {
-                    // Update UI on the main thread
                     handler.post(() -> displayBACData());
                 }
-                handler.postDelayed(this, REFRESH_INTERVAL_MS); // Update every 10 seconds
+                handler.postDelayed(this, REFRESH_INTERVAL_MS);
             }
         };
 
-        SettingsUtils.applySettings(this, hourlyButton, dailyButton, weeklyButton);
+        SettingsUtils.applySettings(this, sec15Button, minutelyButton, hourlyButton);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        handler.post(runnable); // Start the updates
+        handler.post(runnable);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        handler.removeCallbacks(runnable); // Stop the updates
+        handler.removeCallbacks(runnable);
     }
 
     @Override
@@ -138,7 +135,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         chart.setDragEnabled(true);
         chart.setScaleEnabled(true);
         chart.setDrawGridBackground(false);
-        chart.setPinchZoom(false); // Pinch Zoom Disabled
+        chart.setPinchZoom(false);
         chart.setBackgroundColor(Color.LTGRAY);
 
         LineData data = new LineData();
@@ -175,14 +172,13 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         YAxis rightAxis = chart.getAxisRight();
         rightAxis.setEnabled(false);
 
-        // Add buttons for HOURLY, DAILY, WEEKLY
+        sec15Button = findViewById(R.id.sec15Button);
+        minutelyButton = findViewById(R.id.minutelyButton);
         hourlyButton = findViewById(R.id.hourlyButton);
-        dailyButton = findViewById(R.id.dailyButton);
-        weeklyButton = findViewById(R.id.weeklyButton);
 
+        sec15Button.setOnClickListener(v -> setChartMode(ChartMode.SEC_15));
+        minutelyButton.setOnClickListener(v -> setChartMode(ChartMode.MINUTELY));
         hourlyButton.setOnClickListener(v -> setChartMode(ChartMode.HOURLY));
-        dailyButton.setOnClickListener(v -> setChartMode(ChartMode.DAILY));
-        weeklyButton.setOnClickListener(v -> setChartMode(ChartMode.WEEKLY));
     }
 
     private void displayBACData() {
@@ -202,14 +198,14 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
 
             List<Entry> entries = new ArrayList<>();
             switch (currentMode) {
+                case SEC_15:
+                    entries = calculateAverageBAC(ChartMode.SEC_15);
+                    break;
+                case MINUTELY:
+                    entries = calculateAverageBAC(ChartMode.MINUTELY);
+                    break;
                 case HOURLY:
                     entries = calculateAverageBAC(ChartMode.HOURLY);
-                    break;
-                case DAILY:
-                    entries = calculateAverageBAC(ChartMode.DAILY);
-                    break;
-                case WEEKLY:
-                    entries = calculateAverageBAC(ChartMode.WEEKLY);
                     break;
             }
 
@@ -234,7 +230,6 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
             });
         });
     }
-
 
     private void fetchAndSaveAverageBACData() {
         executorService.submit(() -> {
@@ -283,21 +278,64 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
 
     private void setChartMode(ChartMode mode) {
         currentMode = mode;
-        displayBACData(); // Refresh the chart with the new mode
+        displayBACData();
     }
 
     private List<Entry> calculateAverageBAC(ChartMode mode) {
         List<Entry> entries = new ArrayList<>();
         switch (mode) {
+            case SEC_15:
+                entries = calculateSec15BAC();
+                break;
+            case MINUTELY:
+                entries = calculateMinutelyBAC();
+                break;
             case HOURLY:
                 entries = calculateHourlyBAC();
                 break;
-            case DAILY:
-                entries = calculateDailyBAC();
-                break;
-            case WEEKLY:
-                entries = calculateWeeklyBAC();
-                break;
+        }
+        return entries;
+    }
+
+    private List<Entry> calculateSec15BAC() {
+        List<Entry> entries = new ArrayList<>();
+        double[] sumBAC = new double[4]; // 15-sec intervals
+        int[] countBAC = new int[4];
+        for (BACRecord record : allBacRecords) {
+            String timestamp = record.getTimestamp();
+            double bac = record.getBacValue();
+            int second = getSecondFromTimestamp(timestamp);
+            int interval = second / 15;
+            sumBAC[interval] += bac;
+            countBAC[interval]++;
+        }
+
+        for (int i = 0; i < 4; i++) {
+            if (countBAC[i] > 0) {
+                double averageBAC = sumBAC[i] / countBAC[i];
+                entries.add(new Entry(i * 15, (float) averageBAC));
+            }
+        }
+        return entries;
+    }
+
+    private List<Entry> calculateMinutelyBAC() {
+        List<Entry> entries = new ArrayList<>();
+        double[] sumBAC = new double[60]; // Minute intervals
+        int[] countBAC = new int[60];
+        for (BACRecord record : allBacRecords) {
+            String timestamp = record.getTimestamp();
+            double bac = record.getBacValue();
+            int minute = getMinuteFromTimestamp(timestamp);
+            sumBAC[minute] += bac;
+            countBAC[minute]++;
+        }
+
+        for (int i = 0; i < 60; i++) {
+            if (countBAC[i] > 0) {
+                double averageBAC = sumBAC[i] / countBAC[i];
+                entries.add(new Entry(i, (float) averageBAC));
+            }
         }
         return entries;
     }
@@ -324,46 +362,15 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         return entries;
     }
 
-    private List<Entry> calculateDailyBAC() {
-        List<Entry> entries = new ArrayList<>();
-        double[] sumBAC = new double[24];
-        int[] countBAC = new int[24];
-        for (BACRecord record : allBacRecords) {
-            String timestamp = record.getTimestamp();
-            double bac = record.getBacValue();
-            int hour = getHourFromTimestamp(timestamp);
-            sumBAC[hour] += bac;
-            countBAC[hour]++;
+    private int getSecondFromTimestamp(String timestamp) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+            Date date = sdf.parse(timestamp);
+            return date != null ? date.getSeconds() : 0;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return 0;
         }
-
-        for (int i = 0; i < 24; i++) {
-            if (countBAC[i] > 0) {
-                double averageBAC = sumBAC[i] / countBAC[i];
-                entries.add(new Entry(i, (float) averageBAC));
-            }
-        }
-        return entries;
-    }
-
-    private List<Entry> calculateWeeklyBAC() {
-        List<Entry> entries = new ArrayList<>();
-        double[] sumBAC = new double[7];
-        int[] countBAC = new int[7];
-        for (BACRecord record : allBacRecords) {
-            String timestamp = record.getTimestamp();
-            double bac = record.getBacValue();
-            int day = getDayFromTimestamp(timestamp);
-            sumBAC[day] += bac;
-            countBAC[day]++;
-        }
-
-        for (int i = 0; i < 7; i++) {
-            if (countBAC[i] > 0) {
-                double averageBAC = sumBAC[i] / countBAC[i];
-                entries.add(new Entry(i, (float) averageBAC));
-            }
-        }
-        return entries;
     }
 
     private int getMinuteFromTimestamp(String timestamp) {
@@ -382,17 +389,6 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
             Date date = sdf.parse(timestamp);
             return date != null ? date.getHours() : 0;
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return 0;
-        }
-    }
-
-    private int getDayFromTimestamp(String timestamp) {
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
-            Date date = sdf.parse(timestamp);
-            return date != null ? date.getDay() : 0;
         } catch (ParseException e) {
             e.printStackTrace();
             return 0;
