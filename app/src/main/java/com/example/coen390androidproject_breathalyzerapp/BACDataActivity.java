@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import androidx.activity.OnBackPressedCallback;
@@ -42,7 +43,7 @@ public class BACDataActivity extends AppCompatActivity {
     private Handler refreshHandler = new Handler();
     private Runnable refreshRunnable;
 
-    private static final long REFRESH_INTERVAL_MS = 2000;
+    private static final long REFRESH_INTERVAL_MS = 2500;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,13 +54,13 @@ public class BACDataActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
 
         recyclerViewBACData = findViewById(R.id.recyclerViewBACData);
         recyclerViewBACData.setLayoutManager(new LinearLayoutManager(this));
 
         dbHelper = new DBHelper(this);
-        currentUserId = getIntent().getIntExtra("currentUserId", -1);
+        currentUserId = sharedPreferences.getInt("currentUserId", -1);
+        Log.d("BACDataActivity", "Attempting to fetch currentUserId from SharedPreferences.");
 
         executorService = Executors.newSingleThreadExecutor();
 
@@ -165,6 +166,7 @@ public class BACDataActivity extends AppCompatActivity {
         super.onResume();
         isPaused = false;
         executorService = Executors.newSingleThreadExecutor();
+        sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
         fetchBACData(currentUserId);
         updateMenuItems();
