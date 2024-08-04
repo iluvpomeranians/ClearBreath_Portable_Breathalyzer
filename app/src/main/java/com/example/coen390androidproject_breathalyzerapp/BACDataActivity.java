@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -36,6 +37,12 @@ public class BACDataActivity extends AppCompatActivity {
     private ExecutorService executorService;
     private boolean isPaused = false;
     private OnBackPressedCallback onBackPressedCallback;
+
+    // Handler and Runnable for auto-refresh
+    private Handler refreshHandler = new Handler();
+    private Runnable refreshRunnable;
+
+    private static final long REFRESH_INTERVAL_MS = 2000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,6 +112,16 @@ public class BACDataActivity extends AppCompatActivity {
         };
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
 
+        // Initialize and start the refresh runnable
+        refreshRunnable = this::refreshBACData;
+        refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL_MS);
+    }
+
+    private void refreshBACData() {
+        if (!isPaused) {
+            fetchBACData(currentUserId);
+            refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL_MS);
+        }
     }
 
     private void fetchBACData(int userId) {
@@ -140,6 +157,7 @@ public class BACDataActivity extends AppCompatActivity {
         super.onPause();
         isPaused = true;
         executorService.shutdownNow();
+        refreshHandler.removeCallbacks(refreshRunnable);
     }
 
     @Override
@@ -150,6 +168,7 @@ public class BACDataActivity extends AppCompatActivity {
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
         fetchBACData(currentUserId);
         updateMenuItems();
+        refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL_MS);
     }
 
     @Override
@@ -190,6 +209,3 @@ public class BACDataActivity extends AppCompatActivity {
         updateUI(currentUserId);
     }
 }
-
-
-

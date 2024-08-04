@@ -57,7 +57,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     private List<BACRecord> allBacRecords = new ArrayList<>(); // Global list to store all BAC records
     private Button hourlyButton, dailyButton, weeklyButton;
 
-    private static final long REFRESH_INTERVAL_MS = 10000; // 10 seconds
+    private static final long REFRESH_INTERVAL_MS = 2000; // 10 seconds
     private static final int SAMPLE_COUNT = 10;
     private List<BACRecord> bacRecordBuffer = new ArrayList<>();
     private long lastSaveTimestamp = 0;
@@ -186,75 +186,81 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     }
 
     private void displayBACData() {
-        LineData data = chart.getData();
-        if (data != null) {
-            data.clearValues();
-        }
+        executorService.submit(() -> {
+            if (allBacRecords.isEmpty()) {
+                Cursor cursor = dbHelper.getBACRecords(currentUserId);
+                if (cursor != null && cursor.moveToFirst()) {
+                    do {
+                        String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
+                        double bac = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BAC_VALUE));
+                        bac = roundToThreeDecimalPlaces(bac);
+                        allBacRecords.add(new BACRecord(bac, timestamp));
+                    } while (cursor.moveToNext());
+                    cursor.close();
+                }
+            }
 
-        if (allBacRecords.isEmpty()) {
+            List<Entry> entries = new ArrayList<>();
+            switch (currentMode) {
+                case HOURLY:
+                    entries = calculateAverageBAC(ChartMode.HOURLY);
+                    break;
+                case DAILY:
+                    entries = calculateAverageBAC(ChartMode.DAILY);
+                    break;
+                case WEEKLY:
+                    entries = calculateAverageBAC(ChartMode.WEEKLY);
+                    break;
+            }
+
+            LineDataSet set = new LineDataSet(entries, "BAC Data");
+            set.setAxisDependency(YAxis.AxisDependency.LEFT);
+            set.setColor(ColorTemplate.getHoloBlue());
+            set.setLineWidth(2f);
+            set.setDrawFilled(true);
+            set.setFillDrawable(createGradientDrawable());
+            set.setHighLightColor(Color.rgb(244, 117, 117));
+            set.setDrawValues(true);
+
+            handler.post(() -> {
+                LineData data = chart.getData();
+                if (data != null) {
+                    data.clearValues();
+                    data.addDataSet(set);
+                    chart.setData(data);
+                    chart.notifyDataSetChanged();
+                    chart.invalidate();
+                }
+            });
+        });
+    }
+
+
+    private void fetchAndSaveAverageBACData() {
+        executorService.submit(() -> {
             Cursor cursor = dbHelper.getBACRecords(currentUserId);
             if (cursor != null && cursor.moveToFirst()) {
+                List<BACRecord> tempBuffer = new ArrayList<>();
                 do {
                     String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
                     double bac = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BAC_VALUE));
-                    bac = roundToThreeDecimalPlaces(bac);
-                    allBacRecords.add(new BACRecord(bac, timestamp));
+                    tempBuffer.add(new BACRecord(bac, timestamp));
+
+                    if (tempBuffer.size() >= SAMPLE_COUNT) {
+                        double averageBac = 0;
+                        for (BACRecord record : tempBuffer) {
+                            averageBac += record.getBacValue();
+                        }
+                        averageBac /= SAMPLE_COUNT;
+
+                        String firstTimestamp = tempBuffer.get(0).getTimestamp();
+                        dbHelper.insertBACRecord(currentUserId, firstTimestamp, averageBac);
+                        tempBuffer.clear();
+                    }
                 } while (cursor.moveToNext());
                 cursor.close();
             }
-        }
-
-        List<Entry> entries = new ArrayList<>();
-        switch (currentMode) {
-            case HOURLY:
-                entries = calculateAverageBAC(ChartMode.HOURLY);
-                break;
-            case DAILY:
-                entries = calculateAverageBAC(ChartMode.DAILY);
-                break;
-            case WEEKLY:
-                entries = calculateAverageBAC(ChartMode.WEEKLY);
-                break;
-        }
-
-        LineDataSet set = new LineDataSet(entries, "BAC Data");
-        set.setAxisDependency(YAxis.AxisDependency.LEFT);
-        set.setColor(ColorTemplate.getHoloBlue());
-        set.setLineWidth(2f);
-        set.setDrawFilled(true);
-        set.setFillDrawable(createGradientDrawable());
-        set.setHighLightColor(Color.rgb(244, 117, 117));
-        set.setDrawValues(true);
-
-        data.addDataSet(set);
-        chart.setData(data);
-        chart.notifyDataSetChanged();
-        chart.invalidate();
-    }
-
-    private void fetchAndSaveAverageBACData() {
-        Cursor cursor = dbHelper.getBACRecords(currentUserId);
-        if (cursor != null && cursor.moveToFirst()) {
-            List<BACRecord> tempBuffer = new ArrayList<>();
-            do {
-                String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
-                double bac = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BAC_VALUE));
-                tempBuffer.add(new BACRecord(bac, timestamp));
-
-                if (tempBuffer.size() >= SAMPLE_COUNT) {
-                    double averageBac = 0;
-                    for (BACRecord record : tempBuffer) {
-                        averageBac += record.getBacValue();
-                    }
-                    averageBac /= SAMPLE_COUNT;
-
-                    String firstTimestamp = tempBuffer.get(0).getTimestamp();
-                    dbHelper.insertBACRecord(currentUserId, firstTimestamp, averageBac);
-                    tempBuffer.clear();
-                }
-            } while (cursor.moveToNext());
-            cursor.close();
-        }
+        });
     }
 
     private float convertTimestampToMillis(String timestamp) {

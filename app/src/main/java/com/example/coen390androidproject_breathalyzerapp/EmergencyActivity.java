@@ -29,12 +29,15 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 
+import app.juky.squircleview.views.SquircleButton;
+
+
 public class EmergencyActivity extends AppCompatActivity implements Marker.OnMarkerClickListener {
 
     private static final int REQUEST_LOCATION_PERMISSION = 1;
 
     private MapView mapView;
-    private Button buttonFindNearby, buttonFindHospitals, buttonCall, buttonSMS, buttonWhatsApp;
+    private SquircleButton buttonFindNearby, buttonFindHospitals, buttonCall, buttonSMS, buttonWhatsApp;
     private FusedLocationProviderClient fusedLocationClient;
     private boolean pendingTaxiDialog = false;
 
