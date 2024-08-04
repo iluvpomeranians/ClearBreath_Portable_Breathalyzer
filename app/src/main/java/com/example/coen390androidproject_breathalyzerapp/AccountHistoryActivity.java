@@ -1,11 +1,13 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
@@ -56,8 +58,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     private ChartMode currentMode = ChartMode.HOURLY;
     private List<BACRecord> allBacRecords = new ArrayList<>(); // Global list to store all BAC records
     private Button hourlyButton, dailyButton, weeklyButton;
-
-    private static final long REFRESH_INTERVAL_MS = 2000; // 10 seconds
+    private static final long REFRESH_INTERVAL_MS = 3000; 
     private static final int SAMPLE_COUNT = 10;
     private List<BACRecord> bacRecordBuffer = new ArrayList<>();
     private long lastSaveTimestamp = 0;
@@ -84,7 +85,8 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
 
         chart = findViewById(R.id.chart1);
         dbHelper = new DBHelper(this);
-        currentUserId = getIntent().getIntExtra("currentUserId", -1);
+        SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+        currentUserId = sharedPreferences.getInt("currentUserId", -1);
 
         initializeChart();
 
@@ -116,13 +118,20 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     @Override
     protected void onResume() {
         super.onResume();
-        handler.post(runnable); // Start the updates
+        SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+        currentUserId = sharedPreferences.getInt("currentUserId", -1);
+        if (currentUserId != -1) {
+            Log.d("AA", "currentUserId fetched successfully: " + currentUserId);
+        } else {
+            Log.d("AA", "currentUserId is not set or invalid.");
+        }
+        handler.post(runnable);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        handler.removeCallbacks(runnable); // Stop the updates
+        handler.removeCallbacks(runnable);
     }
 
     @Override
@@ -186,6 +195,8 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     }
 
     private void displayBACData() {
+        SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+        currentUserId = sharedPreferences.getInt("currentUserId", -1);
         executorService.submit(() -> {
             if (allBacRecords.isEmpty()) {
                 Cursor cursor = dbHelper.getBACRecords(currentUserId);
@@ -237,6 +248,8 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
 
 
     private void fetchAndSaveAverageBACData() {
+        SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+        currentUserId = sharedPreferences.getInt("currentUserId", -1);
         executorService.submit(() -> {
             Cursor cursor = dbHelper.getBACRecords(currentUserId);
             if (cursor != null && cursor.moveToFirst()) {

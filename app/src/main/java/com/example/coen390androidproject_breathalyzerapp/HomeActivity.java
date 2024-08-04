@@ -121,6 +121,16 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
 
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
+        if (!allPermissionsGranted()) {
+            ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_CODE_NOTIFICATIONS);
+            }
+        }
+
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
@@ -248,12 +258,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
 
         updateMenuItems();
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_CODE_NOTIFICATIONS);
-            }
-        }
 
         FirebaseMessaging.getInstance().getToken()
                 .addOnCompleteListener(task -> {
@@ -401,16 +405,15 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     protected void onResume() {
         super.onResume();
 
-        if (sharedPreferences == null) {
-            sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        }
+        SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+        currentUserId = sharedPreferences.getInt("currentUserId", -1);
 
         if (bacDisplay != null && bacMlDisplay != null && timeUntilSoberDisplay != null && btnStartRecording != null && btnInstructions != null) {
             SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, btnStartRecording, btnInstructions, buttonEmergency);
         } else {
             Log.e(TAG, "One or more UI elements are null");
         }
-        currentUserId = sharedPreferences.getInt("currentUserId", -1);
+
         updateMenuItems();
         updateBluetoothStatus();
         Log.d(TAG, "onResume");
@@ -572,7 +575,9 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             timeUntilSoberDisplay.setText(String.format("Time Until Sober: %.1f hours", hoursUntilSober));
 
             String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH).format(new Date());
-            // Save BAC data for the current user
+
+            SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+            currentUserId = sharedPreferences.getInt("currentUserId", -1);
             dbHelper.insertBACRecord(currentUserId, timestamp, bac);
 
         } catch (NumberFormatException e) {
