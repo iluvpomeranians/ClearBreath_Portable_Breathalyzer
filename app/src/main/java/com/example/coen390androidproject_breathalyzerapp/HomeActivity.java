@@ -186,6 +186,8 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             public void onClick(View v) {
                 progressBar.setVisibility(View.VISIBLE);
                 textViewBlow.setVisibility(View.VISIBLE);
+                buttonEmergency.setVisibility(View.GONE);
+                btnAccountHistory.setVisibility(View.GONE);
                 buttonStartRecording.setEnabled(false);
                 btnCancelRecording.setVisibility(View.VISIBLE);
                 isRecording = true;
@@ -361,7 +363,11 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                     public void run() {
                         textViewBlow.setVisibility(View.GONE);
                         btnCancelRecording.setVisibility(View.GONE);
+                        progressBar.setVisibility(View.GONE);
                         buttonStartRecording.setEnabled(true);
+                        buttonEmergency.setVisibility(View.VISIBLE);
+                        btnAccountHistory.setVisibility(View.VISIBLE);
+
                     }
                 });
             }

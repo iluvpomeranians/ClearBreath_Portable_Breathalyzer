@@ -1,5 +1,6 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
+import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Intent;
@@ -130,6 +131,7 @@ public class StartRecordingActivity extends AppCompatActivity {
             }
         }
 
+        @SuppressLint("MissingPermission")
         private void sendNotification(String messageBody) {
             NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
 
