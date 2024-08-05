@@ -28,7 +28,7 @@
     <app.juky.squircleview.views.SquircleButton
         android:id="@+id/button_find_nearby"
         android:layout_width="0dp"
-        android:layout_height="60dp"
+        android:layout_height="40dp"
         android:text="Find Nearby Police Stations"
         app:squircle_background_color="@color/material_dynamic_primary95"
         app:squircle_border_gradient_direction="top_to_bottom"
@@ -43,7 +43,7 @@
     <app.juky.squircleview.views.SquircleButton
         android:id="@+id/button_find_hospitals"
         android:layout_width="0dp"
-        android:layout_height="60dp"
+        android:layout_height="40dp"
         android:text="Find Nearby Hospitals"
         app:squircle_background_color="@color/material_dynamic_primary95"
         app:squircle_border_gradient_direction="top_to_bottom"
@@ -58,7 +58,7 @@
     <app.juky.squircleview.views.SquircleButton
         android:id="@+id/button_call"
         android:layout_width="0dp"
-        android:layout_height="60dp"
+        android:layout_height="40dp"
         android:text="Make Emergency Call"
         app:squircle_background_color="@color/material_dynamic_primary95"
         app:squircle_border_gradient_direction="top_to_bottom"
@@ -73,7 +73,7 @@
     <app.juky.squircleview.views.SquircleButton
         android:id="@+id/button_sms"
         android:layout_width="0dp"
-        android:layout_height="60dp"
+        android:layout_height="40dp"
         android:text="Send SMS"
         app:squircle_background_color="@color/material_dynamic_primary95"
         app:squircle_border_gradient_direction="top_to_bottom"
@@ -88,7 +88,7 @@
     <app.juky.squircleview.views.SquircleButton
         android:id="@+id/button_whatsapp"
         android:layout_width="0dp"
-        android:layout_height="60dp"
+        android:layout_height="40dp"
         android:text="Open WhatsApp"
         app:squircle_background_color="@color/material_dynamic_primary95"
         app:squircle_border_gradient_direction="top_to_bottom"

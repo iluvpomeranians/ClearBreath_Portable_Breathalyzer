@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.bluetooth.BluetoothAdapter;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Handler;
 import android.app.PendingIntent;
@@ -204,7 +205,14 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                 startProgressBar();
             }
         });
-        btnCancelRecording.setOnClickListener(v -> cancelRecording());
+        btnCancelRecording.setOnClickListener(v -> {
+            cancelRecording();
+            progressBar.setVisibility(View.GONE);
+            textViewBlow.setVisibility(View.GONE);
+            btnCancelRecording.setVisibility(View.GONE);
+            buttonEmergency.setVisibility(View.VISIBLE);
+            btnAccountHistory.setVisibility(View.VISIBLE);
+        });
 
         btnAccountHistory.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, AccountHistoryActivity.class);
@@ -404,7 +412,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     @Override
     protected void onResume() {
         super.onResume();
-
+        applySettings();
         SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
 
@@ -692,6 +700,43 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             } else {
                 accountMenuItem.setTitle("Account");
             }
+        }
+    }
+
+    private void applySettings() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        // Apply toolbar color
+        int toolbarColor = sharedPreferences.getInt("toolbar_color", Color.BLUE);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        if (toolbar != null) {
+            toolbar.setBackgroundColor(toolbarColor);
+        }
+
+        // Apply status bar color
+        setStatusBarColor(toolbarColor);
+
+        // Apply text size
+        int textSize = sharedPreferences.getInt("text_size", 15);
+        TextView sampleTextView = findViewById(R.id.sample_text_view); // Adjust to your actual view
+        if (sampleTextView != null) {
+            sampleTextView.setTextSize(textSize);
+        }
+
+        // Apply font type
+        int fontIndex = sharedPreferences.getInt("font_index", 0);
+        String[] fonts = SettingsActivity.getFonts();
+        if (fontIndex >= 0 && fontIndex < fonts.length) {
+            Typeface typeface = Typeface.create(fonts[fontIndex], Typeface.NORMAL);
+            if (sampleTextView != null) {
+                sampleTextView.setTypeface(typeface);
+            }
+        }
+    }
+
+    private void setStatusBarColor(int color) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(color);
         }
     }
 

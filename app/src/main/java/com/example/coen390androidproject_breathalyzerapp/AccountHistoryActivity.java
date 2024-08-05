@@ -2,6 +2,7 @@ package com.example.coen390androidproject_breathalyzerapp;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
@@ -45,6 +46,8 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import app.juky.squircleview.views.SquircleButton;
+
 public class AccountHistoryActivity extends AppCompatActivity implements OnChartValueSelectedListener {
 
     private DrawerLayout drawerLayout;
@@ -58,7 +61,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
 
     private ChartMode currentMode = ChartMode.SEC_15;
     private List<BACRecord> allBacRecords = new ArrayList<>();
-    private Button sec15Button, minutelyButton, hourlyButton;
+    private SquircleButton sec15Button, minutelyButton, hourlyButton;
     private static final long REFRESH_INTERVAL_MS = 3000;
 
     private static final int SAMPLE_COUNT = 10;
@@ -76,6 +79,8 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_account_history);
+
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
