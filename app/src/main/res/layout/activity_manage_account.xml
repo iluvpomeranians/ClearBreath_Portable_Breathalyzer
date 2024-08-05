@@ -36,7 +36,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.545"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+            app:layout_constraintTop_toBottomOf="@+id/toolbar"
+            android:digits="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"/>
 
         <EditText
             android:id="@+id/editTextAge"
@@ -48,7 +49,8 @@
             android:inputType="number"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editTextUsername" />
+            app:layout_constraintTop_toBottomOf="@+id/editTextUsername"
+            android:digits="1234567890"/>
 
         <EditText
             android:id="@+id/editTextBMI"
@@ -60,38 +62,47 @@
             android:inputType="numberDecimal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editTextAge" />
+            app:layout_constraintTop_toBottomOf="@+id/editTextAge"
+            android:digits="1234567890"/>
 
         <app.juky.squircleview.views.SquircleButton
             android:id="@+id/buttonSaveChanges"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            android:minWidth="200dp"
-            android:minHeight="30dp"
+            android:minWidth="300dp"
+            android:minHeight="40dp"
             android:text="Save Changes"
-            android:textColor="@android:color/white"
+            android:textColor="@android:color/black"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.497"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/editTextBMI"
-            app:squircle_background_color="@android:color/holo_green_light" />
+            app:squircle_background_color="@color/material_dynamic_primary95"
+            app:squircle_border_gradient_direction="top_to_bottom"
+            app:squircle_border_gradient_end_color="@color/teal_200"
+            app:squircle_border_gradient_start_color="@color/purple_500"
+            app:squircle_border_width="4dp" />
 
         <app.juky.squircleview.views.SquircleButton
             android:id="@+id/buttonDeleteAccount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:minWidth="200dp"
-            android:minHeight="30dp"
+            android:minWidth="300dp"
+            android:minHeight="40dp"
             android:text="Delete Account"
-            android:textColor="@android:color/white"
+            android:textColor="@android:color/black"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.497"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/buttonSaveChanges"
-            app:layout_constraintVertical_bias="0.0"
-            app:squircle_background_color="@android:color/holo_red_light" />
+            app:layout_constraintVertical_bias="0.044"
+            app:squircle_background_color="@color/material_dynamic_primary95"
+            app:squircle_border_gradient_direction="top_to_bottom"
+            app:squircle_border_gradient_end_color="@color/teal_200"
+            app:squircle_border_gradient_start_color="@color/purple_500"
+            app:squircle_border_width="4dp" />
 
         <ImageView
             android:id="@+id/mascots_image"

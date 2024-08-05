@@ -1,21 +1,34 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
+import android.os.Handler;
+import android.preference.PreferenceManager;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
-
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.navigation.NavigationView;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class BACDataActivity extends AppCompatActivity {
 
-    private TextView textViewBACData;
+    private SharedPreferences sharedPreferences;
+    private RecyclerView recyclerViewBACData;
     private DBHelper dbHelper;
     private int currentUserId;
 
@@ -23,25 +36,44 @@ public class BACDataActivity extends AppCompatActivity {
     private ActionBarDrawerToggle toggle;
     private NavigationView navigationView;
 
+    private ExecutorService executorService;
+    private boolean isPaused = false;
+    private OnBackPressedCallback onBackPressedCallback;
+
+    // Handler and Runnable for auto-refresh
+    private Handler refreshHandler = new Handler();
+    private Runnable refreshRunnable;
+
+    private static final long REFRESH_INTERVAL_MS = 2500;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bac_data);
 
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        textViewBACData = findViewById(R.id.textViewBACData);
-        dbHelper = new DBHelper(this);
-        currentUserId = getIntent().getIntExtra("currentUserId", -1);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        displayBACData();
-        SettingsUtils.applySettings(this, textViewBACData);
+        recyclerViewBACData = findViewById(R.id.recyclerViewBACData);
+        recyclerViewBACData.setLayoutManager(new LinearLayoutManager(this));
+
+        dbHelper = new DBHelper(this);
+
+        currentUserId = sharedPreferences.getInt("currentUserId", -1);
+        Log.d("BACDataActivity", "Attempting to fetch currentUserId from SharedPreferences.");
+
+        executorService = Executors.newSingleThreadExecutor();
+
+        fetchBACData(currentUserId);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
-            getSupportActionBar().setTitle("BAC Data Account Details");
+            getSupportActionBar().setTitle("View RAW BAC Data");
         }
 
         drawerLayout = findViewById(R.id.drawer_layout);
@@ -52,43 +84,137 @@ public class BACDataActivity extends AppCompatActivity {
         navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
+            Intent intent;
             if (id == R.id.nav_home) {
-                Intent intent = new Intent(BACDataActivity.this, HomeActivity.class);
-                intent.putExtra("currentUserId", currentUserId);
-                startActivity(intent);
-                return true;
+                intent = new Intent(BACDataActivity.this, HomeActivity.class);
             } else if (id == R.id.nav_settings) {
-                Intent intent = new Intent(BACDataActivity.this, SettingsActivity.class);
-                intent.putExtra("currentUserId", currentUserId);
-                startActivity(intent);
-                return true;
+                intent = new Intent(BACDataActivity.this, SettingsActivity.class);
             } else if (id == R.id.nav_manage_account) {
-                Intent intent = new Intent(BACDataActivity.this, ManageAccountActivity.class);
-                intent.putExtra("currentUserId", currentUserId);
-                startActivity(intent);
-                return true;
+                intent = new Intent(BACDataActivity.this, ManageAccountActivity.class);
             } else if (id == R.id.nav_account) {
-                Intent intent = new Intent(BACDataActivity.this, AccountActivity.class);
-                intent.putExtra("currentUserId", currentUserId);
-                startActivity(intent);
-                return true;
+                intent = new Intent(BACDataActivity.this, AccountActivity.class);
+            } else {
+                return false;
             }
-            return false;
+            intent.putExtra("currentUserId", currentUserId);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+            return true;
         });
 
+        updateMenuItems();
+
+        onBackPressedCallback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                } else {
+                    navigateBackToHome();
+                }
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
+
+        // Initialize and start the refresh runnable
+        refreshRunnable = this::refreshBACData;
+        refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL_MS);
+
+        SettingsUtils.applySettings(this);
     }
 
-    private void displayBACData() {
-        Cursor cursor = dbHelper.getBACRecords(currentUserId);
+    private void refreshBACData() {
+        if (!isPaused) {
+            fetchBACData(currentUserId);
+            refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL_MS);
+        }
+    }
+
+    private void fetchBACData(int userId) {
+        executorService.submit(() -> {
+            if (!isPaused) {
+                List<BACData> data = getBACData(userId);
+                runOnUiThread(() -> {
+                    if (!isPaused) {
+                        BACDataAdapter adapter = new BACDataAdapter(data);
+                        recyclerViewBACData.setAdapter(adapter);
+                    }
+                });
+            }
+        });
+    }
+
+    private List<BACData> getBACData(int userId) {
+        List<BACData> data = new ArrayList<>();
+        Cursor cursor = dbHelper.getBACRecords(userId);
         if (cursor != null && cursor.moveToFirst()) {
-            StringBuilder data = new StringBuilder();
             do {
                 String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
                 double bac = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BAC_VALUE));
-                data.append("Timestamp: ").append(timestamp).append(", BAC: ").append(bac).append("\n");
+                data.add(new BACData(timestamp, bac));
             } while (cursor.moveToNext());
-            textViewBACData.setText(data.toString());
             cursor.close();
+        }
+        return data;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        isPaused = true;
+        executorService.shutdownNow();
+        refreshHandler.removeCallbacks(refreshRunnable);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateMenuItems();
+        isPaused = false;
+        executorService = Executors.newSingleThreadExecutor();
+        sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+        currentUserId = sharedPreferences.getInt("currentUserId", -1);
+        fetchBACData(currentUserId);
+        refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL_MS);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        executorService.shutdown();
+    }
+
+    private void navigateBackToHome() {
+        Intent intent = new Intent(BACDataActivity.this, HomeActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        finish();
+    }
+
+    private void updateMenuItems() {
+        SharedPreferences preferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+        currentUserId = preferences.getInt("currentUserId", -1);
+        boolean isLoggedIn = preferences.getBoolean("loggedIn", false);
+
+        Menu menu = navigationView.getMenu();
+        menu.findItem(R.id.nav_manage_account).setVisible(isLoggedIn);
+        updateUI(currentUserId);
+    }
+
+    private void updateUI(int currentUserId) {
+        MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
+        if (currentUserId == -1) {
+            accountMenuItem.setTitle("Account");
+        } else {
+            Cursor cursor = dbHelper.getAccount(currentUserId);
+            if (cursor != null && cursor.moveToFirst()) {
+                String username = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_USERNAME));
+                accountMenuItem.setTitle(username);
+                cursor.close();
+            } else {
+                accountMenuItem.setTitle("Account");
+            }
         }
     }
 }

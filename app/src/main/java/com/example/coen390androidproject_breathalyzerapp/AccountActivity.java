@@ -63,28 +63,27 @@ public class AccountActivity extends AppCompatActivity {
         navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
+            Intent intent;
             if (id == R.id.nav_home) {
-                Intent intent = new Intent(AccountActivity.this, HomeActivity.class);
+                intent = new Intent(AccountActivity.this, HomeActivity.class);
                 intent.putExtra("currentUserId", currentUserId);
-                startActivity(intent);
-                return true;
             } else if (id == R.id.nav_settings) {
-                Intent intent = new Intent(AccountActivity.this, SettingsActivity.class);
+                intent = new Intent(AccountActivity.this, SettingsActivity.class);
                 intent.putExtra("currentUserId", currentUserId);
-                startActivity(intent);
-                return true;
             } else if (id == R.id.nav_manage_account) {
-                Intent intent = new Intent(AccountActivity.this, ManageAccountActivity.class);
+                intent = new Intent(AccountActivity.this, ManageAccountActivity.class);
                 intent.putExtra("currentUserId", currentUserId);
-                startActivity(intent);
-                return true;
             } else if (id == R.id.nav_bac_data) {
-                Intent intent = new Intent(AccountActivity.this, BACDataActivity.class);
+                intent = new Intent(AccountActivity.this, BACDataActivity.class);
                 intent.putExtra("currentUserId", currentUserId);
-                startActivity(intent);
-                return true;
             }
-            return false;
+            else{
+                return false;
+            }
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+            return true;
         });
 
         textViewWelcome = findViewById(R.id.textViewWelcome);
@@ -125,11 +124,18 @@ public class AccountActivity extends AppCompatActivity {
                 if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
                     drawerLayout.closeDrawer(GravityCompat.START);
                 } else {
-                    moveTaskToBack(true);
+                    navigateBackToHome();
                 }
             }
         };
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
+    }
+
+    private void navigateBackToHome() {
+        Intent intent = new Intent(AccountActivity.this, HomeActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        finish();
     }
 
     private void saveLoginState(boolean loggedIn) {
@@ -176,7 +182,7 @@ public class AccountActivity extends AppCompatActivity {
     private void updateUI(int currentUserId) {
         if (currentUserId == -1) {
             Log.d("AccountACT:", "currentUserId does not exist!");
-            textViewWelcome.setText("Welcome");
+            textViewWelcome.setText("Welcome to ClearBreath!");
             btnLogin.setVisibility(View.VISIBLE);
             btnRegister.setVisibility(View.VISIBLE);
             btnLogout.setVisibility(View.GONE);

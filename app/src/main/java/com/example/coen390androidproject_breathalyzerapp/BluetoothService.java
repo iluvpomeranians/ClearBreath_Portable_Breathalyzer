@@ -32,7 +32,6 @@ public class BluetoothService extends Service {
     private InputStream inputStream;
     private BluetoothDataListener dataListener;
     private Handler handler = new Handler();
-
     private final IBinder binder = new LocalBinder();
 
     public interface BluetoothDataListener {

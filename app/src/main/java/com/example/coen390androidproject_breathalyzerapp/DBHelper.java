@@ -4,13 +4,14 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteDatabaseLockedException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 public class DBHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "breathalyzerApp.db";
     private static final int DATABASE_VERSION = 1;
-
     public static final String TABLE_ACCOUNTS = "accounts";
     public static final String COLUMN_ID = "id";
     public static final String COLUMN_FULL_NAME = "full_name";
@@ -20,7 +21,6 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String COLUMN_AGE = "age";
     public static final String COLUMN_EMAIL = "email";
     public static final String COLUMN_BMI = "bmi";
-
     public static final String TABLE_BAC_DATA = "bac_data";
     public static final String COLUMN_ACCOUNT_ID = "account_id";
     public static final String COLUMN_TIMESTAMP = "timestamp";
@@ -108,11 +108,32 @@ public class DBHelper extends SQLiteOpenHelper {
         return db.query(TABLE_BAC_DATA, null, COLUMN_ACCOUNT_ID + " = ?", new String[]{String.valueOf(accountId)}, null, null, COLUMN_TIMESTAMP + " DESC");
     }
 
-    public long insertBACRecord(int accountId, double bacValue) {
+    public void insertBACRecord(int userId, String timestamp, double bacValue) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(COLUMN_ACCOUNT_ID, accountId);
+        values.put(COLUMN_ACCOUNT_ID, userId);
+        values.put(COLUMN_TIMESTAMP, timestamp);
         values.put(COLUMN_BAC_VALUE, bacValue);
-        return db.insert(TABLE_BAC_DATA, null, values);
+
+        synchronized (this) {
+            int retries = 3;
+            while (retries > 0) {
+                try {
+                    db.insertOrThrow(TABLE_BAC_DATA, null, values);
+                    return;
+                } catch (SQLiteDatabaseLockedException e) {
+                    retries--;
+                    try {
+                        Thread.sleep(50);  // Wait a bit before retrying
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+                } catch (Exception e) {
+                    Log.e("DBHelper", "Error inserting BAC record", e);
+                    return;
+                }
+            }
+            Log.e("DBHelper", "Failed to insert BAC record after retries");
+        }
     }
 }

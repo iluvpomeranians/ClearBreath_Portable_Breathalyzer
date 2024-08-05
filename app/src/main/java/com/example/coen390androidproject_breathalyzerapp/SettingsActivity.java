@@ -74,6 +74,7 @@ public class SettingsActivity extends AppCompatActivity {
         setupTextSizeSeekBar();
         setupFontSpinner();
         setupColorGrid();
+
         apply_button.setOnClickListener(v -> {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             int selectedColor = ((ColorDrawable) toolbar.getBackground()).getColor();
@@ -81,14 +82,16 @@ public class SettingsActivity extends AppCompatActivity {
             editor.apply();
 
             SettingsUtils.setStatusBarColor(SettingsActivity.this, selectedColor);
-
-            Intent intent = new Intent(SettingsActivity.this, HomeActivity.class);
-            startActivity(intent);
+            navigateBackToHome();
         });
 
         OnBackPressedCallback callback = new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                int selectedColor = ((ColorDrawable) toolbar.getBackground()).getColor();
+                editor.putInt("toolbar_color", selectedColor);
+                editor.apply();
                 navigateBackToHome();
             }
         };

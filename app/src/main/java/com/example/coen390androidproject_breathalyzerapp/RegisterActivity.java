@@ -1,31 +1,26 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
-import android.content.ContentValues;
-import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.InputFilter;
 import android.text.Spanned;
 import android.text.method.DigitsKeyListener;
-import android.widget.ArrayAdapter;
 import android.view.Menu;
-import android.widget.Button;
+import android.view.MenuItem;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import android.text.InputFilter;
-import android.text.Spanned;
-import android.text.method.DigitsKeyListener;
-import android.widget.ArrayAdapter;
-import android.view.Menu;
-import android.view.MenuItem;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.navigation.NavigationView;
 import app.juky.squircleview.views.SquircleButton;
 
@@ -36,6 +31,9 @@ public class RegisterActivity extends AppCompatActivity {
     private SquircleButton btnRegister;
     private DBHelper dbHelper;
     private SharedPreferences sharedPreferences;
+    private DrawerLayout drawerLayout;
+    private ActionBarDrawerToggle toggle;
+    private NavigationView navigationView;
     private int currentUserId = -1;
     private OnBackPressedCallback onBackPressedCallback;
 
@@ -44,7 +42,7 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // lock our app to portrait
+        // Lock the app to portrait
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -80,11 +78,43 @@ public class RegisterActivity extends AppCompatActivity {
         btnRegister.setOnClickListener(v -> register());
         SettingsUtils.applySettings(this, editTextFullName, editTextUsername, editTextPassword, editTextConfirmPassword, editTextAge,editTextBMI, btnRegister);
 
-        updateMenuItems();
+        drawerLayout = findViewById(R.id.drawer_layout);
+        toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
 
+        navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(item -> {
+            int id = item.getItemId();
+            Intent intent;
+            if (id == R.id.nav_home) {
+                intent = new Intent(RegisterActivity.this, HomeActivity.class);
+            } else if (id == R.id.nav_settings) {
+                intent = new Intent(RegisterActivity.this, SettingsActivity.class);
+            } else if (id == R.id.nav_bac_data) {
+                intent = new Intent(RegisterActivity.this, BACDataActivity.class);
+            } else if (id == R.id.nav_account) {
+                intent = new Intent(RegisterActivity.this, AccountActivity.class);
+            } else {
+                return false;
+            }
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+            return true;
+        });
+
+        onBackPressedCallback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                navigateBackToHome();
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
+
+        updateMenuItems();
         boolean loggedIn = sharedPreferences.getBoolean("loggedIn", false);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
-
     }
 
     private void setInputRestrictions() {
@@ -192,8 +222,13 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        if (age < 1 || age > 120) {
-            Toast.makeText(this, "Age must be between 1 and 120", Toast.LENGTH_SHORT).show();
+        if (age < 18 || age > 120) {
+            Toast.makeText(this, "Age must be between 18 and 120", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (bmi < 10.0 || bmi > 150.0) {
+            Toast.makeText(this, "BMI must be between 10 and 150", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -228,7 +263,6 @@ public class RegisterActivity extends AppCompatActivity {
 
     private void updateMenuItems() {
         boolean isLoggedIn = sharedPreferences.getBoolean("loggedIn", false);
-        NavigationView navigationView = findViewById(R.id.nav_view);
         if (navigationView != null) {
             Menu menu = navigationView.getMenu();
             if (menu != null) {
@@ -238,14 +272,18 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(@NonNull android.view.MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            Intent intent = new Intent(RegisterActivity.this, AccountActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-            startActivity(intent);
-            finish();
+            navigateBackToHome();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void navigateBackToHome() {
+        Intent intent = new Intent(RegisterActivity.this, HomeActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        finish();
     }
 }
