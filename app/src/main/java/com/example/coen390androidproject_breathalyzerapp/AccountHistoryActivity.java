@@ -1,5 +1,6 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
@@ -12,7 +13,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -58,24 +58,22 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     private int currentUserId;
     private Handler handler;
     private Runnable runnable;
-    private ChartMode currentMode = ChartMode.SEC_15;
+    private ChartMode currentMode = ChartMode.DEFAULT;
     private List<BACRecord> allBacRecords = new ArrayList<>();
-    private SquircleButton sec15Button, minutelyButton, hourlyButton;
+    private SquircleButton sec15Button, minutelyButton, defaultButton;
     private static final long REFRESH_INTERVAL_MS = 3000;
     private static final int SAMPLE_COUNT = 10;
-    private List<BACRecord> bacRecordBuffer = new ArrayList<>();
     private long lastSaveTimestamp = 0;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private enum ChartMode {
-        SEC_15, MINUTELY, HOURLY
+        SEC_15, MINUTELY, DEFAULT
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_account_history);
 
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -90,7 +88,6 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
 
         chart = findViewById(R.id.chart1);
         dbHelper = new DBHelper(this);
-        Log.d("AccountHistoryActivity", "DBHelper initialized: " + (dbHelper != null));
         SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
 
@@ -101,33 +98,29 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
             @Override
             public void run() {
                 long currentTime = System.currentTimeMillis();
-                Log.d("Runnable", "Runnable is running");
-                Log.d("Runnable", "Current time: " + currentTime);
-                Log.d("Runnable", "Last save timestamp: " + lastSaveTimestamp);
-                Log.d("Runnable", "Time difference: " + (currentTime - lastSaveTimestamp));
+                long refreshInterval = REFRESH_INTERVAL_MS;
+                if (currentMode == ChartMode.SEC_15) {
+                    refreshInterval = 15000;
+                } else if (currentMode == ChartMode.MINUTELY) {
+                    refreshInterval = 60000;
+                }
 
-                if (currentTime - lastSaveTimestamp >= REFRESH_INTERVAL_MS) {
+                if (currentTime - lastSaveTimestamp >= refreshInterval) {
                     executorService.submit(() -> {
-                        try {
-                            fetchAndSaveAverageBACData();
-                            handler.post(() -> {
-                                displayBACData();
-                                lastSaveTimestamp = currentTime;
-                            });
-                        } catch (Exception e) {
-                            Log.e("Runnable", "Error fetching and saving average BAC data", e);
-                        }
+                        fetchAndSaveAverageBACData();
+                        handler.post(() -> {
+                            displayBACData();
+                            lastSaveTimestamp = currentTime;
+                        });
                     });
                 } else {
-                    Log.d("Runnable", "Time difference does not exceed refresh interval, updating display");
                     handler.post(() -> displayBACData());
                 }
                 handler.postDelayed(this, REFRESH_INTERVAL_MS);
             }
         };
 
-
-        SettingsUtils.applySettings(this, sec15Button, minutelyButton, hourlyButton);
+        SettingsUtils.applySettings(this, sec15Button, minutelyButton, defaultButton);
     }
 
     @Override
@@ -201,8 +194,23 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         xl.setEnabled(true);
         xl.setPosition(XAxis.XAxisPosition.BOTTOM);
         xl.setGranularityEnabled(true);
-        xl.setGranularity(3f);
+        xl.setGranularity(1f);
         xl.setLabelCount(5, true);
+        xl.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                switch (currentMode) {
+                    case SEC_15:
+                        return String.format(Locale.ENGLISH, "%.0f sec", value * 15);
+                    case MINUTELY:
+                        return String.format(Locale.ENGLISH, "%.0f min", value);
+                    case DEFAULT:
+                        return String.format(Locale.ENGLISH, "%.0f sec", value * 3);
+                    default:
+                        return String.valueOf(value);
+                }
+            }
+        });
 
         YAxis leftAxis = chart.getAxisLeft();
         leftAxis.setTextColor(Color.WHITE);
@@ -213,7 +221,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         leftAxis.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
-                return String.format(Locale.ENGLISH, "%.3f", value);
+                return String.format(Locale.ENGLISH, "%.3f BAC", value);
             }
         });
 
@@ -222,11 +230,11 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
 
         sec15Button = findViewById(R.id.sec15Button);
         minutelyButton = findViewById(R.id.minutelyButton);
-        hourlyButton = findViewById(R.id.hourlyButton);
+        defaultButton = findViewById(R.id.defaultButton);
 
         sec15Button.setOnClickListener(v -> setChartMode(ChartMode.SEC_15));
         minutelyButton.setOnClickListener(v -> setChartMode(ChartMode.MINUTELY));
-        hourlyButton.setOnClickListener(v -> setChartMode(ChartMode.HOURLY));
+        defaultButton.setOnClickListener(v -> setChartMode(ChartMode.DEFAULT));
     }
 
     private void displayBACData() {
@@ -237,30 +245,21 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         String json = sharedPreferences.getString("averageBACList", "[]");
         List<Float> averageBacList = Utils.convertJsonToList(json);
 
-        LineData data = chart.getData();
-        if (data == null) {
-            data = new LineData();
-            chart.setData(data);
-        }
+        List<Entry> entries = calculateAverageBAC(currentMode);
 
-        ILineDataSet set = data.getDataSetByIndex(0);
-        if (set == null) {
-            set = createSet();
+        handler.post(() -> {
+            LineData data = new LineData();
+            LineDataSet set = createSet();
+            set.setValues(entries);
             data.addDataSet(set);
-        }
 
-        for (Float bac : averageBacList) {
-            data.addEntry(new Entry(set.getEntryCount(), bac), 0);
-        }
-        data.notifyDataChanged();
-
-        // Let the chart know its data has changed
-        chart.notifyDataSetChanged();
-        chart.setVisibleXRangeMaximum(50);
-        chart.moveViewToX(data.getEntryCount());
-        chart.invalidate();
+            chart.setData(data);
+            chart.notifyDataSetChanged();
+            chart.setVisibleXRangeMaximum(50);
+            chart.moveViewToX(data.getEntryCount());
+            chart.invalidate();
+        });
     }
-
 
     private LineDataSet createSet() {
         LineDataSet set = new LineDataSet(new ArrayList<>(), "BAC Data");
@@ -280,7 +279,6 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
 
         return set;
     }
-
 
     private void fetchAndSaveAverageBACData() {
         SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
@@ -304,26 +302,22 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
                             recordCount++;
 
                             if (tempBuffer.size() >= SAMPLE_COUNT) {
-                                break; // Process only SAMPLE_COUNT records
+                                break;
                             }
                         } while (cursor.moveToNext());
 
                         if (recordCount > 0) {
                             double averageBac = totalBac / recordCount;
 
-                            // Save single average BAC value
                             SharedPreferences.Editor editor = sharedPreferences.edit();
                             editor.putFloat("averageBAC", (float) averageBac);
                             editor.apply();
 
-                            // Retrieve existing list from SharedPreferences
                             String json = sharedPreferences.getString("averageBACList", "[]");
                             List<Float> averageBacList = Utils.convertJsonToList(json);
 
-                            // Add the new average BAC value to the list
                             averageBacList.add((float) averageBac);
 
-                            // Save the updated list to SharedPreferences
                             editor.putString("averageBACList", Utils.convertListToJson(averageBacList));
                             editor.apply();
                         }
@@ -339,8 +333,73 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         });
     }
 
+    private List<Entry> calculateAverageBAC(ChartMode mode) {
+        List<Entry> entries = new ArrayList<>();
+        switch (mode) {
+            case SEC_15:
+                entries = calculateSec15BAC();
+                break;
+            case MINUTELY:
+                entries = calculateMinutelyBAC();
+                break;
+            case DEFAULT:
+                entries = calculateDefaultBAC();
+                break;
+        }
+        return entries;
+    }
 
-    private float convertTimestampToMillis(String timestamp) {
+    private List<Entry> calculateSec15BAC() {
+        List<Entry> entries = new ArrayList<>();
+        double sumBAC = 0;
+        int countBAC = 0;
+        long startTime = System.currentTimeMillis() - 15000;
+        for (BACRecord record : allBacRecords) {
+            long timestamp = convertTimestampToMillis(record.getTimestamp());
+            if (timestamp >= startTime) {
+                sumBAC += record.getBacValue();
+                countBAC++;
+            }
+        }
+
+        if (countBAC > 0) {
+            double averageBAC = sumBAC / countBAC;
+            entries.add(new Entry(0, (float) averageBAC));
+        }
+        return entries;
+    }
+
+    private List<Entry> calculateMinutelyBAC() {
+        List<Entry> entries = new ArrayList<>();
+        double sumBAC = 0;
+        int countBAC = 0;
+        long startTime = System.currentTimeMillis() - 60000;
+        for (BACRecord record : allBacRecords) {
+            long timestamp = convertTimestampToMillis(record.getTimestamp());
+            if (timestamp >= startTime) {
+                sumBAC += record.getBacValue();
+                countBAC++;
+            }
+        }
+
+        if (countBAC > 0) {
+            double averageBAC = sumBAC / countBAC;
+            entries.add(new Entry(0, (float) averageBAC));
+        }
+        return entries;
+    }
+
+    private List<Entry> calculateDefaultBAC() {
+        List<Entry> entries = new ArrayList<>();
+        for (BACRecord record : allBacRecords) {
+            String timestamp = record.getTimestamp();
+            double bac = record.getBacValue();
+            entries.add(new Entry(convertTimestampToMillis(timestamp) / 1000, (float) bac));
+        }
+        return entries;
+    }
+
+    private long convertTimestampToMillis(String timestamp) {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
             Date date = sdf.parse(timestamp);
@@ -353,132 +412,12 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
 
     private GradientDrawable createGradientDrawable() {
         int[] colors = {ColorTemplate.getHoloBlue(), Color.TRANSPARENT};
-        GradientDrawable gradientDrawable = new GradientDrawable(
-                GradientDrawable.Orientation.TOP_BOTTOM, colors);
-        return gradientDrawable;
+        return new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, colors);
     }
 
     private void setChartMode(ChartMode mode) {
         currentMode = mode;
         displayBACData();
-    }
-
-    private List<Entry> calculateAverageBAC(ChartMode mode) {
-        List<Entry> entries = new ArrayList<>();
-        switch (mode) {
-            case SEC_15:
-                entries = calculateSec15BAC();
-                break;
-            case MINUTELY:
-                entries = calculateMinutelyBAC();
-                break;
-            case HOURLY:
-                entries = calculateHourlyBAC();
-                break;
-        }
-        return entries;
-    }
-
-    private List<Entry> calculateSec15BAC() {
-        List<Entry> entries = new ArrayList<>();
-        double[] sumBAC = new double[4]; // 15-sec intervals
-        int[] countBAC = new int[4];
-        for (BACRecord record : allBacRecords) {
-            String timestamp = record.getTimestamp();
-            double bac = record.getBacValue();
-            int second = getSecondFromTimestamp(timestamp);
-            int interval = second / 15;
-            sumBAC[interval] += bac;
-            countBAC[interval]++;
-        }
-
-        for (int i = 0; i < 4; i++) {
-            if (countBAC[i] > 0) {
-                double averageBAC = sumBAC[i] / countBAC[i];
-                entries.add(new Entry(i * 15, (float) averageBAC));
-            }
-        }
-        return entries;
-    }
-
-    private List<Entry> calculateMinutelyBAC() {
-        List<Entry> entries = new ArrayList<>();
-        double[] sumBAC = new double[60]; // Minute intervals
-        int[] countBAC = new int[60];
-        for (BACRecord record : allBacRecords) {
-            String timestamp = record.getTimestamp();
-            double bac = record.getBacValue();
-            int minute = getMinuteFromTimestamp(timestamp);
-            sumBAC[minute] += bac;
-            countBAC[minute]++;
-        }
-
-        for (int i = 0; i < 60; i++) {
-            if (countBAC[i] > 0) {
-                double averageBAC = sumBAC[i] / countBAC[i];
-                entries.add(new Entry(i, (float) averageBAC));
-            }
-        }
-        return entries;
-    }
-
-    private List<Entry> calculateHourlyBAC() {
-        List<Entry> entries = new ArrayList<>();
-        double[] sumBAC = new double[12];
-        int[] countBAC = new int[12];
-        for (BACRecord record : allBacRecords) {
-            String timestamp = record.getTimestamp();
-            double bac = record.getBacValue();
-            int minute = getMinuteFromTimestamp(timestamp);
-            int interval = minute / 5;
-            sumBAC[interval] += bac;
-            countBAC[interval]++;
-        }
-
-        for (int i = 0; i < 12; i++) {
-            if (countBAC[i] > 0) {
-                double averageBAC = sumBAC[i] / countBAC[i];
-                entries.add(new Entry(i * 5, (float) averageBAC));
-            }
-        }
-        return entries;
-    }
-
-    private int getSecondFromTimestamp(String timestamp) {
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
-            Date date = sdf.parse(timestamp);
-            return date != null ? date.getSeconds() : 0;
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return 0;
-        }
-    }
-
-    private int getMinuteFromTimestamp(String timestamp) {
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
-            Date date = sdf.parse(timestamp);
-            return date != null ? date.getMinutes() : 0;
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return 0;
-        }
-    }
-
-    private int getHourFromTimestamp(String timestamp) {
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
-            Date date = sdf.parse(timestamp);
-            return date != null ? date.getHours() : 0;
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return 0;
-        }
-    }
-
-    private double roundToThreeDecimalPlaces(double value) {
-        return Math.round(value * 1000.0) / 1000.0;
     }
 
     @Override
@@ -531,11 +470,24 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     @Override
     public void onValueSelected(Entry e, Highlight h) {
         Toast.makeText(this, "Value Selected: " + e.getY(), Toast.LENGTH_SHORT).show();
+        if (e.getY() >= 0.27) {
+            Intent intent = new Intent(AccountHistoryActivity.this, EmergencyActivity.class);
+            startActivity(intent);
+            showAlertDialog();
+        }
     }
 
     @Override
     public void onNothingSelected() {
         Toast.makeText(this, "No Value Selected", Toast.LENGTH_SHORT).show();
+    }
+
+    private void showAlertDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("High Level of Alcohol Detected")
+                .setMessage("High level of alcohol detected, please act with caution and ask for help if necessary.")
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
     }
 
     @Override
