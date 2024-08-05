@@ -64,11 +64,14 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import app.juky.squircleview.views.SquircleButton;
 
 
 public class HomeActivity extends AppCompatActivity implements BluetoothService.BluetoothDataListener {
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private boolean isSimulating = false;
     int userAge;
     String userGender;
@@ -255,7 +258,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                     }
                     else
                     {
-                        //TODO: Save recording
+                        saveRecording();
                     }
                 });
         button_cancel_recording.setOnClickListener(v -> {cancelRecording();});
@@ -318,6 +321,78 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         onNewIntent(getIntent());
 
     }
+    private void saveRecording() {
+        Toast.makeText(this, "Recording saved", Toast.LENGTH_SHORT).show();
+        fetchAndSaveAverageBACData();
+        isRecording = false;
+        progressBar.setProgress(0);
+        progressBar.setVisibility(View.GONE);
+        textViewBlow.setVisibility(View.GONE);
+        btnCancelRecording.setVisibility(View.GONE);
+        textView_Calculating.setVisibility(View.GONE);
+        btnInstructions.setVisibility(View.VISIBLE);
+        btnBluetooth.setVisibility(View.VISIBLE);
+        btnPairDevices.setVisibility(View.VISIBLE);
+        btnAccountHistory.setVisibility(View.VISIBLE);
+        button_save_recording.setVisibility(View.GONE);
+        button_retake_recording.setVisibility(View.GONE);
+        button_cancel_recording.setVisibility(View.GONE);
+        buttonStartRecording.setVisibility(View.VISIBLE);
+        stopSimulation();
+    }
+    private void fetchAndSaveAverageBACData() {
+        SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+        currentUserId = sharedPreferences.getInt("currentUserId", -1);
+
+        executorService.submit(() -> {
+            synchronized (dbHelper) {
+                Cursor cursor = null;
+                try {
+                    cursor = dbHelper.getBACRecords(currentUserId);
+                    if (cursor != null && cursor.moveToFirst()) {
+                        List<BACRecord> tempBuffer = new ArrayList<>();
+                        double totalBac = 0;
+                        int recordCount = 0;
+
+                        do {
+                            String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
+                            double bac = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BAC_VALUE));
+                            tempBuffer.add(new BACRecord(bac, timestamp));
+                            totalBac += bac;
+                            recordCount++;
+
+                        } while (cursor.moveToNext());
+
+                        if (recordCount > 0) {
+                            double averageBac = totalBac / recordCount;
+
+                            // Save single average BAC value
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putFloat("averageBAC", (float) averageBac);
+                            editor.apply();
+
+                            // Retrieve existing list from SharedPreferences
+                            String json = sharedPreferences.getString("averageBACList", "[]");
+                            List<Float> averageBacList = Utils.convertJsonToList(json);
+
+                            // Add the new average BAC value to the list
+                            averageBacList.add((float) averageBac);
+
+                            // Save the updated list to SharedPreferences
+                            editor.putString("averageBACList", Utils.convertListToJson(averageBacList));
+                            editor.apply();
+                        }
+                    }
+                } catch (Exception e) {
+                    Log.e("fetchAndSaveAverageBACData", "Error accessing database", e);
+                } finally {
+                    if (cursor != null) {
+                        cursor.close();
+                    }
+                }
+            }
+        });
+    }
 
     private void sendTokenToServer(String token) {
         String url = "https://clearbreath-14b67f8b2024.herokuapp.com/send-notification";
@@ -375,6 +450,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         button_retake_recording.setVisibility(View.GONE);
         button_cancel_recording.setVisibility(View.GONE);
         buttonStartRecording.setVisibility(View.VISIBLE);
+        stopSimulation();
 
 
         Toast.makeText(this, "Recording cancelled", Toast.LENGTH_SHORT).show();
@@ -437,7 +513,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                         }
                     });
                     try {
-                        Thread.sleep(50);
+                        Thread.sleep(60); //6 seconds
                     } catch (InterruptedException e) {
                         e.printStackTrace();
 
@@ -457,11 +533,11 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
 
             @Override
             public void run() {
-                if (count < 4) {
+                if (count < 6) {
                     // Simulate BAC value reading
                     double bacValue = new Random().nextDouble() * 0.2; // Replace with actual BAC value retrieval logic
                     bacValues.add(bacValue);
-
+                    textView_Calculating.setVisibility(View.VISIBLE);
                     count++;
                     handler.postDelayed(this, 1000); // Run this every 1 second for 7 seconds
                 } else {
@@ -485,11 +561,11 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                         }
                     }
                     if (currentUserId != -1) {
-                        if (count<7)
+                        if (count<8)
                         {
                             count++;
                             handler.postDelayed(this, 1000);
-                            textView_Calculating.setVisibility(View.VISIBLE);
+
                         }
                             else
                             {
@@ -499,12 +575,13 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                                 button_retake_recording.setVisibility(View.VISIBLE);
                                 button_save_recording.setVisibility(View.VISIBLE);
                                 button_cancel_recording.setVisibility(View.VISIBLE);
+                                stopSimulation();
                             }
                         }
 
                     else
                     {
-                        if (count<7)
+                        if (count<8)
                         {
                             count++;
                             handler.postDelayed(this, 1000);
@@ -518,9 +595,10 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                                 button_retake_recording.setVisibility(View.VISIBLE);
                                 button_save_recording.setVisibility(View.VISIBLE);
                                 button_cancel_recording.setVisibility(View.VISIBLE);
+                                stopSimulation();
                             }
                     }
-                    stopSimulation();
+
                     isCalculating = false;
                 }
             }
@@ -603,6 +681,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             }
         }
         isFromNotification = false;
+        executorService.shutdown();
     }
 
     @Override
