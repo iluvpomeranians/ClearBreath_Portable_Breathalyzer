@@ -58,12 +58,10 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     private int currentUserId;
     private Handler handler;
     private Runnable runnable;
-
     private ChartMode currentMode = ChartMode.SEC_15;
     private List<BACRecord> allBacRecords = new ArrayList<>();
     private SquircleButton sec15Button, minutelyButton, hourlyButton;
     private static final long REFRESH_INTERVAL_MS = 3000;
-
     private static final int SAMPLE_COUNT = 10;
     private List<BACRecord> bacRecordBuffer = new ArrayList<>();
     private long lastSaveTimestamp = 0;
@@ -92,6 +90,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
 
         chart = findViewById(R.id.chart1);
         dbHelper = new DBHelper(this);
+        Log.d("AccountHistoryActivity", "DBHelper initialized: " + (dbHelper != null));
         SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
 
@@ -102,19 +101,31 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
             @Override
             public void run() {
                 long currentTime = System.currentTimeMillis();
+                Log.d("Runnable", "Runnable is running");
+                Log.d("Runnable", "Current time: " + currentTime);
+                Log.d("Runnable", "Last save timestamp: " + lastSaveTimestamp);
+                Log.d("Runnable", "Time difference: " + (currentTime - lastSaveTimestamp));
+
                 if (currentTime - lastSaveTimestamp >= REFRESH_INTERVAL_MS) {
                     executorService.submit(() -> {
-                        fetchAndSaveAverageBACData();
-                        lastSaveTimestamp = currentTime;
-
-                        handler.post(() -> displayBACData());
+                        try {
+                            fetchAndSaveAverageBACData();
+                            handler.post(() -> {
+                                displayBACData();
+                                lastSaveTimestamp = currentTime;
+                            });
+                        } catch (Exception e) {
+                            Log.e("Runnable", "Error fetching and saving average BAC data", e);
+                        }
                     });
                 } else {
+                    Log.d("Runnable", "Time difference does not exceed refresh interval, updating display");
                     handler.post(() -> displayBACData());
                 }
                 handler.postDelayed(this, REFRESH_INTERVAL_MS);
             }
         };
+
 
         SettingsUtils.applySettings(this, sec15Button, minutelyButton, hourlyButton);
     }
@@ -124,11 +135,6 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         super.onResume();
         SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
-        if (currentUserId != -1) {
-            Log.d("AA", "currentUserId fetched successfully: " + currentUserId);
-        } else {
-            Log.d("AA", "currentUserId is not set or invalid.");
-        }
         handler.post(runnable);
     }
 
@@ -200,83 +206,97 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     private void displayBACData() {
         SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
-        executorService.submit(() -> {
-            if (allBacRecords.isEmpty()) {
-                Cursor cursor = dbHelper.getBACRecords(currentUserId);
-                if (cursor != null && cursor.moveToFirst()) {
-                    do {
-                        String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
-                        double bac = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BAC_VALUE));
-                        bac = roundToThreeDecimalPlaces(bac);
-                        allBacRecords.add(new BACRecord(bac, timestamp));
-                    } while (cursor.moveToNext());
-                    cursor.close();
-                }
+        Log.d("displayBACData", "Fetched currentUserId: " + currentUserId);
+
+        // Retrieve the average BAC from shared preferences
+        float averageBac = sharedPreferences.getFloat("averageBAC", 0.0f);
+        Log.d("displayBACData", "Retrieved average BAC: " + averageBac);
+
+        handler.post(() -> {
+            LineData data = chart.getData();
+            if (data == null) {
+                data = new LineData();
+                chart.setData(data);
             }
 
-            List<Entry> entries = new ArrayList<>();
-            switch (currentMode) {
-                case SEC_15:
-                    entries = calculateAverageBAC(ChartMode.SEC_15);
-                    break;
-                case MINUTELY:
-                    entries = calculateAverageBAC(ChartMode.MINUTELY);
-                    break;
-                case HOURLY:
-                    entries = calculateAverageBAC(ChartMode.HOURLY);
-                    break;
+            ILineDataSet set = data.getDataSetByIndex(0);
+            if (set == null) {
+                set = createSet();
+                data.addDataSet(set);
             }
 
-            LineDataSet set = new LineDataSet(entries, "BAC Data");
-            set.setAxisDependency(YAxis.AxisDependency.LEFT);
-            set.setColor(ColorTemplate.getHoloBlue());
-            set.setLineWidth(2f);
-            set.setDrawFilled(true);
-            set.setFillDrawable(createGradientDrawable());
-            set.setHighLightColor(Color.rgb(244, 117, 117));
-            set.setDrawValues(true);
+            // Add the new entry
+            data.addEntry(new Entry(set.getEntryCount(), averageBac), 0);
+            data.notifyDataChanged();
 
-            handler.post(() -> {
-                LineData data = chart.getData();
-                if (data != null) {
-                    data.clearValues();
-                    data.addDataSet(set);
-                    chart.setData(data);
-                    chart.notifyDataSetChanged();
-                    chart.invalidate();
-                }
-            });
+            // Let the chart know its data has changed
+            chart.notifyDataSetChanged();
+            chart.setVisibleXRangeMaximum(50);
+            chart.moveViewToX(data.getEntryCount());
+            chart.invalidate();
+            Log.d("displayBACData", "Chart data updated and validated");
         });
     }
+
+    private LineDataSet createSet() {
+        LineDataSet set = new LineDataSet(new ArrayList<>(), "BAC Data");
+        set.setAxisDependency(YAxis.AxisDependency.LEFT);
+        set.setColor(ColorTemplate.getHoloBlue());
+        set.setLineWidth(2f);
+        set.setDrawFilled(true);
+        set.setFillDrawable(createGradientDrawable());
+        set.setHighLightColor(Color.rgb(244, 117, 117));
+        set.setDrawValues(true);
+        return set;
+    }
+
 
     private void fetchAndSaveAverageBACData() {
         SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
+
         executorService.submit(() -> {
-            Cursor cursor = dbHelper.getBACRecords(currentUserId);
-            if (cursor != null && cursor.moveToFirst()) {
-                List<BACRecord> tempBuffer = new ArrayList<>();
-                do {
-                    String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
-                    double bac = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BAC_VALUE));
-                    tempBuffer.add(new BACRecord(bac, timestamp));
+            synchronized (dbHelper) {
+                Cursor cursor = null;
+                try {
+                    cursor = dbHelper.getBACRecords(currentUserId);
+                    if (cursor != null && cursor.moveToFirst()) {
+                        List<BACRecord> tempBuffer = new ArrayList<>();
+                        double totalBac = 0;
+                        int recordCount = 0;
 
-                    if (tempBuffer.size() >= SAMPLE_COUNT) {
-                        double averageBac = 0;
-                        for (BACRecord record : tempBuffer) {
-                            averageBac += record.getBacValue();
+                        do {
+                            String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
+                            double bac = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BAC_VALUE));
+                            tempBuffer.add(new BACRecord(bac, timestamp));
+                            totalBac += bac;
+                            recordCount++;
+
+                            if (tempBuffer.size() >= SAMPLE_COUNT) {
+                                break; // Process only SAMPLE_COUNT records
+                            }
+                        } while (cursor.moveToNext());
+
+                        if (recordCount > 0) {
+                            double averageBac = totalBac / recordCount;
+
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putFloat("averageBAC", (float) averageBac);
+                            editor.apply();
                         }
-                        averageBac /= SAMPLE_COUNT;
-
-                        String firstTimestamp = tempBuffer.get(0).getTimestamp();
-                        dbHelper.insertBACRecord(currentUserId, firstTimestamp, averageBac);
-                        tempBuffer.clear();
                     }
-                } while (cursor.moveToNext());
-                cursor.close();
+                } catch (Exception e) {
+                    Log.e("fetchAndSaveAverageBACData", "Error accessing database", e);
+                } finally {
+                    if (cursor != null) {
+                        cursor.close();
+                    }
+                }
             }
         });
     }
+
+
 
     private float convertTimestampToMillis(String timestamp) {
         try {
