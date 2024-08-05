@@ -118,12 +118,12 @@
             android:id="@+id/button_account_history"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="24dp"
             android:minWidth="160dp"
             android:minHeight="30dp"
             android:text="Account History"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.505"
+            app:layout_constraintHorizontal_bias="0.498"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/btn_cancel_recording"
             app:squircle_background_color="#D3D3D3" />
@@ -191,6 +191,58 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/btn_bluetooth"
             app:layout_constraintTop_toBottomOf="@id/btn_start_recording"
+            app:squircle_background_color="#D3D3D3" />
+
+        <TextView
+            android:id="@+id/textView_Calculating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Calculating..."
+            android:textSize="20dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.764" />
+
+        <app.juky.squircleview.views.SquircleButton
+            android:id="@+id/button_retake_recording"
+            android:layout_width="121dp"
+            android:layout_height="47dp"
+            android:layout_marginStart="4dp"
+            android:text="Retake Recording"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/progressBar"
+            app:layout_constraintVertical_bias="0.347"
+            app:squircle_background_color="#D3D3D3" />
+
+        <app.juky.squircleview.views.SquircleButton
+            android:id="@+id/button_save_recording"
+            android:layout_width="121dp"
+            android:layout_height="47dp"
+            android:text="Save Recording"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/button_cancel_recording"
+            app:layout_constraintStart_toEndOf="@+id/button_retake_recording"
+            app:layout_constraintTop_toBottomOf="@+id/btn_start_recording"
+            app:layout_constraintVertical_bias="0.347"
+            app:squircle_background_color="#D3D3D3" />
+
+        <app.juky.squircleview.views.SquircleButton
+            android:id="@+id/button_cancel_recording"
+            android:layout_width="121dp"
+            android:layout_height="47dp"
+            android:layout_marginEnd="4dp"
+            android:text="Cancel"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btn_start_recording"
+            app:layout_constraintVertical_bias="0.347"
             app:squircle_background_color="#D3D3D3" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

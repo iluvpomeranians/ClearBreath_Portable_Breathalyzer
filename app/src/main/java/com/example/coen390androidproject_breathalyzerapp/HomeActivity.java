@@ -53,6 +53,11 @@ import app.juky.squircleview.views.SquircleButton;
 
 public class HomeActivity extends AppCompatActivity implements BluetoothService.BluetoothDataListener {
     private boolean isSimulating = false;
+    int userAge;
+    String userGender;
+    double userBMI;
+    private TextView textView_Calculating;
+    private SquircleButton button_retake_recording, button_save_recording, button_cancel_recording;
 
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle toggle;
@@ -92,6 +97,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
 
     private DBHelper dbHelper;
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -147,6 +153,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         updateMenuItems();
 
+        textView_Calculating = findViewById(R.id.textView_Calculating);
         progressBar = findViewById(R.id.progressBar);
         textViewBlow = findViewById(R.id.textView_blow);
         buttonStartRecording = findViewById(R.id.btn_start_recording);
@@ -160,22 +167,16 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         btnBluetooth = findViewById(R.id.btn_bluetooth);
         btnPairDevices = findViewById(R.id.btn_pairdevices);
         bluetoothStatusDisplay = findViewById(R.id.bluetooth_status_display);
+        button_retake_recording = findViewById(R.id.button_retake_recording);
+        button_save_recording = findViewById(R.id.button_save_recording);
+        button_cancel_recording = findViewById(R.id.button_cancel_recording);
 
 
-        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, buttonStartRecording, btnBluetooth, btnInstructions, btnCancelRecording,  btnAccountHistory, btnPairDevices, bluetoothStatusDisplay, textViewBlow);
+        SettingsUtils.applySettings(this, bacDisplay, bacMlDisplay, timeUntilSoberDisplay, buttonStartRecording, btnBluetooth, btnInstructions, btnCancelRecording,
+                btnAccountHistory, btnPairDevices, bluetoothStatusDisplay, textViewBlow, button_retake_recording, button_save_recording, button_cancel_recording, textView_Calculating);
 
-        buttonStartRecording.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                progressBar.setVisibility(View.VISIBLE);
-                textViewBlow.setVisibility(View.VISIBLE);
-                buttonStartRecording.setEnabled(false);
-                btnCancelRecording.setVisibility(View.VISIBLE);
-                isRecording = true;
-                startSimulation();
-                startProgressBar();
-            }
-        });
+
+        buttonStartRecording.setOnClickListener(v -> {startRecording();});
         btnCancelRecording.setOnClickListener(v -> cancelRecording());
 
         btnAccountHistory.setOnClickListener(v -> {
@@ -208,6 +209,26 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                 showDeviceListDialog();
             }
         });
+        button_retake_recording.setOnClickListener(v -> {
+            if (isRecording) {
+                cancelRecording();
+            }
+                else
+                {
+                    startRecording();
+                }
+        });
+        button_save_recording.setOnClickListener(v -> {
+                    if (isRecording) {
+                        cancelRecording();
+                    }
+                    else
+                    {
+                        //TODO: Save recording
+                    }
+                });
+        button_cancel_recording.setOnClickListener(v -> {cancelRecording();});
+
 
         Intent serviceIntent = new Intent(this, BluetoothService.class);
         startService(serviceIntent);
@@ -266,10 +287,40 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         progressBar.setProgress(0);
         progressBar.setVisibility(View.GONE);
         textViewBlow.setVisibility(View.GONE);
-        buttonStartRecording.setEnabled(true);
         btnCancelRecording.setVisibility(View.GONE);
+        textView_Calculating.setVisibility(View.GONE);
+        btnInstructions.setVisibility(View.VISIBLE);
+        btnBluetooth.setVisibility(View.VISIBLE);
+        btnPairDevices.setVisibility(View.VISIBLE);
+        btnAccountHistory.setVisibility(View.VISIBLE);
+        button_save_recording.setVisibility(View.GONE);
+        button_retake_recording.setVisibility(View.GONE);
+        button_cancel_recording.setVisibility(View.GONE);
+        buttonStartRecording.setVisibility(View.VISIBLE);
+
+
         Toast.makeText(this, "Recording cancelled", Toast.LENGTH_SHORT).show();
     }
+    private void startRecording()
+        {
+            progressBar.setVisibility(View.VISIBLE);
+            textViewBlow.setVisibility(View.VISIBLE);
+            btnCancelRecording.setVisibility(View.VISIBLE);
+            textView_Calculating.setVisibility(View.GONE);
+            btnInstructions.setVisibility(View.GONE);
+            btnBluetooth.setVisibility(View.GONE);
+            btnPairDevices.setVisibility(View.GONE);
+            btnAccountHistory.setVisibility(View.GONE);
+            button_retake_recording.setVisibility(View.GONE);
+            button_save_recording.setVisibility(View.GONE);
+            button_cancel_recording.setVisibility(View.GONE);
+            buttonStartRecording.setVisibility(View.GONE);
+            isRecording = true;
+            startSimulation();
+            startProgressBar();
+
+        }
+
 
     private void startProgressBar() {
         new Thread(new Runnable() {
@@ -290,7 +341,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                                 textViewBlow.setVisibility(View.GONE);
                                 isRecording = false;
                                 isCalculating = true;
-                                buttonStartRecording.setEnabled(true);
                                 btnCancelRecording.setVisibility(View.GONE);
                                 if (isCalculating)
                                 {
@@ -304,7 +354,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                         }
                     });
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(50);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
 
@@ -312,6 +362,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                 }
                 progressStatus = 0;
             }
+
         }).start();
     }
     private void startBACCalculation() {
@@ -327,9 +378,9 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                     bacValues.add(bacValue);
 
                     count++;
-                    handler.postDelayed(this, 1000); // Run this every 1 second for 4 seconds
+                    handler.postDelayed(this, 1000); // Run this every 1 second for 7 seconds
                 } else {
-                    isCalculating = false;
+                    textView_Calculating.setVisibility(View.VISIBLE);
                     // Calculate the median BAC value
                     Collections.sort(bacValues);
                     double median;
@@ -339,17 +390,62 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                         median = bacValues.get(bacValues.size() / 2);
                     }
                     // Update the UI with the median BAC value
-                    updateBACUI(median);
+                    if (currentUserId != -1) {
+                        Cursor cursor = dbHelper.getAccount(currentUserId);
+                        if (cursor != null && cursor.moveToFirst()) {
+                            userAge = (cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_AGE)));
+                            userGender = (cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_GENDER)));
+                            userBMI = (cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BMI)));
+                            cursor.close();
+                        }
+                    }
+                    if (currentUserId != -1) {
+                        if (count<7)
+                        {
+                            count++;
+                            handler.postDelayed(this, 1000);
+                            textView_Calculating.setVisibility(View.VISIBLE);
+                        }
+                            else
+                            {
+                                double adjustedBAC = adjustBACForUserDetails(median, userAge, userGender, userBMI);
+                                updateBACUI(adjustedBAC);
+                                textView_Calculating.setVisibility(View.GONE);
+                                button_retake_recording.setVisibility(View.VISIBLE);
+                                button_save_recording.setVisibility(View.VISIBLE);
+                                button_cancel_recording.setVisibility(View.VISIBLE);
+                            }
+                        }
+
+                    else
+                    {
+                        if (count<7)
+                        {
+                            count++;
+                            handler.postDelayed(this, 1000);
+                            textView_Calculating.setVisibility(View.VISIBLE);
+                        }
+                            else
+                            {
+
+                                updateBACUI(median);
+                                textView_Calculating.setVisibility(View.GONE);
+                                button_retake_recording.setVisibility(View.VISIBLE);
+                                button_save_recording.setVisibility(View.VISIBLE);
+                                button_cancel_recording.setVisibility(View.VISIBLE);
+                            }
+                    }
                     stopSimulation();
+                    isCalculating = false;
                 }
             }
-        }, 1); // Start after 1 second
+        }, 1);
     }
 
     private void updateBACUI(double bacValue) {
-        double bacPercentage = bacValue * 100;
+        double bacPercentage = bacValue;
         String bacText = String.format(Locale.getDefault(), "%.2f%%", bacPercentage);
-        String bacMlText = String.format(Locale.getDefault(), "%.2f mL", bacValue * 1000);
+        String bacMlText = String.format(Locale.getDefault(), "BAC in ml: %.2f mL", bacValue * 1000);
         String timeUntilSoberText = calculateTimeUntilSober(bacValue);
 
         bacDisplay.setText(bacText);
