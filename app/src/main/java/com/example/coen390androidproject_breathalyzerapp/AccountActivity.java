@@ -182,7 +182,7 @@ public class AccountActivity extends AppCompatActivity {
     private void updateUI(int currentUserId) {
         if (currentUserId == -1) {
             Log.d("AccountACT:", "currentUserId does not exist!");
-            textViewWelcome.setText("Welcome");
+            textViewWelcome.setText("Welcome to ClearBreath!");
             btnLogin.setVisibility(View.VISIBLE);
             btnRegister.setVisibility(View.VISIBLE);
             btnLogout.setVisibility(View.GONE);

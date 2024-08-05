@@ -2,6 +2,7 @@ package com.example.coen390androidproject_breathalyzerapp;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -46,7 +47,8 @@ public class EmergencyActivity extends AppCompatActivity implements Marker.OnMar
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emergency);
 
-        // Set up the toolbar
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 

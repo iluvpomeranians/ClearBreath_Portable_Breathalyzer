@@ -2,6 +2,7 @@ package com.example.coen390androidproject_breathalyzerapp;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
@@ -49,6 +50,8 @@ public class BACDataActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bac_data);
+
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -167,6 +170,7 @@ public class BACDataActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        updateMenuItems();
         isPaused = false;
         executorService = Executors.newSingleThreadExecutor();
         sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
@@ -188,6 +192,16 @@ public class BACDataActivity extends AppCompatActivity {
         finish();
     }
 
+    private void updateMenuItems() {
+        SharedPreferences preferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+        currentUserId = preferences.getInt("currentUserId", -1);
+        boolean isLoggedIn = preferences.getBoolean("loggedIn", false);
+
+        Menu menu = navigationView.getMenu();
+        menu.findItem(R.id.nav_manage_account).setVisible(isLoggedIn);
+        updateUI(currentUserId);
+    }
+
     private void updateUI(int currentUserId) {
         MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
         if (currentUserId == -1) {
@@ -202,14 +216,5 @@ public class BACDataActivity extends AppCompatActivity {
                 accountMenuItem.setTitle("Account");
             }
         }
-    }
-
-    private void updateMenuItems() {
-        SharedPreferences preferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
-        boolean isLoggedIn = preferences.getBoolean("loggedIn", false);
-        currentUserId = sharedPreferences.getInt("currentUserId", -1);
-        Menu menu = navigationView.getMenu();
-        menu.findItem(R.id.nav_manage_account).setVisible(isLoggedIn);
-        updateUI(currentUserId);
     }
 }

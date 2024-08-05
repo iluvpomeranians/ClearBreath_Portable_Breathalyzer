@@ -4,8 +4,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -19,7 +20,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
 import app.juky.squircleview.views.SquircleButton;
-
 
 public class ManageAccountActivity extends AppCompatActivity {
 
@@ -74,7 +74,10 @@ public class ManageAccountActivity extends AppCompatActivity {
 
         dbHelper = new DBHelper(this);
         SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
-        currentUserId = sharedPreferences.getInt("currentUserId", -1); // Retrieve the current user ID from shared preferences
+        currentUserId = sharedPreferences.getInt("currentUserId", -1);
+        Log.d("ManageAccountActivity", "onCreate currentUserId: " + currentUserId);
+
+        updateMenuItems();
 
         editTextUsername = findViewById(R.id.editTextUsername);
         editTextAge = findViewById(R.id.editTextAge);
@@ -87,17 +90,59 @@ public class ManageAccountActivity extends AppCompatActivity {
 
         buttonSaveChanges.setOnClickListener(v -> {
             String username = editTextUsername.getText().toString().trim();
-            int age = Integer.parseInt(editTextAge.getText().toString().trim());
-            double bmi = Double.parseDouble(editTextBMI.getText().toString().trim());
+            String ageStr = editTextAge.getText().toString().trim();
+            String bmiStr = editTextBMI.getText().toString().trim();
 
+            // Validate username
+            if (!username.matches("^[a-zA-Z0-9]+$")) {
+                Toast.makeText(this, "Username can only contain alphanumeric characters", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Validate age
+            int age;
+            try {
+                age = Integer.parseInt(ageStr);
+                if (age < 18) {
+                    Toast.makeText(this, "Age must be at least 18", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                Toast.makeText(this, "Please enter a valid age", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Validate BMI
+            double bmi;
+            try {
+                bmi = Double.parseDouble(bmiStr);
+                if (bmi <= 0 || bmi > 50) {
+                    Toast.makeText(this, "Please enter a valid BMI (0 < BMI <= 50)", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                Toast.makeText(this, "Please enter a valid BMI", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Update the user account in the database
             boolean isUpdated = dbHelper.updateAccount(currentUserId, null, username, null, null, age, null, bmi);
             if (isUpdated) {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putInt("currentUserId", currentUserId);
+                editor.putString("username", username);
+                editor.putInt("age", age);
+                editor.putFloat("bmi", (float) bmi);
+                editor.apply();
+                updateMenuItems();
                 Toast.makeText(this, "Account updated successfully", Toast.LENGTH_SHORT).show();
                 loadAccountDetails(currentUserId);
             } else {
                 Toast.makeText(this, "Failed to update account", Toast.LENGTH_SHORT).show();
             }
         });
+
+
 
         buttonDeleteAccount.setOnClickListener(v -> {
             boolean isDeleted = dbHelper.deleteAccount(currentUserId);
@@ -130,6 +175,12 @@ public class ManageAccountActivity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateMenuItems();
+    }
+
     private void loadAccountDetails(int userId) {
         if (userId != -1) {
             Cursor cursor = dbHelper.getAccount(userId);
@@ -138,6 +189,45 @@ public class ManageAccountActivity extends AppCompatActivity {
                 editTextAge.setText(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_AGE))));
                 editTextBMI.setText(String.valueOf(cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BMI))));
                 cursor.close();
+            }
+        }
+    }
+
+    private void updateMenuItems() {
+        SharedPreferences preferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+        currentUserId = preferences.getInt("currentUserId", -1);
+        boolean isLoggedIn = preferences.getBoolean("loggedIn", false);
+
+        Log.d("ManageAccountActivity", "updateMenuItems currentUserId: " + currentUserId);
+        Log.d("ManageAccountActivity", "isLoggedIn: " + isLoggedIn);
+
+        Menu menu = navigationView.getMenu();
+        if (menu == null) {
+            Log.e("ManageAccountActivity", "Menu is null");
+            return;
+        }
+
+        menu.findItem(R.id.nav_manage_account).setVisible(isLoggedIn);
+        updateUI(currentUserId);
+    }
+
+    private void updateUI(int currentUserId) {
+        MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
+        if (accountMenuItem == null) {
+            Log.e("ManageAccountActivity", "accountMenuItem is null");
+            return;
+        }
+
+        if (currentUserId == -1) {
+            accountMenuItem.setTitle("Account");
+        } else {
+            Cursor cursor = dbHelper.getAccount(currentUserId);
+            if (cursor != null && cursor.moveToFirst()) {
+                String username = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_USERNAME));
+                accountMenuItem.setTitle(username);
+                cursor.close();
+            } else {
+                accountMenuItem.setTitle("Account");
             }
         }
     }
