@@ -1,6 +1,7 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -62,7 +63,7 @@ public class ManageAccountActivity extends AppCompatActivity {
                 intent = new Intent(ManageAccountActivity.this, BACDataActivity.class);
             } else if (id == R.id.nav_account) {
                 intent = new Intent(ManageAccountActivity.this, AccountActivity.class);
-            }else{
+            } else {
                 return false;
             }
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -72,7 +73,8 @@ public class ManageAccountActivity extends AppCompatActivity {
         });
 
         dbHelper = new DBHelper(this);
-        currentUserId = getIntent().getIntExtra("currentUserId", -1);
+        SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+        currentUserId = sharedPreferences.getInt("currentUserId", -1); // Retrieve the current user ID from shared preferences
 
         editTextUsername = findViewById(R.id.editTextUsername);
         editTextAge = findViewById(R.id.editTextAge);
@@ -81,15 +83,7 @@ public class ManageAccountActivity extends AppCompatActivity {
         buttonSaveChanges = findViewById(R.id.buttonSaveChanges);
         buttonDeleteAccount = findViewById(R.id.buttonDeleteAccount);
 
-        if (currentUserId != -1) {
-            Cursor cursor = dbHelper.getAccount(currentUserId);
-            if (cursor != null && cursor.moveToFirst()) {
-                editTextUsername.setText(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_USERNAME)));
-                editTextAge.setText(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_AGE))));
-                editTextBMI.setText(String.valueOf(cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BMI))));
-                cursor.close();
-            }
-        }
+        loadAccountDetails(currentUserId);
 
         buttonSaveChanges.setOnClickListener(v -> {
             String username = editTextUsername.getText().toString().trim();
@@ -99,10 +93,7 @@ public class ManageAccountActivity extends AppCompatActivity {
             boolean isUpdated = dbHelper.updateAccount(currentUserId, null, username, null, null, age, null, bmi);
             if (isUpdated) {
                 Toast.makeText(this, "Account updated successfully", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(ManageAccountActivity.this, AccountActivity.class);
-                intent.putExtra("currentUserId", currentUserId);
-                startActivity(intent);
-                finish();
+                loadAccountDetails(currentUserId);
             } else {
                 Toast.makeText(this, "Failed to update account", Toast.LENGTH_SHORT).show();
             }
@@ -112,6 +103,10 @@ public class ManageAccountActivity extends AppCompatActivity {
             boolean isDeleted = dbHelper.deleteAccount(currentUserId);
             if (isDeleted) {
                 Toast.makeText(this, "Account deleted successfully", Toast.LENGTH_SHORT).show();
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean("loggedIn", false);
+                editor.putInt("currentUserId", -1);
+                editor.apply();
                 Intent intent = new Intent(ManageAccountActivity.this, LoginActivity.class);
                 startActivity(intent);
                 finish();
@@ -133,6 +128,18 @@ public class ManageAccountActivity extends AppCompatActivity {
             }
         };
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
+    }
+
+    private void loadAccountDetails(int userId) {
+        if (userId != -1) {
+            Cursor cursor = dbHelper.getAccount(userId);
+            if (cursor != null && cursor.moveToFirst()) {
+                editTextUsername.setText(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_USERNAME)));
+                editTextAge.setText(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_AGE))));
+                editTextBMI.setText(String.valueOf(cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BMI))));
+                cursor.close();
+            }
+        }
     }
 
     @Override

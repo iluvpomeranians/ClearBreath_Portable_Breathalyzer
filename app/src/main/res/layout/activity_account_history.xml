@@ -36,24 +36,24 @@
             android:padding="16dp">
 
             <Button
+                android:id="@+id/sec15Button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="15 SEC" />
+
+            <Button
+                android:id="@+id/minutelyButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="MINUTELY" />
+
+            <Button
                 android:id="@+id/hourlyButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
                 android:text="HOURLY" />
-
-            <Button
-                android:id="@+id/dailyButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:text="DAILY" />
-
-            <Button
-                android:id="@+id/weeklyButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:text="WEEKLY" />
         </LinearLayout>
     </LinearLayout>
 

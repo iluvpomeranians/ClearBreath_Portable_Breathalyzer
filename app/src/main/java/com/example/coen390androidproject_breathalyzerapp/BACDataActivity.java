@@ -59,6 +59,7 @@ public class BACDataActivity extends AppCompatActivity {
         recyclerViewBACData.setLayoutManager(new LinearLayoutManager(this));
 
         dbHelper = new DBHelper(this);
+
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
         Log.d("BACDataActivity", "Attempting to fetch currentUserId from SharedPreferences.");
 
@@ -116,6 +117,8 @@ public class BACDataActivity extends AppCompatActivity {
         // Initialize and start the refresh runnable
         refreshRunnable = this::refreshBACData;
         refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL_MS);
+
+        SettingsUtils.applySettings(this);
     }
 
     private void refreshBACData() {
@@ -169,7 +172,6 @@ public class BACDataActivity extends AppCompatActivity {
         sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
         fetchBACData(currentUserId);
-        updateMenuItems();
         refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL_MS);
     }
 

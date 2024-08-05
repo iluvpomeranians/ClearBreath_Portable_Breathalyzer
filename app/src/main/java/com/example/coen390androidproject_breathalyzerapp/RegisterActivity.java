@@ -91,8 +91,8 @@ public class RegisterActivity extends AppCompatActivity {
                 intent = new Intent(RegisterActivity.this, HomeActivity.class);
             } else if (id == R.id.nav_settings) {
                 intent = new Intent(RegisterActivity.this, SettingsActivity.class);
-            } else if (id == R.id.nav_manage_account) {
-                intent = new Intent(RegisterActivity.this, ManageAccountActivity.class);
+            } else if (id == R.id.nav_bac_data) {
+                intent = new Intent(RegisterActivity.this, BACDataActivity.class);
             } else if (id == R.id.nav_account) {
                 intent = new Intent(RegisterActivity.this, AccountActivity.class);
             } else {
@@ -222,8 +222,13 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        if (age < 1 || age > 120) {
-            Toast.makeText(this, "Age must be between 1 and 120", Toast.LENGTH_SHORT).show();
+        if (age < 18 || age > 120) {
+            Toast.makeText(this, "Age must be between 18 and 120", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (bmi < 10.0 || bmi > 150.0) {
+            Toast.makeText(this, "BMI must be between 10 and 150", Toast.LENGTH_SHORT).show();
             return;
         }
 
