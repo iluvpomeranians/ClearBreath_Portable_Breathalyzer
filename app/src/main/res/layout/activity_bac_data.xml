@@ -33,6 +33,7 @@
                 android:background="@color/colorPrimaryDark">
 
                 <TextView
+                    android:id="@+id/date_text_view"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -41,6 +42,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/time_text_view"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -49,6 +51,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/bac_level_text_view"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
