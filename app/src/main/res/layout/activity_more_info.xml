@@ -17,7 +17,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            android:text="Device Information:\nClearBreath Portable Breathalyzer\n\nThis device helps you monitor your BAC levels in real-time using advanced sensor technology.\n\nHere are the steps to follow to properly use this device:\n\n1. Connect the device to your phone via Bluetooth.\n\n2. Once paired, blow on the front of the device for more than 5 seconds.\n\n3. Carefully read the values and follow the instructions given by the device."
+            android:text="Device Information:\nClearBreath Portable Breathalyzer\n\nThis device helps you monitor your BAC levels in real-time using advanced sensor technology.\n\nHere are the steps to follow to properly use this device:\n\n1. Connect the device to your phone via Bluetooth.\n\n2. Once paired, press on the button called 'Start Recording' and blow into the nuzzle until the progressbar fills up.\n\n3. Carefully read the values and follow the instructions given by the device.\n\nBAC readings can vary according to a user's age, sex and BMI. If you are interested in said variations, please create an account and enter the variables listed above."
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

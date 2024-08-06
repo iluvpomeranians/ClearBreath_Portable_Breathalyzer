@@ -321,6 +321,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         chart.setVisibleXRangeMaximum(50);
         chart.moveViewToX(data.getEntryCount());
         chart.invalidate();
+
     }
 
     private List<Entry> calculateSec15BAC() {

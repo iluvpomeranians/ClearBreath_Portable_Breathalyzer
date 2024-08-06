@@ -36,6 +36,8 @@ public class BluetoothService extends Service {
 
     public interface BluetoothDataListener {
         void onDataReceived(String data);
+
+        void onBluetoothDataReceived(double bacValue);
     }
 
     public class LocalBinder extends Binder {

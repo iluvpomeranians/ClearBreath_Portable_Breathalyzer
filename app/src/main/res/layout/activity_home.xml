@@ -46,7 +46,7 @@
             android:id="@+id/bac_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="4dp"
             android:text="BAC: 0.00%"
             android:textColor="#000000"
             android:textSize="32sp"
@@ -63,6 +63,7 @@
             android:textColor="#000000"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.498"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/bac_display" />
 
@@ -70,7 +71,7 @@
             android:id="@+id/time_until_sober_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="36dp"
             android:text="Time Until Sober: 0.0 hours"
             android:textColor="#000000"
             android:textSize="16sp"
@@ -82,12 +83,12 @@
             android:id="@+id/bluetooth_status_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="8dp"
             android:text="Status: Not connected"
             android:textColor="#FF0000"
             android:textSize="25sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.501"
+            app:layout_constraintHorizontal_bias="0.506"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/time_until_sober_display" />
 
@@ -109,6 +110,7 @@
             app:squircle_border_gradient_start_color="@color/purple_500"
             app:squircle_border_width="4dp" />
 
+
         <app.juky.squircleview.views.SquircleButton
             android:id="@+id/btn_start_recording"
             android:layout_width="wrap_content"
@@ -127,6 +129,7 @@
             app:squircle_border_gradient_start_color="@color/purple_500"
             app:squircle_border_width="4dp" />
 
+
         <app.juky.squircleview.views.SquircleButton
             android:id="@+id/button_account_history"
             android:layout_width="wrap_content"
@@ -136,10 +139,12 @@
             android:minHeight="40dp"
             android:padding="4dp"
             android:text="Account History"
+            app:layout_constraintBottom_toTopOf="@+id/button_emergency"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.505"
+            app:layout_constraintHorizontal_bias="0.509"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/btn_cancel_recording"
+            app:layout_constraintVertical_bias="0.208"
             app:squircle_background_color="@color/material_dynamic_primary95"
             app:squircle_border_gradient_direction="top_to_bottom"
             app:squircle_border_gradient_end_color="@color/teal_200"
@@ -154,10 +159,12 @@
             android:minWidth="160dp"
             android:minHeight="40dp"
             android:text="Emergency"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.505"
+            app:layout_constraintHorizontal_bias="0.498"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/btn_cancel_recording"
+            app:layout_constraintVertical_bias="0.0"
             app:squircle_background_color="#DC4848"
             app:squircle_background_gradient_end_color="#F65252"
             app:squircle_background_gradient_start_color="#CA9C9C"
@@ -211,13 +218,15 @@
             android:id="@+id/btn_pairdevices"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="132dp"
             android:minWidth="140dp"
             android:minHeight="40dp"
             android:text="Pair Devices"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.53"
             app:layout_constraintStart_toEndOf="@id/btn_bluetooth"
-            app:layout_constraintTop_toBottomOf="@id/btn_start_recording"
+            app:layout_constraintTop_toBottomOf="@+id/button_emergency"
+            app:layout_constraintVertical_bias="0.058"
             app:squircle_background_color="@color/material_dynamic_primary95"
             app:squircle_border_gradient_direction="top_to_bottom"
             app:squircle_border_gradient_end_color="@color/teal_200"
@@ -228,19 +237,97 @@
             android:id="@+id/btn_bluetooth"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="132dp"
             android:minWidth="140dp"
             android:minHeight="40dp"
-            android:padding="5dp"
             android:text="Bluetooth On"
-            app:layout_constraintEnd_toStartOf="@id/btn_pairdevices"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.169"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btn_start_recording"
+            app:layout_constraintTop_toBottomOf="@+id/button_emergency"
+            app:layout_constraintVertical_bias="0.058"
             app:squircle_background_color="@color/material_dynamic_primary95"
             app:squircle_border_gradient_direction="top_to_bottom"
             app:squircle_border_gradient_end_color="@color/teal_200"
             app:squircle_border_gradient_start_color="@color/purple_500"
             app:squircle_border_width="4dp" />
+
+        <TextView
+            android:id="@+id/textView_Calculating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Calculating..."
+            android:textSize="20dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.691" />
+
+        <app.juky.squircleview.views.SquircleButton
+            android:id="@+id/button_retake_recording"
+            android:layout_width="121dp"
+            android:layout_height="47dp"
+            android:layout_marginStart="4dp"
+            android:text="Retake Recording"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/progressBar"
+            app:layout_constraintVertical_bias="0.347"
+            app:squircle_background_color="@color/material_dynamic_primary95"
+            app:squircle_border_gradient_direction="top_to_bottom"
+            app:squircle_border_gradient_end_color="@color/teal_200"
+            app:squircle_border_gradient_start_color="@color/purple_500"
+            app:squircle_border_width="4dp" />
+
+        <app.juky.squircleview.views.SquircleButton
+            android:id="@+id/button_save_recording"
+            android:layout_width="121dp"
+            android:layout_height="47dp"
+            android:text="Save Recording"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/button_cancel_recording"
+            app:layout_constraintStart_toEndOf="@+id/button_retake_recording"
+            app:layout_constraintTop_toBottomOf="@+id/btn_start_recording"
+            app:layout_constraintVertical_bias="0.347"
+            app:squircle_background_color="@color/material_dynamic_primary95"
+            app:squircle_border_gradient_direction="top_to_bottom"
+            app:squircle_border_gradient_end_color="@color/teal_200"
+            app:squircle_border_gradient_start_color="@color/purple_500"
+            app:squircle_border_width="4dp" />
+
+        <app.juky.squircleview.views.SquircleButton
+            android:id="@+id/button_cancel_recording"
+            android:layout_width="121dp"
+            android:layout_height="47dp"
+            android:layout_marginEnd="4dp"
+            android:text="Cancel"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btn_start_recording"
+            app:layout_constraintVertical_bias="0.347"
+            app:squircle_background_color="@color/material_dynamic_primary95"
+            app:squircle_border_gradient_direction="top_to_bottom"
+            app:squircle_border_gradient_end_color="@color/teal_200"
+            app:squircle_border_gradient_start_color="@color/purple_500"
+            app:squircle_border_width="4dp" />
+
+        <TextView
+            android:id="@+id/latestBac"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Latest BAC(%):"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toTopOf="@+id/time_until_sober_display"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/bac_ml_display" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
