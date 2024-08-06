@@ -83,6 +83,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private ActionBarDrawerToggle toggle;
     private SharedPreferences sharedPreferences;
     private TextView bacDisplay;
+    private TextView latestbacDisplay;
     private ProgressBar progressBar;
     private TextView textViewBlow;
     private SquircleButton buttonStartRecording, btnAccountHistory;
@@ -107,6 +108,8 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private boolean isRecording = false;
     private boolean isCalculating = true;
     private boolean isFromNotification = false;
+    private String firebasetoken = null;
+    private Float globalavgbac = null ;
     private static final String PREFS_NAME = "NotificationPrefs";
     private static final String KEY_IS_FROM_NOTIFICATION = "isFromNotification";
     private static final int REQUEST_CODE_PERMISSIONS = 101;
@@ -198,6 +201,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         btnAccountHistory = findViewById(R.id.button_account_history);
         circularProgressBar = findViewById(R.id.circularProgressBar);
         bacDisplay = findViewById(R.id.bac_display);
+        latestbacDisplay = findViewById(R.id.latestBac);
         bacMlDisplay = findViewById(R.id.bac_ml_display);
         timeUntilSoberDisplay = findViewById(R.id.time_until_sober_display);
         btnInstructions = findViewById(R.id.btn_more_info);
@@ -258,7 +262,10 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                     }
                     else
                     {
-                        saveRecording();
+                        if (globalavgbac != null)
+                        {
+                            saveRecording(globalavgbac);
+                        }
                     }
                 });
         button_cancel_recording.setOnClickListener(v -> {cancelRecording();});
@@ -297,6 +304,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                         return;
                     }
 
+                    firebasetoken = task.getResult();
                     String token = task.getResult();
                     Log.d(TAG, "FCM Token: " + token);
                     sendTokenToServer(token);
@@ -321,78 +329,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         onNewIntent(getIntent());
 
     }
-    private void saveRecording() {
-        Toast.makeText(this, "Recording saved", Toast.LENGTH_SHORT).show();
-        fetchAndSaveAverageBACData();
-        isRecording = false;
-        progressBar.setProgress(0);
-        progressBar.setVisibility(View.GONE);
-        textViewBlow.setVisibility(View.GONE);
-        btnCancelRecording.setVisibility(View.GONE);
-        textView_Calculating.setVisibility(View.GONE);
-        btnInstructions.setVisibility(View.VISIBLE);
-        btnBluetooth.setVisibility(View.VISIBLE);
-        btnPairDevices.setVisibility(View.VISIBLE);
-        btnAccountHistory.setVisibility(View.VISIBLE);
-        button_save_recording.setVisibility(View.GONE);
-        button_retake_recording.setVisibility(View.GONE);
-        button_cancel_recording.setVisibility(View.GONE);
-        buttonStartRecording.setVisibility(View.VISIBLE);
-        stopSimulation();
-    }
-    private void fetchAndSaveAverageBACData() {
-        SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
-        currentUserId = sharedPreferences.getInt("currentUserId", -1);
-
-        executorService.submit(() -> {
-            synchronized (dbHelper) {
-                Cursor cursor = null;
-                try {
-                    cursor = dbHelper.getBACRecords(currentUserId);
-                    if (cursor != null && cursor.moveToFirst()) {
-                        List<BACRecord> tempBuffer = new ArrayList<>();
-                        double totalBac = 0;
-                        int recordCount = 0;
-
-                        do {
-                            String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
-                            double bac = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BAC_VALUE));
-                            tempBuffer.add(new BACRecord(bac, timestamp));
-                            totalBac += bac;
-                            recordCount++;
-
-                        } while (cursor.moveToNext());
-
-                        if (recordCount > 0) {
-                            double averageBac = totalBac / recordCount;
-
-                            // Save single average BAC value
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putFloat("averageBAC", (float) averageBac);
-                            editor.apply();
-
-                            // Retrieve existing list from SharedPreferences
-                            String json = sharedPreferences.getString("averageBACList", "[]");
-                            List<Float> averageBacList = Utils.convertJsonToList(json);
-
-                            // Add the new average BAC value to the list
-                            averageBacList.add((float) averageBac);
-
-                            // Save the updated list to SharedPreferences
-                            editor.putString("averageBACList", Utils.convertListToJson(averageBacList));
-                            editor.apply();
-                        }
-                    }
-                } catch (Exception e) {
-                    Log.e("fetchAndSaveAverageBACData", "Error accessing database", e);
-                } finally {
-                    if (cursor != null) {
-                        cursor.close();
-                    }
-                }
-            }
-        });
-    }
 
     private void sendTokenToServer(String token) {
         String url = "https://clearbreath-14b67f8b2024.herokuapp.com/send-notification";
@@ -403,6 +339,47 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             payload.put("token", token);
             payload.put("title", "Hello from Clearbreath");
             payload.put("body", "Have you updated to the latest version of Clearbreath?");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
+                Request.Method.POST,
+                url,
+                payload,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Log.d(TAG, "Token sent successfully: " + response.toString());
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e(TAG, "Failed to send token", error);
+                    }
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Content-Type", "application/json");
+                return headers;
+            }
+        };
+
+        queue.add(jsonObjectRequest);
+    }
+
+    private void sendBACTokenToServer(String token, Float recorded_average) {
+        String url = "https://clearbreath-14b67f8b2024.herokuapp.com/send-notification";
+        RequestQueue queue = Volley.newRequestQueue(this);
+
+        JSONObject payload = new JSONObject();
+        try {
+            payload.put("token", token);
+            payload.put("title", "Clearbreath: Latest BAC Reading Complete!");
+            payload.put("body", "Your latest reading is " + recorded_average);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -450,8 +427,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         button_retake_recording.setVisibility(View.GONE);
         button_cancel_recording.setVisibility(View.GONE);
         buttonStartRecording.setVisibility(View.VISIBLE);
-        stopSimulation();
-
+        buttonEmergency.setVisibility(View.VISIBLE);
 
         Toast.makeText(this, "Recording cancelled", Toast.LENGTH_SHORT).show();
     }
@@ -461,6 +437,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             textViewBlow.setVisibility(View.VISIBLE);
             btnCancelRecording.setVisibility(View.VISIBLE);
             textView_Calculating.setVisibility(View.GONE);
+            buttonEmergency.setVisibility(View.GONE);
             btnInstructions.setVisibility(View.GONE);
             btnBluetooth.setVisibility(View.GONE);
             btnPairDevices.setVisibility(View.GONE);
@@ -470,17 +447,43 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             button_cancel_recording.setVisibility(View.GONE);
             buttonStartRecording.setVisibility(View.GONE);
             isRecording = true;
-            startSimulation();
             startProgressBar();
 
         }
 
+    private void saveRecording(float averageBac) {
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        currentUserId = sharedPreferences.getInt("currentUserId", -1);
 
-    private void startProgressBar() {
-        // Reset progress status
+        Toast.makeText(this, "Recording saved", Toast.LENGTH_SHORT).show();
+
+        isRecording = false;
+        progressBar.setProgress(0);
+        progressBar.setVisibility(View.GONE);
+        textViewBlow.setVisibility(View.GONE);
+        btnCancelRecording.setVisibility(View.GONE);
+        textView_Calculating.setVisibility(View.GONE);
+        button_save_recording.setVisibility(View.GONE);
+        button_retake_recording.setVisibility(View.GONE);
+        button_cancel_recording.setVisibility(View.GONE);
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putFloat("averageBAC", averageBac);
+        editor.apply();
+
+        if (firebasetoken != null)
+        {
+            sendBACTokenToServer(firebasetoken, averageBac);
+        }
+
+        Log.d("RECORDED AVG", Double.toString(averageBac));
+
+    }
+
+    private void startProgressBar()
+    {
         progressStatus = 0;
         progressBar.setProgress(progressStatus);
-
 
         new Thread(new Runnable() {
             @Override
@@ -494,7 +497,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                         @Override
                         public void run() {
                             progressBar.setProgress(progressStatus);
-                            circularProgressBar.setProgress(progressStatus);
                             if (progressStatus == 100) {
                                 progressBar.setVisibility(View.GONE);
                                 textViewBlow.setVisibility(View.GONE);
@@ -506,9 +508,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
                                     startBACCalculation();
                                 }
 
-                                // Simulate the BAC value reading
-                                //double bacValue = new Random().nextDouble() * 0.2; // Simulated BAC value
-                                //updateBACUI(bacValue);
                             }
                         }
                     });
@@ -527,95 +526,64 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         }).start();
     }
     private void startBACCalculation() {
-        List<Double> bacValues = new ArrayList<>();
-        handler.postDelayed(new Runnable() {
-            int count = 0;
+        textView_Calculating.setVisibility(View.VISIBLE);
+        btnCancelRecording.setVisibility(View.GONE);
+        button_retake_recording.setVisibility(View.GONE);
+        button_save_recording.setVisibility(View.GONE);
+        button_cancel_recording.setVisibility(View.GONE);
+        buttonStartRecording.setVisibility(View.GONE);
 
-            @Override
-            public void run() {
-                if (count < 6) {
-                    // Simulate BAC value reading
-                    double bacValue = new Random().nextDouble() * 0.2; // Replace with actual BAC value retrieval logic
-                    bacValues.add(bacValue);
-                    textView_Calculating.setVisibility(View.VISIBLE);
-                    count++;
-                    handler.postDelayed(this, 1000); // Run this every 1 second for 7 seconds
-                } else {
-                    textView_Calculating.setVisibility(View.VISIBLE);
-                    // Calculate the median BAC value
-                    Collections.sort(bacValues);
-                    double median;
-                    if (bacValues.size() % 2 == 0) {
-                        median = (bacValues.get(bacValues.size() / 2 - 1) + bacValues.get(bacValues.size() / 2)) / 2.0;
-                    } else {
-                        median = bacValues.get(bacValues.size() / 2);
+        Cursor cursor = null;
+        try {
+            cursor = dbHelper.getBACRecords(currentUserId);
+            if (cursor != null && cursor.moveToFirst()) {
+                float totalBac = 0;
+                int recordCount = 0;
+                long currentTime = System.currentTimeMillis();
+                long tenSecondsAgo = currentTime - 10000;
+
+                do {
+                    String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
+                    double bac = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BAC_VALUE));
+
+                    // Parse the timestamp and check if it is within the last 10 seconds
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+                    Date date = sdf.parse(timestamp);
+                    if (date != null && date.getTime() >= tenSecondsAgo && date.getTime() <= currentTime) {
+                        totalBac += bac;
+                        recordCount++;
                     }
-                    // Update the UI with the median BAC value
-                    if (currentUserId != -1) {
-                        Cursor cursor = dbHelper.getAccount(currentUserId);
-                        if (cursor != null && cursor.moveToFirst()) {
-                            userAge = (cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_AGE)));
-                            userGender = (cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_GENDER)));
-                            userBMI = (cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BMI)));
-                            cursor.close();
-                        }
-                    }
-                    if (currentUserId != -1) {
-                        if (count<8)
-                        {
-                            count++;
-                            handler.postDelayed(this, 1000);
+                } while (cursor.moveToNext());
 
-                        }
-                            else
-                            {
-                                double adjustedBAC = adjustBACForUserDetails(median, userAge, userGender, userBMI);
-                                updateBACUI(adjustedBAC);
-                                textView_Calculating.setVisibility(View.GONE);
-                                button_retake_recording.setVisibility(View.VISIBLE);
-                                button_save_recording.setVisibility(View.VISIBLE);
-                                button_cancel_recording.setVisibility(View.VISIBLE);
-                                stopSimulation();
-                            }
-                        }
-
-                    else
-                    {
-                        if (count<8)
-                        {
-                            count++;
-                            handler.postDelayed(this, 1000);
-                            textView_Calculating.setVisibility(View.VISIBLE);
-                        }
-                            else
-                            {
-
-                                updateBACUI(median);
-                                textView_Calculating.setVisibility(View.GONE);
-                                button_retake_recording.setVisibility(View.VISIBLE);
-                                button_save_recording.setVisibility(View.VISIBLE);
-                                button_cancel_recording.setVisibility(View.VISIBLE);
-                                stopSimulation();
-                            }
-                    }
-
-                    isCalculating = false;
+                if (recordCount > 0) {
+                    float averageBac = totalBac / recordCount;
+                    updateBACUI(averageBac);
+                    saveRecording(averageBac);
+                    globalavgbac = averageBac;
                 }
             }
-        }, 1);
+        } catch (Exception e) {
+            Log.e("calculateAverageBAC", "Error accessing database", e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        textView_Calculating.setVisibility(View.GONE);
+        button_retake_recording.setVisibility(View.VISIBLE);
+        button_save_recording.setVisibility(View.VISIBLE);
+        button_cancel_recording.setVisibility(View.VISIBLE);
+        buttonStartRecording.setVisibility(View.VISIBLE);
+        isCalculating = false;
     }
 
     private void updateBACUI(double bacValue) {
         double bacPercentage = bacValue;
         String bacText = String.format(Locale.getDefault(), "%.2f%%", bacPercentage);
-        String bacMlText = String.format(Locale.getDefault(), "BAC in ml: %.2f mL", bacValue * 1000);
-        String timeUntilSoberText = calculateTimeUntilSober(bacValue);
-
-        bacDisplay.setText(bacText);
-        bacMlDisplay.setText(bacMlText);
-        timeUntilSoberDisplay.setText(timeUntilSoberText);
-        circularProgressBar.setProgress((float) (bacPercentage / 0.2 * 100));
+        latestbacDisplay.setText("Latest BAC(%): " + bacText);;
     }
+
     private void updateMenuItems() {
         SharedPreferences preferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         boolean isLoggedIn = preferences.getBoolean("loggedIn", false);
@@ -711,26 +679,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         }
     }
 
-
-    /*private void scheduleSoberNotification() {
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(this, SoberNotificationReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        double bacValue = 2;
-        long soberTimeMillis = System.currentTimeMillis() + (long) (calculateTimeUntilSober(bacValue));
-        if (alarmManager != null) {
-            alarmManager.set(AlarmManager.RTC_WAKEUP, soberTimeMillis, pendingIntent);
-        }
-    }*/
-
-    private String calculateTimeUntilSober(double bac) {
-        double soberTimeHours = bac / 0.015; // On average, BAC decreases by 0.015% per hour
-        int hours = (int) soberTimeHours;
-        int minutes = (int) ((soberTimeHours - hours) * 60);
-        return String.format(Locale.getDefault(), "%d hours %d minutes", hours, minutes);
-    }
-
     private boolean allPermissionsGranted() {
         for (String permission : REQUIRED_PERMISSIONS) {
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
@@ -778,7 +726,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             Toast.makeText(this, "Bluetooth service not connected", Toast.LENGTH_SHORT).show();
         }
     }
-
 
     @Override
     public void onDataReceived(String data) {
@@ -861,7 +808,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
 
     }
 
-
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -884,43 +830,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         }
     };
 
-    private void scheduleSoberNotification(double currentBAC) {
-        long timeUntilSober = (long) (currentBAC / 0.015 * 3600000); // Convert to milliseconds
-
-        // ATTENTION
-        double bac = 2.3;
-
-        // Made bac 2.3 for now. Double.parseDouble(data)
-
-        try {
-            int bacProgress = (int) (bac * 1000); // Convert BAC to integer representation
-
-            int progressBarColor;
-            if (bac < 0.02) {
-                progressBarColor = Color.GREEN;
-            } else if (bac < 0.05) {
-                progressBarColor = Color.YELLOW;
-            } else if (bac < 0.08) {
-                progressBarColor = Color.rgb(255, 165, 0); // Orange color
-            } else {
-                progressBarColor = Color.RED;
-            }
-
-            bacDisplay.setText(String.format("BAC: %.2f%%", bac));
-            circularProgressBar.setProgressWithAnimation(bacProgress, 1000L); // Animation duration of 1 second
-            circularProgressBar.setProgressBarColor(progressBarColor);
-
-            double bacMl = bac * 1000; // Convert BAC to mL
-            bacMlDisplay.setText(String.format("BAC in mL: %.2f mL", bacMl));
-
-            double hoursUntilSober = bac / 0.015;
-            timeUntilSoberDisplay.setText(String.format("Time Until Sober: %.1f hours", hoursUntilSober));
-
-        } catch (NumberFormatException e) {
-            Log.e(TAG, "Invalid BAC data received", e);
-        }
-    }
-
     private void updateUI(int currentUserId) {
         MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
         if (currentUserId == -1) {
@@ -930,62 +839,17 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
             if (cursor != null && cursor.moveToFirst()) {
                 String username = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_USERNAME));
                 accountMenuItem.setTitle(username);
-                /*@SuppressLint("Range") int age = cursor.getInt(cursor.getColumnIndex(DBHelper.COLUMN_AGE));
-                @SuppressLint("Range") String gender = cursor.getString(cursor.getColumnIndex(DBHelper.COLUMN_GENDER));
-                @SuppressLint("Range") double bmi = cursor.getDouble(cursor.getColumnIndex(DBHelper.COLUMN_BMI));
-
-                // Adjust BAC display based on age, gender, and BMI
-                double adjustedBac = adjustBACForUserDetails(bacValue, age, gender, bmi);
-                bacDisplay.setText(String.format(Locale.getDefault(), "%.2f%%", adjustedBac));
-
-                // Calculate BAC in mL and time until sober
-                double bacMl = adjustedBac * 1000; // Assuming the adjustment leads to a straightforward conversion
-                bacMlDisplay.setText(String.format(Locale.getDefault(), "%.2f mL", bacMl));
-                timeUntilSoberDisplay.setText(calculateTimeUntilSober(adjustedBac));*/
                 cursor.close();
             } else {
                 accountMenuItem.setTitle("Account");
             }
         }
     }
-    private void startSimulation() {
-        isSimulating = true;
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (isSimulating) {
-                    simulateData();
-                    try {
-                        Thread.sleep(1000); // Sleep for 1 second
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }).start();
-    }
 
-    private void stopSimulation() {
-        isSimulating = false;
-    }
-
-    private void simulateData() {
-        Random random = new Random();
-        double randomBAC = random.nextDouble() * 0.15; // Generates a random BAC value between 0.000 and 0.150
-        final String simulatedData = "BAC: " + String.format(Locale.ENGLISH, "%.3f", randomBAC);
-
-        // Updating the UI should be done on the main thread
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                processReceivedData(simulatedData);
-            }
-        });
-    }
     private double adjustBACForUserDetails(double bac, int age, String gender, double bmi) {
         // Adjust BAC
-        double beta = 0.2; // coefficient for BMI adjustment, changeable
-        double gamma = 0.1; // coefficient for age adjustment, changeable
+        double beta = 0.2;
+        double gamma = 0.1;
         double rBase = gender.equalsIgnoreCase("male") ? 0.7 : 0.85; // rBase value based on gender
 
         // Calculate the adjusted BAC
@@ -995,7 +859,6 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     @Override
     public void onBluetoothDataReceived(double bacValue) {
         if (currentUserId != -1) {
-            //this.bacValue = bacValue; // Store the BAC value received, need this from sensor
             updateUI(currentUserId);
         }
     }
@@ -1003,24 +866,20 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     private void applySettings() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        // Apply toolbar color
         int toolbarColor = sharedPreferences.getInt("toolbar_color", Color.BLUE);
         Toolbar toolbar = findViewById(R.id.toolbar);
         if (toolbar != null) {
             toolbar.setBackgroundColor(toolbarColor);
         }
 
-        // Apply status bar color
         setStatusBarColor(toolbarColor);
 
-        // Apply text size
         int textSize = sharedPreferences.getInt("text_size", 15);
         TextView sampleTextView = findViewById(R.id.sample_text_view); // Adjust to your actual view
         if (sampleTextView != null) {
             sampleTextView.setTextSize(textSize);
         }
 
-        // Apply font type
         int fontIndex = sharedPreferences.getInt("font_index", 0);
         String[] fonts = SettingsActivity.getFonts();
         if (fontIndex >= 0 && fontIndex < fonts.length) {
