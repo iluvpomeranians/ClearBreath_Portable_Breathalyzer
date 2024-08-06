@@ -127,6 +127,11 @@ public class RegisterActivity extends AppCompatActivity {
                                 return "";
                             }
                         }
+
+                        InputFilter[] filterArray = new InputFilter[1];
+                        filterArray[0] = new InputFilter.LengthFilter(20);
+                        editTextFullName.setFilters(filterArray);
+
                         return null;
                     }
                 }
@@ -142,12 +147,17 @@ public class RegisterActivity extends AppCompatActivity {
                                 return "";
                             }
                         }
+
+                        InputFilter[] filterArray = new InputFilter[1];
+                        filterArray[0] = new InputFilter.LengthFilter(10);
+                        editTextUsername.setFilters(filterArray);
+
                         return null;
                     }
                 }
         });
 
-        // Password: Minimum length 6
+        // Password: max length 6
         editTextPassword.setFilters(new InputFilter[]{
                 new InputFilter.LengthFilter(6)
         });
@@ -156,7 +166,7 @@ public class RegisterActivity extends AppCompatActivity {
                 new InputFilter.LengthFilter(6)
         });
 
-        // Age: Only numbers between 1 and 120
+        // Age: Only numbers between 18 and 120
         editTextAge.setKeyListener(DigitsKeyListener.getInstance("0123456789"));
         editTextAge.setFilters(new InputFilter[]{
                 new InputFilter.LengthFilter(3)
@@ -179,6 +189,9 @@ public class RegisterActivity extends AppCompatActivity {
                             return "";
                         }
 
+                        InputFilter[] filterArray = new InputFilter[1];
+                        filterArray[0] = new InputFilter.LengthFilter(5);
+                        editTextBMI.setFilters(filterArray);
                         return null;
                     }
                 }
@@ -227,8 +240,8 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        if (bmi < 10.0 || bmi > 150.0) {
-            Toast.makeText(this, "BMI must be between 10 and 150", Toast.LENGTH_SHORT).show();
+        if (bmi < 10.0 || bmi > 200.00) {
+            Toast.makeText(this, "BMI must be between 10 and 200", Toast.LENGTH_SHORT).show();
             return;
         }
 

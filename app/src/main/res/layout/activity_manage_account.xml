@@ -33,6 +33,7 @@
             android:inputType="text"
             android:minWidth="400dp"
             android:minHeight="40dp"
+            android:maxLength="10"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.545"
             app:layout_constraintStart_toStartOf="parent"
@@ -40,16 +41,32 @@
             android:digits="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"/>
 
         <EditText
+            android:id="@+id/editTextPassword"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:digits="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890@"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:maxLength="6"
+            android:minWidth="400dp"
+            android:minHeight="40dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.545"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/editTextUsername" />
+
+        <EditText
             android:id="@+id/editTextAge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:minWidth="400dp"
             android:minHeight="40dp"
+            android:maxLength="3"
             android:hint="Age"
             android:inputType="number"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editTextUsername"
+            app:layout_constraintTop_toBottomOf="@+id/editTextPassword"
             android:digits="1234567890"/>
 
         <EditText
@@ -57,13 +74,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:minWidth="400dp"
+            android:maxLength="5"
             android:minHeight="40dp"
             android:hint="BMI"
             android:inputType="numberDecimal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/editTextAge"
-            android:digits="1234567890"/>
+            android:digits="1234567890."/>
 
         <app.juky.squircleview.views.SquircleButton
             android:id="@+id/buttonSaveChanges"
@@ -108,7 +126,6 @@
             android:id="@+id/mascots_image"
             android:layout_width="350dp"
             android:layout_height="350dp"
-            android:layout_marginBottom="28dp"
             android:src="@drawable/ic_appicon"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
