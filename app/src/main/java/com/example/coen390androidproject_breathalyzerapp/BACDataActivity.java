@@ -10,6 +10,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -121,6 +122,7 @@ public class BACDataActivity extends AppCompatActivity {
         refreshRunnable = this::refreshBACData;
         refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL_MS);
 
+        // Apply settings
         SettingsUtils.applySettings(this);
     }
 
@@ -137,7 +139,7 @@ public class BACDataActivity extends AppCompatActivity {
                 List<BACData> data = getBACData(userId);
                 runOnUiThread(() -> {
                     if (!isPaused) {
-                        BACDataAdapter adapter = new BACDataAdapter(data);
+                        BACDataAdapter adapter = new BACDataAdapter(data, this); // Pass context to adapter
                         recyclerViewBACData.setAdapter(adapter);
                     }
                 });
