@@ -36,9 +36,21 @@
             android:padding="16dp">
 
             <app.juky.squircleview.views.SquircleButton
+                android:id="@+id/defaultButton"
+                android:layout_width="110dp"
+                android:layout_height="50dp"
+                android:text="DEFAULT"
+                app:squircle_background_color="@color/material_dynamic_primary95"
+                app:squircle_border_gradient_direction="top_to_bottom"
+                app:squircle_border_gradient_end_color="@color/teal_200"
+                app:squircle_border_gradient_start_color="@color/purple_500"
+                app:squircle_border_width="4dp" />
+
+            <app.juky.squircleview.views.SquircleButton
                 android:id="@+id/sec15Button"
                 android:layout_width="110dp"
                 android:layout_height="50dp"
+                android:layout_marginStart="16dp"
                 android:text="15 SEC"
                 app:squircle_background_color="@color/material_dynamic_primary95"
                 app:squircle_border_gradient_direction="top_to_bottom"
@@ -52,18 +64,6 @@
                 android:layout_height="50dp"
                 android:layout_marginStart="16dp"
                 android:text="MINUTELY"
-                app:squircle_background_color="@color/material_dynamic_primary95"
-                app:squircle_border_gradient_direction="top_to_bottom"
-                app:squircle_border_gradient_end_color="@color/teal_200"
-                app:squircle_border_gradient_start_color="@color/purple_500"
-                app:squircle_border_width="4dp" />
-
-            <app.juky.squircleview.views.SquircleButton
-                android:id="@+id/hourlyButton"
-                android:layout_width="110dp"
-                android:layout_height="50dp"
-                android:layout_marginStart="16dp"
-                android:text="HOURLY"
                 app:squircle_background_color="@color/material_dynamic_primary95"
                 app:squircle_border_gradient_direction="top_to_bottom"
                 app:squircle_border_gradient_end_color="@color/teal_200"

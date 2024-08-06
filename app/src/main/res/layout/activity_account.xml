@@ -7,95 +7,91 @@
     android:layout_height="match_parent"
     tools:context=".AccountActivity">
 
-    <ScrollView
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:layout_height="wrap_content">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimary"
+            android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:background="?attr/colorPrimary"
-                android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-                android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+        <TextView
+            android:id="@+id/textViewWelcome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Welcome!"
+            android:textSize="24sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
-            <TextView
-                android:id="@+id/textViewWelcome"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Welcome!"
-                android:textSize="24sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/toolbar" />
+        <app.juky.squircleview.views.SquircleButton
+            android:id="@+id/btn_login"
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="16dp"
+            android:text="Login"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/textViewWelcome"
+            app:squircle_background_color="@color/material_dynamic_primary95"
+            app:squircle_border_gradient_direction="top_to_bottom"
+            app:squircle_border_gradient_end_color="@color/teal_200"
+            app:squircle_border_gradient_start_color="@color/purple_500"
+            app:squircle_border_width="4dp" />
 
-            <app.juky.squircleview.views.SquircleButton
-                android:id="@+id/btn_login"
-                android:layout_width="250dp"
-                android:layout_height="60dp"
-                android:layout_marginTop="16dp"
-                android:text="Login"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/textViewWelcome"
-                app:squircle_background_color="@color/material_dynamic_primary95"
-                app:squircle_border_gradient_direction="top_to_bottom"
-                app:squircle_border_gradient_end_color="@color/teal_200"
-                app:squircle_border_gradient_start_color="@color/purple_500"
-                app:squircle_border_width="4dp" />
+        <app.juky.squircleview.views.SquircleButton
+            android:id="@+id/btn_register"
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="16dp"
+            android:text="Register"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btn_login"
+            app:squircle_background_color="@color/material_dynamic_primary95"
+            app:squircle_border_gradient_direction="top_to_bottom"
+            app:squircle_border_gradient_end_color="@color/teal_200"
+            app:squircle_border_gradient_start_color="@color/purple_500"
+            app:squircle_border_width="4dp" />
 
-            <app.juky.squircleview.views.SquircleButton
-                android:id="@+id/btn_register"
-                android:layout_width="250dp"
-                android:layout_height="60dp"
-                android:layout_marginTop="16dp"
-                android:text="Register"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/btn_login"
-                app:squircle_background_color="@color/material_dynamic_primary95"
-                app:squircle_border_gradient_direction="top_to_bottom"
-                app:squircle_border_gradient_end_color="@color/teal_200"
-                app:squircle_border_gradient_start_color="@color/purple_500"
-                app:squircle_border_width="4dp" />
+        <app.juky.squircleview.views.SquircleButton
+            android:id="@+id/btn_logout"
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="16dp"
+            android:text="Logout"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/btn_register"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:squircle_background_color="@color/material_dynamic_primary95"
+            app:squircle_border_gradient_direction="top_to_bottom"
+            app:squircle_border_gradient_end_color="@color/teal_200"
+            app:squircle_border_gradient_start_color="@color/purple_500"
+            app:squircle_border_width="4dp" />
 
-            <app.juky.squircleview.views.SquircleButton
-                android:id="@+id/btn_logout"
-                android:layout_width="250dp"
-                android:layout_height="60dp"
-                android:layout_marginTop="16dp"
-                android:text="Logout"
-                android:visibility="gone"
-                app:layout_constraintTop_toBottomOf="@id/btn_register"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:squircle_background_color="@color/material_dynamic_primary95"
-                app:squircle_border_gradient_direction="top_to_bottom"
-                app:squircle_border_gradient_end_color="@color/teal_200"
-                app:squircle_border_gradient_start_color="@color/purple_500"
-                app:squircle_border_width="4dp" />
+        <ImageView
+            android:id="@+id/bottom_image"
+            android:layout_width="409dp"
+            android:layout_height="582dp"
+            android:src="@drawable/ic_appicon"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textViewWelcome"
+            app:layout_constraintVertical_bias="1.0" />
 
-            <ImageView
-                android:id="@+id/bottom_image"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:src="@drawable/ic_appicon"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </ScrollView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
