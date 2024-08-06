@@ -71,6 +71,8 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         SEC_15, MINUTELY, HOURLY
     }
 
+    private boolean isFirstCreation = true;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,6 +95,20 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         Log.d("AccountHistoryActivity", "DBHelper initialized: " + (dbHelper != null));
         SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
+
+        try {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            List<Float> dummyList = new ArrayList<>();
+            dummyList.add(0.0f); // Add a dummy value
+            editor.putString("averageBACList", Utils.convertListToJson(dummyList));
+            editor.apply();
+
+            editor.putString("averageBACList", "[]");
+            editor.apply();
+            Log.d("onCreate", "averageBACList cleared successfully after adding a dummy value");
+        } catch (Exception e) {
+            Log.e("onCreate", "Error clearing averageBACList", e);
+        }
 
         initializeChart();
 
@@ -128,6 +144,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
 
 
         SettingsUtils.applySettings(this, sec15Button, minutelyButton, hourlyButton);
+        isFirstCreation = false;
     }
 
     @Override
@@ -135,34 +152,58 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         super.onResume();
         SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
-
-        // Retrieve the saved list of average BAC values
-        String json = sharedPreferences.getString("averageBACList", "[]");
-        List<Float> savedAverageBACList = Utils.convertJsonToList(json);
-
-        // Update the chart with the saved values
-        LineData data = chart.getData();
-        if (data == null) {
-            data = new LineData();
-            chart.setData(data);
+        initializeChart();
+        if (sharedPreferences.contains("averageBACList")) {
+            String json = sharedPreferences.getString("averageBACList", "[]");
+            List<Float> savedAverageBACList = Utils.convertJsonToList(json);
+            Log.d("onResume", "Grabbed savedAverageBACList: " + savedAverageBACList.toString());
+        } else {
+            Log.d("onResume", "averageBACList does not exist in SharedPreferences");
         }
-        ILineDataSet set = data.getDataSetByIndex(0);
-        if (set == null) {
-            set = createSet();
-            data.addDataSet(set);
-        }
-
-        for (Float bac : savedAverageBACList) {
-            data.addEntry(new Entry(set.getEntryCount(), bac), 0);
-        }
-        data.notifyDataChanged();
-        chart.notifyDataSetChanged();
-        chart.setVisibleXRangeMaximum(50);
-        chart.moveViewToX(data.getEntryCount());
-        chart.invalidate();
-
+//        if (!isFirstCreation) {
+//            handler.post(() -> {
+//                try {
+//                    if (sharedPreferences.contains("averageBACList")) {
+//                        // Retrieve the saved list of average BAC values
+//                        String json = sharedPreferences.getString("averageBACList", "[]");
+//                        List<Float> savedAverageBACList = Utils.convertJsonToList(json);
+//                        Log.d("onResume", "savedAverageBACList: " + savedAverageBACList.toString());
+//
+//                        // Update the chart with the saved values
+//                        LineData data = chart.getData();
+//                        if (data == null) {
+//                            Log.d("onResume", "Creating new LineData for chart");
+//                            data = new LineData();
+//                            chart.setData(data);
+//                        }
+//                        ILineDataSet set = data.getDataSetByIndex(0);
+//                        if (set == null) {
+//                            Log.d("onResume", "Creating new LineDataSet for chart");
+//                            set = createSet();
+//                            data.addDataSet(set);
+//                        }
+//
+//                        for (Float bac : savedAverageBACList) {
+//                            Log.d("onResume", "Adding entry: " + bac);
+//                            data.addEntry(new Entry(set.getEntryCount(), bac), 0);
+//                        }
+//                        data.notifyDataChanged();
+//                        chart.notifyDataSetChanged();
+//                        chart.setVisibleXRangeMaximum(50);
+//                        chart.moveViewToX(data.getEntryCount());
+//                        chart.invalidate();
+//                        Log.d("onResume", "Chart updated successfully");
+//                    } else {
+//                        Log.d("onResume", "averageBACList does not exist in SharedPreferences");
+//                    }
+//                } catch (Exception e) {
+//                    Log.e("onResume", "Error in onResume", e);
+//                }
+//            });
+//        }
         handler.post(runnable);
     }
+
 
     @Override
     protected void onPause() {
@@ -201,7 +242,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         xl.setEnabled(true);
         xl.setPosition(XAxis.XAxisPosition.BOTTOM);
         xl.setGranularityEnabled(true);
-        xl.setGranularity(3f);
+        xl.setGranularity(1f);
         xl.setLabelCount(5, true);
 
         YAxis leftAxis = chart.getAxisLeft();
@@ -232,35 +273,46 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     private void displayBACData() {
         SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
+        Log.d("displayBACData", "Fetched currentUserId: " + currentUserId);
 
-        // Retrieve the average BAC list from shared preferences
         String json = sharedPreferences.getString("averageBACList", "[]");
         List<Float> averageBacList = Utils.convertJsonToList(json);
+        Log.d("displayBACData", "averageBacList size: " + averageBacList.size());
 
-        LineData data = chart.getData();
-        if (data == null) {
-            data = new LineData();
-            chart.setData(data);
-        }
+        // Retrieve the average BAC from shared preferences
+        float averageBac = sharedPreferences.getFloat("averageBAC", 0.0f);
+        Log.d("displayBACData", "Retrieved average BAC: " + averageBac);
 
-        ILineDataSet set = data.getDataSetByIndex(0);
-        if (set == null) {
-            set = createSet();
-            data.addDataSet(set);
-        }
+        handler.post(() -> {
+            LineData data = chart.getData();
+            if (data == null) {
+                data = new LineData();
+                chart.setData(data);
+            }
 
-        for (Float bac : averageBacList) {
-            data.addEntry(new Entry(set.getEntryCount(), bac), 0);
-        }
-        data.notifyDataChanged();
+            ILineDataSet set = data.getDataSetByIndex(0);
+            if (set == null) {
+                set = createSet();
+                data.addDataSet(set);
+            }
 
-        // Let the chart know its data has changed
-        chart.notifyDataSetChanged();
-        chart.setVisibleXRangeMaximum(50);
-        chart.moveViewToX(data.getEntryCount());
-        chart.invalidate();
+            // Add the new entry
+            //data.addEntry(new Entry(set.getEntryCount(), averageBac), 0);
+            for (Float bac : averageBacList) {
+                float formattedBac = Float.parseFloat(String.format(Locale.ENGLISH, "%.3f", bac));
+                Log.d("displayBACData", "Adding entry to chart: " + formattedBac);
+                data.addEntry(new Entry(set.getEntryCount(), formattedBac), 0);
+            }
+            data.notifyDataChanged();
+
+            // Let the chart know its data has changed
+            chart.notifyDataSetChanged();
+            chart.setVisibleXRangeMaximum(50);
+            chart.moveViewToX(data.getEntryCount());
+            chart.invalidate();
+            Log.d("displayBACData", "Chart data updated and validated");
+        });
     }
-
 
     private LineDataSet createSet() {
         LineDataSet set = new LineDataSet(new ArrayList<>(), "BAC Data");
@@ -277,7 +329,6 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
                 return String.format(Locale.ENGLISH, "%.3f", entry.getY());
             }
         });
-
         return set;
     }
 
@@ -311,18 +362,14 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
                         if (recordCount > 0) {
                             double averageBac = totalBac / recordCount;
 
-                            // Save single average BAC value
                             SharedPreferences.Editor editor = sharedPreferences.edit();
                             editor.putFloat("averageBAC", (float) averageBac);
                             editor.apply();
 
-                            // Retrieve existing list from SharedPreferences
+                            // new section
                             String json = sharedPreferences.getString("averageBACList", "[]");
                             List<Float> averageBacList = Utils.convertJsonToList(json);
-
-                            // Add the new average BAC value to the list
                             averageBacList.add((float) averageBac);
-
                             // Save the updated list to SharedPreferences
                             editor.putString("averageBACList", Utils.convertListToJson(averageBacList));
                             editor.apply();
@@ -338,6 +385,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
             }
         });
     }
+
 
 
     private float convertTimestampToMillis(String timestamp) {
