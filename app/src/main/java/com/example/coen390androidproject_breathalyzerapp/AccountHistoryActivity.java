@@ -1,5 +1,6 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
@@ -104,13 +105,17 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
                             handler.post(() -> {
                                 displayBACData();
                                 lastSaveTimestamp = currentTime;
+                                checkForHighBAC();
                             });
                         } catch (Exception e) {
                             Log.e("Runnable", "Error reading BAC data from database", e);
                         }
                     });
                 } else {
-                    handler.post(() -> displayBACData());
+                    handler.post(() -> {
+                        displayBACData();
+                        checkForHighBAC();
+                    });
                 }
                 handler.postDelayed(this, REFRESH_INTERVAL_MS);
             }
@@ -373,6 +378,44 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         }
     }
 
+    private void checkForHighBAC() {
+        int highBACCount = 0;
+        long currentTime = System.currentTimeMillis();
+        long thresholdTime = currentTime - 1000;
+
+        for (int i = allBacRecords.size() - 1; i >= 0; i--) {
+            BACRecord record = allBacRecords.get(i);
+            long timestamp = (long) convertTimestampToMillis(record.getTimestamp());
+            if (timestamp >= thresholdTime) {
+                if (record.getBacValue() >= 0.20) {
+                    highBACCount++;
+                    if (highBACCount >= 2) {
+                        runOnUiThread(() -> showHighBACDialog());
+                        return;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+    }
+
+    private void showHighBACDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("HIGH LEVEL OF BAC DETECTED")
+                .setMessage("PLEASE PROCEED WITH CAUTION AND GET HELP IF NEEDED")
+                .setPositiveButton("OK", (dialog, which) -> navigateToEmergencyActivity())
+                .setCancelable(false)
+                .show();
+    }
+
+    private void navigateToEmergencyActivity() {
+        Intent intent = new Intent(this, EmergencyActivity.class);
+        intent.putExtra("showHighBACDialog", true);
+        startActivity(intent);
+        finish();
+    }
+
     private int getSecondFromTimestamp(String timestamp) {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
@@ -383,6 +426,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
             return 0;
         }
     }
+
 
     private int getMinuteFromTimestamp(String timestamp) {
         try {
@@ -404,6 +448,12 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         set.setFillDrawable(createGradientDrawable());
         set.setHighLightColor(Color.rgb(244, 117, 117));
         set.setDrawValues(true);
+        set.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getPointLabel(Entry entry) {
+                return String.format(Locale.ENGLISH, "%.3f", entry.getY()); // 3 decimal places
+            }
+        });
         return set;
     }
 

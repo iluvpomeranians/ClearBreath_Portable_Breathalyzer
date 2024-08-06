@@ -65,6 +65,10 @@ public class EmergencyActivity extends AppCompatActivity implements Marker.OnMar
             finish();
         });
 
+        if (getIntent().getBooleanExtra("showHighBACDialog", false)) {
+            new Handler().postDelayed(this::showHighBACDialog, 500);
+        }
+
         // Initialize the osmdroid configuration
         Configuration.getInstance().setUserAgentValue(BuildConfig.APPLICATION_ID);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -113,6 +117,11 @@ public class EmergencyActivity extends AppCompatActivity implements Marker.OnMar
         });
 
         SettingsUtils.applySettings(this, buttonFindNearby, buttonFindHospitals, buttonCall, buttonSMS, buttonWhatsApp);
+    }
+
+    private void showHighBACDialog() {
+        HighBACDialogFragment dialogFragment = new HighBACDialogFragment();
+        dialogFragment.show(getSupportFragmentManager(), "highBACDialog");
     }
 
     private void findPlaces(String placeType, String city) {
