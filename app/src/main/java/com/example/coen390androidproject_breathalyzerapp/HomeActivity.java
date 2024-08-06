@@ -26,6 +26,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ProgressBar;
 
@@ -37,6 +38,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
@@ -266,6 +268,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
 
         updateMenuItems();
+        applySettings();
 
         FirebaseMessaging.getInstance().getToken()
                 .addOnCompleteListener(task -> {
@@ -716,20 +719,27 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         // Apply status bar color
         setStatusBarColor(toolbarColor);
 
-        // Apply text size
+        // Apply text size and font type to all TextViews
         int textSize = sharedPreferences.getInt("text_size", 15);
-        TextView sampleTextView = findViewById(R.id.sample_text_view); // Adjust to your actual view
-        if (sampleTextView != null) {
-            sampleTextView.setTextSize(textSize);
-        }
-
-        // Apply font type
         int fontIndex = sharedPreferences.getInt("font_index", 0);
         String[] fonts = SettingsActivity.getFonts();
-        if (fontIndex >= 0 && fontIndex < fonts.length) {
-            Typeface typeface = Typeface.create(fonts[fontIndex], Typeface.NORMAL);
-            if (sampleTextView != null) {
-                sampleTextView.setTypeface(typeface);
+        Typeface typeface = Typeface.create(fonts[fontIndex], Typeface.NORMAL);
+
+        // Find the root layout
+        ConstraintLayout rootLayout = findViewById(R.id.root_layout); // Adjust to your actual root layout ID
+        if (rootLayout != null) {
+            applySettingsToAllTextViews(rootLayout, textSize, typeface);
+        }
+    }
+
+    private void applySettingsToAllTextViews(ViewGroup root, int textSize, Typeface typeface) {
+        for (int i = 0; i < root.getChildCount(); i++) {
+            View child = root.getChildAt(i);
+            if (child instanceof TextView) {
+                ((TextView) child).setTextSize(textSize);
+                ((TextView) child).setTypeface(typeface);
+            } else if (child instanceof ViewGroup) {
+                applySettingsToAllTextViews((ViewGroup) child, textSize, typeface);
             }
         }
     }

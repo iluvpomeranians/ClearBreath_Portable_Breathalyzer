@@ -1,5 +1,6 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,9 +12,11 @@ import java.util.List;
 public class BACDataAdapter extends RecyclerView.Adapter<BACDataAdapter.ItemViewHolder> {
 
     private List<BACData> bacDataList;
+    private Context context;
 
-    public BACDataAdapter(List<BACData> bacDataList) {
+    public BACDataAdapter(List<BACData> bacDataList, Context context) {
         this.bacDataList = bacDataList;
+        this.context = context;
     }
 
     @NonNull
@@ -26,7 +29,7 @@ public class BACDataAdapter extends RecyclerView.Adapter<BACDataAdapter.ItemView
     @Override
     public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
         BACData data = bacDataList.get(position);
-        holder.bind(data);
+        holder.bind(data, context);
     }
 
     @Override
@@ -46,10 +49,13 @@ public class BACDataAdapter extends RecyclerView.Adapter<BACDataAdapter.ItemView
             bacLevelTextView = itemView.findViewById(R.id.bacLevelTextView);
         }
 
-        public void bind(BACData data) {
+        public void bind(BACData data, Context context) {
             dateTextView.setText(data.getDate());
             timeTextView.setText(data.getTime());
             bacLevelTextView.setText(String.valueOf(data.getBacLevel()));
+
+            // Apply settings to each TextView
+            SettingsUtils.applySettings(context, dateTextView, timeTextView, bacLevelTextView);
         }
     }
 }

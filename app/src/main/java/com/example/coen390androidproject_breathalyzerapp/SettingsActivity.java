@@ -78,7 +78,10 @@ public class SettingsActivity extends AppCompatActivity {
         apply_button.setOnClickListener(v -> {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             int selectedColor = ((ColorDrawable) toolbar.getBackground()).getColor();
+            int fontIndex = fontSpinner.getSelectedItemPosition();
             editor.putInt("toolbar_color", selectedColor);
+            editor.putInt("font_index", fontIndex);
+            editor.putInt("text_size", textSizeSeekBar.getProgress());
             editor.apply();
 
             SettingsUtils.setStatusBarColor(SettingsActivity.this, selectedColor);
@@ -90,7 +93,10 @@ public class SettingsActivity extends AppCompatActivity {
             public void handleOnBackPressed() {
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 int selectedColor = ((ColorDrawable) toolbar.getBackground()).getColor();
+                int fontIndex = fontSpinner.getSelectedItemPosition();
                 editor.putInt("toolbar_color", selectedColor);
+                editor.putInt("font_index", fontIndex);
+                editor.putInt("text_size", textSizeSeekBar.getProgress());
                 editor.apply();
                 navigateBackToHome();
             }
