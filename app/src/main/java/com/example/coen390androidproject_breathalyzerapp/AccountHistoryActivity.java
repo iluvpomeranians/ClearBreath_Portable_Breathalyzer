@@ -40,6 +40,7 @@ import com.google.android.material.navigation.NavigationView;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -171,13 +172,15 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         xl.setPosition(XAxis.XAxisPosition.BOTTOM);
         xl.setGranularityEnabled(true);
         xl.setGranularity(1f);
-        xl.setLabelCount(5, true);
+        xl.setLabelCount(4, true);
+        xl.setAxisMaximum(45); // Setting the maximum x-axis range to 45 seconds for "15 SEC" mode
+        xl.setAxisMinimum(0);  // Setting the minimum x-axis range to 0 seconds for "15 SEC" mode
         xl.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
                 switch (currentMode) {
                     case SEC_15:
-                        return String.format(Locale.ENGLISH, "%.0f sec", value * 15);
+                        return String.format(Locale.ENGLISH, "%.0f sec", value);
                     case MINUTELY:
                         return String.format(Locale.ENGLISH, "%.0f min", value);
                     case DEFAULT:
@@ -252,6 +255,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
             float formattedBac = (float) Math.round(record.getBacValue() * 1000) / 1000f;
             data.addEntry(new Entry(xIndex++, formattedBac), 0);
         }
+
         data.notifyDataChanged();
         chart.notifyDataSetChanged();
         chart.setVisibleXRangeMaximum(50);
@@ -275,14 +279,13 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         }
 
         set.clear();
-        int xIndex = 0;
         for (Entry entry : entries) {
-            data.addEntry(new Entry(xIndex++, entry.getY()), 0);
+            data.addEntry(entry, 0);
         }
 
         data.notifyDataChanged();
         chart.notifyDataSetChanged();
-        chart.setVisibleXRangeMaximum(50);
+        chart.setVisibleXRangeMaximum(45);
         chart.moveViewToX(data.getEntryCount());
         chart.invalidate();
     }
@@ -317,13 +320,14 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
 
     private List<Entry> calculateSec15BAC() {
         List<Entry> entries = new ArrayList<>();
-        double[] sumBAC = new double[4]; // 15-sec intervals
+        double[] sumBAC = new double[4]; // 15-sec intervals (0-15, 15-30, 30-45, 45-60)
         int[] countBAC = new int[4];
+
         for (BACRecord record : allBacRecords) {
             String timestamp = record.getTimestamp();
             double bac = record.getBacValue();
             int second = getSecondFromTimestamp(timestamp);
-            int interval = second / 15;
+            int interval = (second % 60) / 15; // 0-15 -> 0, 15-30 -> 1, 30-45 -> 2, 45-60 -> 3
             sumBAC[interval] += bac;
             countBAC[interval]++;
         }
@@ -356,6 +360,17 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
             }
         }
         return entries;
+    }
+
+    private float convertTimestampToMillis(String timestamp) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+            Date date = sdf.parse(timestamp);
+            return date != null ? date.getTime() : 0;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     private int getSecondFromTimestamp(String timestamp) {
