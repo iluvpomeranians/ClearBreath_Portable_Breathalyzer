@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.text.InputFilter;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -26,7 +27,7 @@ public class ManageAccountActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle toggle;
     private NavigationView navigationView;
-    private EditText editTextUsername, editTextAge, editTextBMI;
+    private EditText editTextUsername, editTextAge, editTextBMI, editTextPassword;
     private SquircleButton buttonSaveChanges, buttonDeleteAccount;
     private OnBackPressedCallback onBackPressedCallback;
     private DBHelper dbHelper;
@@ -80,6 +81,7 @@ public class ManageAccountActivity extends AppCompatActivity {
         updateMenuItems();
 
         editTextUsername = findViewById(R.id.editTextUsername);
+        editTextPassword = findViewById(R.id.editTextPassword);
         editTextAge = findViewById(R.id.editTextAge);
         editTextBMI = findViewById(R.id.editTextBMI);
 
@@ -90,47 +92,53 @@ public class ManageAccountActivity extends AppCompatActivity {
 
         buttonSaveChanges.setOnClickListener(v -> {
             String username = editTextUsername.getText().toString().trim();
+            String password = editTextPassword.getText().toString().trim();
             String ageStr = editTextAge.getText().toString().trim();
             String bmiStr = editTextBMI.getText().toString().trim();
 
-            // Validate username
+            if (username.isEmpty() || password.isEmpty() ||ageStr.isEmpty() || bmiStr.isEmpty()) {
+                Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             if (!username.matches("^[a-zA-Z0-9]+$")) {
                 Toast.makeText(this, "Username can only contain alphanumeric characters", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Validate age
             int age;
             try {
                 age = Integer.parseInt(ageStr);
-                if (age < 18) {
-                    Toast.makeText(this, "Age must be at least 18", Toast.LENGTH_SHORT).show();
-                    return;
-                }
             } catch (NumberFormatException e) {
                 Toast.makeText(this, "Please enter a valid age", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Validate BMI
             double bmi;
             try {
                 bmi = Double.parseDouble(bmiStr);
-                if (bmi <= 0 || bmi > 50) {
-                    Toast.makeText(this, "Please enter a valid BMI (0 < BMI <= 50)", Toast.LENGTH_SHORT).show();
-                    return;
-                }
             } catch (NumberFormatException e) {
                 Toast.makeText(this, "Please enter a valid BMI", Toast.LENGTH_SHORT).show();
                 return;
             }
 
+            if (age < 18 || age > 120) {
+                Toast.makeText(this, "Age must be between 18 and 120", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (bmi < 10.0 || bmi > 200.00) {
+                Toast.makeText(this, "BMI must be between 10 and 200", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             // Update the user account in the database
-            boolean isUpdated = dbHelper.updateAccount(currentUserId, null, username, null, null, age, null, bmi);
+            boolean isUpdated = dbHelper.updateAccount(currentUserId, null, username, password, null, age, null, bmi);
             if (isUpdated) {
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putInt("currentUserId", currentUserId);
                 editor.putString("username", username);
+                editor.putString("password", password);
                 editor.putInt("age", age);
                 editor.putFloat("bmi", (float) bmi);
                 editor.apply();
@@ -141,8 +149,6 @@ public class ManageAccountActivity extends AppCompatActivity {
                 Toast.makeText(this, "Failed to update account", Toast.LENGTH_SHORT).show();
             }
         });
-
-
 
         buttonDeleteAccount.setOnClickListener(v -> {
             boolean isDeleted = dbHelper.deleteAccount(currentUserId);
@@ -160,7 +166,7 @@ public class ManageAccountActivity extends AppCompatActivity {
             }
         });
 
-        SettingsUtils.applySettings(this, editTextUsername, editTextAge, editTextBMI, buttonSaveChanges, buttonDeleteAccount);
+        SettingsUtils.applySettings(this, editTextUsername, editTextAge, editTextBMI, editTextPassword, buttonSaveChanges, buttonDeleteAccount);
 
         onBackPressedCallback = new OnBackPressedCallback(true) {
             @Override
@@ -178,7 +184,10 @@ public class ManageAccountActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+        currentUserId = sharedPreferences.getInt("currentUserId", -1);
         updateMenuItems();
+        loadAccountDetails(currentUserId);
     }
 
     private void loadAccountDetails(int userId) {
@@ -186,10 +195,23 @@ public class ManageAccountActivity extends AppCompatActivity {
             Cursor cursor = dbHelper.getAccount(userId);
             if (cursor != null && cursor.moveToFirst()) {
                 editTextUsername.setText(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_USERNAME)));
+                editTextPassword.setText(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_PASSWORD)));
                 editTextAge.setText(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_AGE))));
                 editTextBMI.setText(String.valueOf(cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BMI))));
                 cursor.close();
+            } else {
+                // Clear the fields if no user data is found
+                editTextUsername.setText("");
+                editTextPassword.setText("");
+                editTextAge.setText("");
+                editTextBMI.setText("");
             }
+        } else {
+            // Clear the fields if userId is -1
+            editTextUsername.setText("");
+            editTextPassword.setText("");
+            editTextAge.setText("");
+            editTextBMI.setText("");
         }
     }
 

@@ -1,5 +1,6 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
@@ -40,44 +41,38 @@ import com.google.android.material.navigation.NavigationView;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import app.juky.squircleview.views.SquircleButton;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-public class AccountHistoryActivity extends AppCompatActivity implements OnChartValueSelectedListener {
-
-    private DrawerLayout drawerLayout;
-    private ActionBarDrawerToggle toggle;
-    private NavigationView navigationView;
+public class AccountHistoryActivity extends AppCompatActivity implements OnChartValueSelectedListener{
     private LineChart chart;
     private DBHelper dbHelper;
     private int currentUserId;
     private Handler handler;
     private Runnable runnable;
-    private ChartMode currentMode = ChartMode.SEC_15;
-    private List<BACRecord> allBacRecords = new ArrayList<>();
-    private SquircleButton sec15Button, minutelyButton, hourlyButton;
+    private ChartMode currentMode = ChartMode.DEFAULT;
+    private CopyOnWriteArrayList<BACRecord> allBacRecords = new CopyOnWriteArrayList<>();
+    private SquircleButton sec15Button, minutelyButton, defaultButton;
     private static final long REFRESH_INTERVAL_MS = 3000;
-    private static final int SAMPLE_COUNT = 10;
-    private List<BACRecord> bacRecordBuffer = new ArrayList<>();
     private long lastSaveTimestamp = 0;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private enum ChartMode {
-        SEC_15, MINUTELY, HOURLY
+        SEC_15, MINUTELY, DEFAULT
     }
-
-    private boolean isFirstCreation = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_account_history);
 
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -96,20 +91,6 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
 
-        try {
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            List<Float> dummyList = new ArrayList<>();
-            dummyList.add(0.0f); // Add a dummy value
-            editor.putString("averageBACList", Utils.convertListToJson(dummyList));
-            editor.apply();
-
-            editor.putString("averageBACList", "[]");
-            editor.apply();
-            Log.d("onCreate", "averageBACList cleared successfully after adding a dummy value");
-        } catch (Exception e) {
-            Log.e("onCreate", "Error clearing averageBACList", e);
-        }
-
         initializeChart();
 
         handler = new Handler();
@@ -117,93 +98,46 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
             @Override
             public void run() {
                 long currentTime = System.currentTimeMillis();
-                Log.d("Runnable", "Runnable is running");
-                Log.d("Runnable", "Current time: " + currentTime);
-                Log.d("Runnable", "Last save timestamp: " + lastSaveTimestamp);
-                Log.d("Runnable", "Time difference: " + (currentTime - lastSaveTimestamp));
-
                 if (currentTime - lastSaveTimestamp >= REFRESH_INTERVAL_MS) {
                     executorService.submit(() -> {
                         try {
-                            fetchAndSaveAverageBACData();
+                            readBACDataFromDatabase();
                             handler.post(() -> {
                                 displayBACData();
                                 lastSaveTimestamp = currentTime;
+                                checkForHighBAC();
                             });
                         } catch (Exception e) {
-                            Log.e("Runnable", "Error fetching and saving average BAC data", e);
+                            Log.e("Runnable", "Error reading BAC data from database", e);
                         }
                     });
                 } else {
-                    Log.d("Runnable", "Time difference does not exceed refresh interval, updating display");
-                    handler.post(() -> displayBACData());
+                    handler.post(() -> {
+                        displayBACData();
+                        checkForHighBAC();
+                    });
                 }
                 handler.postDelayed(this, REFRESH_INTERVAL_MS);
             }
         };
 
+        sec15Button = findViewById(R.id.sec15Button);
+        minutelyButton = findViewById(R.id.minutelyButton);
+        defaultButton = findViewById(R.id.defaultButton);
 
-        SettingsUtils.applySettings(this, sec15Button, minutelyButton, hourlyButton);
-        isFirstCreation = false;
+        SettingsUtils.applySettings(this, sec15Button, minutelyButton, defaultButton);
+        sec15Button.setOnClickListener(v -> setChartMode(ChartMode.SEC_15));
+        minutelyButton.setOnClickListener(v -> setChartMode(ChartMode.MINUTELY));
+        defaultButton.setOnClickListener(v -> setChartMode(ChartMode.DEFAULT));
+
+        handler.post(runnable);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
-        currentUserId = sharedPreferences.getInt("currentUserId", -1);
-        initializeChart();
-        if (sharedPreferences.contains("averageBACList")) {
-            String json = sharedPreferences.getString("averageBACList", "[]");
-            List<Float> savedAverageBACList = Utils.convertJsonToList(json);
-            Log.d("onResume", "Grabbed savedAverageBACList: " + savedAverageBACList.toString());
-        } else {
-            Log.d("onResume", "averageBACList does not exist in SharedPreferences");
-        }
-//        if (!isFirstCreation) {
-//            handler.post(() -> {
-//                try {
-//                    if (sharedPreferences.contains("averageBACList")) {
-//                        // Retrieve the saved list of average BAC values
-//                        String json = sharedPreferences.getString("averageBACList", "[]");
-//                        List<Float> savedAverageBACList = Utils.convertJsonToList(json);
-//                        Log.d("onResume", "savedAverageBACList: " + savedAverageBACList.toString());
-//
-//                        // Update the chart with the saved values
-//                        LineData data = chart.getData();
-//                        if (data == null) {
-//                            Log.d("onResume", "Creating new LineData for chart");
-//                            data = new LineData();
-//                            chart.setData(data);
-//                        }
-//                        ILineDataSet set = data.getDataSetByIndex(0);
-//                        if (set == null) {
-//                            Log.d("onResume", "Creating new LineDataSet for chart");
-//                            set = createSet();
-//                            data.addDataSet(set);
-//                        }
-//
-//                        for (Float bac : savedAverageBACList) {
-//                            Log.d("onResume", "Adding entry: " + bac);
-//                            data.addEntry(new Entry(set.getEntryCount(), bac), 0);
-//                        }
-//                        data.notifyDataChanged();
-//                        chart.notifyDataSetChanged();
-//                        chart.setVisibleXRangeMaximum(50);
-//                        chart.moveViewToX(data.getEntryCount());
-//                        chart.invalidate();
-//                        Log.d("onResume", "Chart updated successfully");
-//                    } else {
-//                        Log.d("onResume", "averageBACList does not exist in SharedPreferences");
-//                    }
-//                } catch (Exception e) {
-//                    Log.e("onResume", "Error in onResume", e);
-//                }
-//            });
-//        }
         handler.post(runnable);
     }
-
 
     @Override
     protected void onPause() {
@@ -243,7 +177,24 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         xl.setPosition(XAxis.XAxisPosition.BOTTOM);
         xl.setGranularityEnabled(true);
         xl.setGranularity(1f);
-        xl.setLabelCount(5, true);
+        xl.setLabelCount(4, true);
+        xl.setAxisMaximum(45); // Setting the maximum x-axis range to 45 seconds for "15 SEC" mode
+        xl.setAxisMinimum(0);  // Setting the minimum x-axis range to 0 seconds for "15 SEC" mode
+        xl.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                switch (currentMode) {
+                    case SEC_15:
+                        return String.format(Locale.ENGLISH, "%.0f sec", value);
+                    case MINUTELY:
+                        return String.format(Locale.ENGLISH, "%.0f min", value);
+                    case DEFAULT:
+                        return String.format(Locale.ENGLISH, "%.0f sec", value * 3);
+                    default:
+                        return String.valueOf(value);
+                }
+            }
+        });
 
         YAxis leftAxis = chart.getAxisLeft();
         leftAxis.setTextColor(Color.WHITE);
@@ -260,182 +211,128 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
 
         YAxis rightAxis = chart.getAxisRight();
         rightAxis.setEnabled(false);
+    }
 
-        sec15Button = findViewById(R.id.sec15Button);
-        minutelyButton = findViewById(R.id.minutelyButton);
-        hourlyButton = findViewById(R.id.hourlyButton);
-
-        sec15Button.setOnClickListener(v -> setChartMode(ChartMode.SEC_15));
-        minutelyButton.setOnClickListener(v -> setChartMode(ChartMode.MINUTELY));
-        hourlyButton.setOnClickListener(v -> setChartMode(ChartMode.HOURLY));
+    private void readBACDataFromDatabase() {
+        Cursor cursor = dbHelper.getBACRecords(currentUserId);
+        if (cursor != null) {
+            allBacRecords.clear();
+            while (cursor.moveToNext()) {
+                double bacValue = cursor.getDouble(cursor.getColumnIndexOrThrow("bac_value"));
+                String timestamp = cursor.getString(cursor.getColumnIndexOrThrow("timestamp"));
+                BACRecord record = new BACRecord(bacValue, timestamp);
+                allBacRecords.add(record);
+            }
+            cursor.close();
+        }
     }
 
     private void displayBACData() {
-        SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
-        currentUserId = sharedPreferences.getInt("currentUserId", -1);
-        Log.d("displayBACData", "Fetched currentUserId: " + currentUserId);
-
-        String json = sharedPreferences.getString("averageBACList", "[]");
-        List<Float> averageBacList = Utils.convertJsonToList(json);
-        Log.d("displayBACData", "averageBacList size: " + averageBacList.size());
-
-        // Retrieve the average BAC from shared preferences
-        float averageBac = sharedPreferences.getFloat("averageBAC", 0.0f);
-        Log.d("displayBACData", "Retrieved average BAC: " + averageBac);
-
-        handler.post(() -> {
-            LineData data = chart.getData();
-            if (data == null) {
-                data = new LineData();
-                chart.setData(data);
-            }
-
-            ILineDataSet set = data.getDataSetByIndex(0);
-            if (set == null) {
-                set = createSet();
-                data.addDataSet(set);
-            }
-
-            // Add the new entry
-            //data.addEntry(new Entry(set.getEntryCount(), averageBac), 0);
-            for (Float bac : averageBacList) {
-                float formattedBac = Float.parseFloat(String.format(Locale.ENGLISH, "%.3f", bac));
-                Log.d("displayBACData", "Adding entry to chart: " + formattedBac);
-                data.addEntry(new Entry(set.getEntryCount(), formattedBac), 0);
-            }
-            data.notifyDataChanged();
-
-            // Let the chart know its data has changed
-            chart.notifyDataSetChanged();
-            chart.setVisibleXRangeMaximum(50);
-            chart.moveViewToX(data.getEntryCount());
-            chart.invalidate();
-            Log.d("displayBACData", "Chart data updated and validated");
-        });
-    }
-
-    private LineDataSet createSet() {
-        LineDataSet set = new LineDataSet(new ArrayList<>(), "BAC Data");
-        set.setAxisDependency(YAxis.AxisDependency.LEFT);
-        set.setColor(ColorTemplate.getHoloBlue());
-        set.setLineWidth(2f);
-        set.setDrawFilled(true);
-        set.setFillDrawable(createGradientDrawable());
-        set.setHighLightColor(Color.rgb(244, 117, 117));
-        set.setDrawValues(true);
-        set.setValueFormatter(new ValueFormatter() {
-            @Override
-            public String getPointLabel(Entry entry) {
-                return String.format(Locale.ENGLISH, "%.3f", entry.getY());
-            }
-        });
-        return set;
-    }
-
-
-    private void fetchAndSaveAverageBACData() {
-        SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
-        currentUserId = sharedPreferences.getInt("currentUserId", -1);
-
-        executorService.submit(() -> {
-            synchronized (dbHelper) {
-                Cursor cursor = null;
-                try {
-                    cursor = dbHelper.getBACRecords(currentUserId);
-                    if (cursor != null && cursor.moveToFirst()) {
-                        List<BACRecord> tempBuffer = new ArrayList<>();
-                        double totalBac = 0;
-                        int recordCount = 0;
-
-                        do {
-                            String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_TIMESTAMP));
-                            double bac = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_BAC_VALUE));
-                            tempBuffer.add(new BACRecord(bac, timestamp));
-                            totalBac += bac;
-                            recordCount++;
-
-                            if (tempBuffer.size() >= SAMPLE_COUNT) {
-                                break; // Process only SAMPLE_COUNT records
-                            }
-                        } while (cursor.moveToNext());
-
-                        if (recordCount > 0) {
-                            double averageBac = totalBac / recordCount;
-
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putFloat("averageBAC", (float) averageBac);
-                            editor.apply();
-
-                            // new section
-                            String json = sharedPreferences.getString("averageBACList", "[]");
-                            List<Float> averageBacList = Utils.convertJsonToList(json);
-                            averageBacList.add((float) averageBac);
-                            // Save the updated list to SharedPreferences
-                            editor.putString("averageBACList", Utils.convertListToJson(averageBacList));
-                            editor.apply();
-                        }
-                    }
-                } catch (Exception e) {
-                    Log.e("fetchAndSaveAverageBACData", "Error accessing database", e);
-                } finally {
-                    if (cursor != null) {
-                        cursor.close();
-                    }
-                }
-            }
-        });
-    }
-
-
-
-    private float convertTimestampToMillis(String timestamp) {
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
-            Date date = sdf.parse(timestamp);
-            return date != null ? date.getTime() : 0;
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return 0;
-        }
-    }
-
-    private GradientDrawable createGradientDrawable() {
-        int[] colors = {ColorTemplate.getHoloBlue(), Color.TRANSPARENT};
-        GradientDrawable gradientDrawable = new GradientDrawable(
-                GradientDrawable.Orientation.TOP_BOTTOM, colors);
-        return gradientDrawable;
-    }
-
-    private void setChartMode(ChartMode mode) {
-        currentMode = mode;
-        displayBACData();
-    }
-
-    private List<Entry> calculateAverageBAC(ChartMode mode) {
-        List<Entry> entries = new ArrayList<>();
-        switch (mode) {
+        switch (currentMode) {
             case SEC_15:
-                entries = calculateSec15BAC();
+                displaySec15BACData();
                 break;
             case MINUTELY:
-                entries = calculateMinutelyBAC();
+                displayMinutelyBACData();
                 break;
-            case HOURLY:
-                entries = calculateHourlyBAC();
+            case DEFAULT:
+                displayDefaultBACData();
                 break;
         }
-        return entries;
+    }
+
+    private void displayDefaultBACData() {
+        LineData data = chart.getData();
+        if (data == null) {
+            data = new LineData();
+            chart.setData(data);
+        }
+
+        ILineDataSet set = data.getDataSetByIndex(0);
+        if (set == null) {
+            set = createSet("Default Mode");
+            data.addDataSet(set);
+        }
+
+        set.clear();
+        int xIndex = 0;
+        for (BACRecord record : allBacRecords) {
+            float formattedBac = (float) Math.round(record.getBacValue() * 1000) / 1000f;
+            data.addEntry(new Entry(xIndex++, formattedBac), 0);
+        }
+
+        data.notifyDataChanged();
+        chart.notifyDataSetChanged();
+        chart.setVisibleXRangeMaximum(50);
+        chart.moveViewToX(data.getEntryCount());
+        chart.invalidate();
+    }
+
+    private void displaySec15BACData() {
+        List<Entry> entries = calculateSec15BAC();
+
+        LineData data = chart.getData();
+        if (data == null) {
+            data = new LineData();
+            chart.setData(data);
+        }
+
+        ILineDataSet set = data.getDataSetByIndex(0);
+        if (set == null) {
+            set = createSet("15 Sec Mode");
+            data.addDataSet(set);
+        }
+
+        set.clear();
+        for (Entry entry : entries) {
+            data.addEntry(entry, 0);
+        }
+
+        data.notifyDataChanged();
+        chart.notifyDataSetChanged();
+        chart.setVisibleXRangeMaximum(45);
+        chart.moveViewToX(data.getEntryCount());
+        chart.invalidate();
+    }
+
+    private void displayMinutelyBACData() {
+        List<Entry> entries = calculateMinutelyBAC();
+
+        LineData data = chart.getData();
+        if (data == null) {
+            data = new LineData();
+            chart.setData(data);
+        }
+
+        ILineDataSet set = data.getDataSetByIndex(0);
+        if (set == null) {
+            set = createSet("Minutely Mode");
+            data.addDataSet(set);
+        }
+
+        set.clear();
+        int xIndex = 0;
+        for (Entry entry : entries) {
+            data.addEntry(new Entry(xIndex++, entry.getY()), 0);
+        }
+
+        data.notifyDataChanged();
+        chart.notifyDataSetChanged();
+        chart.setVisibleXRangeMaximum(50);
+        chart.moveViewToX(data.getEntryCount());
+        chart.invalidate();
     }
 
     private List<Entry> calculateSec15BAC() {
         List<Entry> entries = new ArrayList<>();
-        double[] sumBAC = new double[4]; // 15-sec intervals
+        double[] sumBAC = new double[4]; // 15-sec intervals (0-15, 15-30, 30-45, 45-60)
         int[] countBAC = new int[4];
+
         for (BACRecord record : allBacRecords) {
             String timestamp = record.getTimestamp();
             double bac = record.getBacValue();
             int second = getSecondFromTimestamp(timestamp);
-            int interval = second / 15;
+            int interval = (second % 60) / 15; // 0-15 -> 0, 15-30 -> 1, 30-45 -> 2, 45-60 -> 3
             sumBAC[interval] += bac;
             countBAC[interval]++;
         }
@@ -470,26 +367,53 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         return entries;
     }
 
-    private List<Entry> calculateHourlyBAC() {
-        List<Entry> entries = new ArrayList<>();
-        double[] sumBAC = new double[12];
-        int[] countBAC = new int[12];
-        for (BACRecord record : allBacRecords) {
-            String timestamp = record.getTimestamp();
-            double bac = record.getBacValue();
-            int minute = getMinuteFromTimestamp(timestamp);
-            int interval = minute / 5;
-            sumBAC[interval] += bac;
-            countBAC[interval]++;
+    private float convertTimestampToMillis(String timestamp) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+            Date date = sdf.parse(timestamp);
+            return date != null ? date.getTime() : 0;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return 0;
         }
+    }
 
-        for (int i = 0; i < 12; i++) {
-            if (countBAC[i] > 0) {
-                double averageBAC = sumBAC[i] / countBAC[i];
-                entries.add(new Entry(i * 5, (float) averageBAC));
+    private void checkForHighBAC() {
+        int highBACCount = 0;
+        long currentTime = System.currentTimeMillis();
+        long thresholdTime = currentTime - 1000;
+
+        for (int i = allBacRecords.size() - 1; i >= 0; i--) {
+            BACRecord record = allBacRecords.get(i);
+            long timestamp = (long) convertTimestampToMillis(record.getTimestamp());
+            if (timestamp >= thresholdTime) {
+                if (record.getBacValue() >= 0.20) {
+                    highBACCount++;
+                    if (highBACCount >= 2) {
+                        runOnUiThread(() -> showHighBACDialog());
+                        return;
+                    }
+                }
+            } else {
+                break;
             }
         }
-        return entries;
+    }
+
+    private void showHighBACDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("HIGH LEVEL OF BAC DETECTED")
+                .setMessage("PLEASE PROCEED WITH CAUTION AND GET HELP IF NEEDED")
+                .setPositiveButton("OK", (dialog, which) -> navigateToEmergencyActivity())
+                .setCancelable(false)
+                .show();
+    }
+
+    private void navigateToEmergencyActivity() {
+        Intent intent = new Intent(this, EmergencyActivity.class);
+        intent.putExtra("showHighBACDialog", true);
+        startActivity(intent);
+        finish();
     }
 
     private int getSecondFromTimestamp(String timestamp) {
@@ -503,6 +427,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         }
     }
 
+
     private int getMinuteFromTimestamp(String timestamp) {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
@@ -514,19 +439,32 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         }
     }
 
-    private int getHourFromTimestamp(String timestamp) {
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
-            Date date = sdf.parse(timestamp);
-            return date != null ? date.getHours() : 0;
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return 0;
-        }
+    private LineDataSet createSet(String label) {
+        LineDataSet set = new LineDataSet(new ArrayList<>(), label);
+        set.setAxisDependency(YAxis.AxisDependency.LEFT);
+        set.setColor(ColorTemplate.getHoloBlue());
+        set.setLineWidth(2f);
+        set.setDrawFilled(true);
+        set.setFillDrawable(createGradientDrawable());
+        set.setHighLightColor(Color.rgb(244, 117, 117));
+        set.setDrawValues(true);
+        set.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getPointLabel(Entry entry) {
+                return String.format(Locale.ENGLISH, "%.3f", entry.getY()); // 3 decimal places
+            }
+        });
+        return set;
     }
 
-    private double roundToThreeDecimalPlaces(double value) {
-        return Math.round(value * 1000.0) / 1000.0;
+    private GradientDrawable createGradientDrawable() {
+        int[] colors = {ColorTemplate.getHoloBlue(), Color.TRANSPARENT};
+        return new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, colors);
+    }
+
+    private void setChartMode(ChartMode mode) {
+        currentMode = mode;
+        displayBACData();
     }
 
     @Override
@@ -597,3 +535,4 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         return true;
     }
 }
+
