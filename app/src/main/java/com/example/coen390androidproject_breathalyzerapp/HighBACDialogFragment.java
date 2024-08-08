@@ -7,7 +7,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
-
+/// Class that displays a dialog fragment when a high BAC level is detected
 public class HighBACDialogFragment extends DialogFragment {
     @NonNull
     @Override

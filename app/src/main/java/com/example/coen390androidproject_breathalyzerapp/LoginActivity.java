@@ -24,7 +24,7 @@ import com.google.android.material.navigation.NavigationView;
 import java.util.concurrent.Executors;
 
 import app.juky.squircleview.views.SquircleButton;
-
+/// This class is responsible for handling the login process of the user.
 public class LoginActivity extends AppCompatActivity {
 
     private EditText editTextUsername;
@@ -43,7 +43,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
+        // lock our app to portrait
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);

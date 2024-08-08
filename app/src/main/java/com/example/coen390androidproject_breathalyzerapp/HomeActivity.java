@@ -71,7 +71,7 @@ import java.util.concurrent.Executors;
 
 import app.juky.squircleview.views.SquircleButton;
 
-
+// This class is responsible for the main activity of the application, which is the home screen.
 public class HomeActivity extends AppCompatActivity implements BluetoothService.BluetoothDataListener {
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private boolean isSimulating = false;
@@ -299,7 +299,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
 
         updateMenuItems();
         applySettings();
-
+        // Initialize the Firebase Messaging
         FirebaseMessaging.getInstance().getToken()
                 .addOnCompleteListener(task -> {
                     if (!task.isSuccessful()) {
@@ -734,7 +734,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
     public void onDataReceived(String data) {
         processReceivedData(data);
     }
-
+    // Process the received data for BAC display
     private void processReceivedData(String data) {
         try {
             data = data.replace("BAC:", "").trim();
@@ -849,16 +849,7 @@ public class HomeActivity extends AppCompatActivity implements BluetoothService.
         }
     }
 
-    private double adjustBACForUserDetails(double bac, int age, String gender, double bmi) {
-        // Adjust BAC
-        double beta = 0.2;
-        double gamma = 0.1;
-        double rBase = gender.equalsIgnoreCase("male") ? 0.7 : 0.85; // rBase value based on gender
 
-        // Calculate the adjusted BAC
-        double adjustedBac = bac * (1 + beta * ((25.0 / bmi) - 1)) * (1 + gamma * ((30.0 / age) - 1)) * rBase;
-        return adjustedBac;
-    }
     @Override
     public void onBluetoothDataReceived(double bacValue) {
         if (currentUserId != -1) {

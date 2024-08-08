@@ -21,7 +21,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
 import app.juky.squircleview.views.SquircleButton;
-
+/// This class is used to allow the user to change their account details.
 public class ManageAccountActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
@@ -95,7 +95,7 @@ public class ManageAccountActivity extends AppCompatActivity {
             String password = editTextPassword.getText().toString().trim();
             String ageStr = editTextAge.getText().toString().trim();
             String bmiStr = editTextBMI.getText().toString().trim();
-
+            // Validate the input fields
             if (username.isEmpty() || password.isEmpty() ||ageStr.isEmpty() || bmiStr.isEmpty()) {
                 Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
                 return;

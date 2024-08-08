@@ -31,8 +31,7 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 
 import app.juky.squircleview.views.SquircleButton;
-
-
+/// This class is responsible for handling emergency situations and providing the user with the necessary tools.
 public class EmergencyActivity extends AppCompatActivity implements Marker.OnMarkerClickListener {
 
     private static final int REQUEST_LOCATION_PERMISSION = 1;
