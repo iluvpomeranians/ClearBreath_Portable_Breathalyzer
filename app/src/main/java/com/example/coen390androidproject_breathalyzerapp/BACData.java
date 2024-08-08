@@ -1,6 +1,9 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
 public class BACData {
+
+    //A GETTER FILE FOR THE BAC DATA
+
     private String timestamp;
     private double bacLevel;
 

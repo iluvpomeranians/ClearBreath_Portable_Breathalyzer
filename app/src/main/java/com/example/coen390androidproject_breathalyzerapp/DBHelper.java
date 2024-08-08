@@ -10,8 +10,11 @@ import android.util.Log;
 
 public class DBHelper extends SQLiteOpenHelper {
 
+    // Database name and version constants
     private static final String DATABASE_NAME = "breathalyzerApp.db";
     private static final int DATABASE_VERSION = 1;
+
+    // Table and column name constants
     public static final String TABLE_ACCOUNTS = "accounts";
     public static final String COLUMN_ID = "id";
     public static final String COLUMN_FULL_NAME = "full_name";
@@ -32,6 +35,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        // SQL statement to create the accounts table
         String createAccountsTable = "CREATE TABLE " + TABLE_ACCOUNTS + " (" +
                 COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COLUMN_FULL_NAME + " TEXT, " +
@@ -44,6 +48,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 ")";
         db.execSQL(createAccountsTable);
 
+        // SQL statement to create the BAC data table
         String createBACDataTable = "CREATE TABLE " + TABLE_BAC_DATA + " (" +
                 COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COLUMN_ACCOUNT_ID + " INTEGER, " +
@@ -56,11 +61,13 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Drop existing tables and recreate them on upgrade
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_ACCOUNTS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_BAC_DATA);
         onCreate(db);
     }
 
+    // Method to insert a new account into the database
     public long insertAccount(String fullName, String username, String password, String gender, int age, String email, double bmi) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -74,6 +81,7 @@ public class DBHelper extends SQLiteOpenHelper {
         return db.insert(TABLE_ACCOUNTS, null, values);
     }
 
+    // Method to update an existing account in the database
     public boolean updateAccount(int id, String fullName, String username, String password, String gender, Integer age, String email, Double bmi) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -88,26 +96,31 @@ public class DBHelper extends SQLiteOpenHelper {
         return rowsAffected > 0;
     }
 
+    // Method to delete an account from the database
     public boolean deleteAccount(int id) {
         SQLiteDatabase db = this.getWritableDatabase();
         return db.delete(TABLE_ACCOUNTS, COLUMN_ID + " = ?", new String[]{String.valueOf(id)}) > 0;
     }
 
+    // Method to retrieve an account by its ID
     public Cursor getAccount(int id) {
         SQLiteDatabase db = this.getReadableDatabase();
         return db.query(TABLE_ACCOUNTS, null, COLUMN_ID + " = ?", new String[]{String.valueOf(id)}, null, null, null);
     }
 
+    // Method to retrieve an account by its username
     public Cursor getAccountByUsername(String username) {
         SQLiteDatabase db = this.getReadableDatabase();
         return db.query(TABLE_ACCOUNTS, null, COLUMN_USERNAME + " = ?", new String[]{username}, null, null, null);
     }
 
+    // Method to retrieve BAC records for a specific account
     public Cursor getBACRecords(int accountId) {
         SQLiteDatabase db = this.getReadableDatabase();
         return db.query(TABLE_BAC_DATA, null, COLUMN_ACCOUNT_ID + " = ?", new String[]{String.valueOf(accountId)}, null, null, COLUMN_TIMESTAMP + " DESC");
     }
 
+    // Method to insert a new BAC record into the database
     public void insertBACRecord(int userId, String timestamp, double bacValue) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -115,6 +128,7 @@ public class DBHelper extends SQLiteOpenHelper {
         values.put(COLUMN_TIMESTAMP, timestamp);
         values.put(COLUMN_BAC_VALUE, bacValue);
 
+        // Insert the record with retry logic in case of database lock
         synchronized (this) {
             int retries = 3;
             while (retries > 0) {

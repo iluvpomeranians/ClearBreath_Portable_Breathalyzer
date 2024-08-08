@@ -82,19 +82,25 @@ public class BluetoothService extends Service {
 
     @SuppressLint("MissingPermission")
     public void setupBluetooth(Context context, TextView bluetoothStatusDisplay) {
+        // Check if Bluetooth is supported on the device
         if (!isBluetoothSupported(context)) {
             bluetoothStatusDisplay.setText("Status: Bluetooth not supported");
             return;
         }
 
+        // Check if Bluetooth is enabled, if not, request to enable it
         if (!isBluetoothEnabled()) {
             requestEnableBluetooth(context);
         }
 
+        // Get the list of paired Bluetooth devices
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
         if (!pairedDevices.isEmpty()) {
+            // Iterate through the paired devices
             for (BluetoothDevice device : pairedDevices) {
+                // Check if the device name matches the target device name
                 if (DEVICE_NAME.equals(device.getName())) {
+                    // Connect to the target device
                     connectToDevice(context, device, bluetoothStatusDisplay);
                     break;
                 }
@@ -106,6 +112,7 @@ public class BluetoothService extends Service {
     private void connectToDevice(Context context, BluetoothDevice device, TextView bluetoothStatusDisplay) {
         new Thread(() -> {
             try {
+                // Check if already connected
                 if (bluetoothSocket != null && bluetoothSocket.isConnected()) {
                     closeConnection();
                     handler.post(() -> {
@@ -116,6 +123,7 @@ public class BluetoothService extends Service {
                     return;
                 }
 
+                // Create a socket to connect to the device
                 bluetoothSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
                 bluetoothSocket.connect();
                 handler.post(() -> {
@@ -123,6 +131,7 @@ public class BluetoothService extends Service {
                     bluetoothStatusDisplay.setText("Status: Connected to " + device.getName());
                     bluetoothStatusDisplay.setTextColor(context.getResources().getColor(android.R.color.holo_green_dark));
                 });
+                // Start listening for data from the device
                 listenForData();
             } catch (IOException e) {
                 Log.e(TAG, "Can't connect to " + device.getName(), e);
@@ -137,9 +146,12 @@ public class BluetoothService extends Service {
 
     @SuppressLint("MissingPermission")
     public void pairDevice(Context context, BluetoothDevice device, TextView bluetoothStatusDisplay) {
+        // Check if the device is already paired
         if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
+            // Connect to the paired device
             connectToDevice(context, device, bluetoothStatusDisplay);
         } else {
+            // Initiate pairing with the device
             device.createBond();
             final BroadcastReceiver receiver = new BroadcastReceiver() {
                 @Override
@@ -164,23 +176,26 @@ public class BluetoothService extends Service {
                 }
             };
 
+            // Register the receiver to listen for bond state changes
             IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
             context.registerReceiver(receiver, filter);
         }
     }
 
     public boolean isDeviceConnected(BluetoothDevice device) {
+        // Check if the Bluetooth socket is connected to the specified device
         return bluetoothSocket != null && bluetoothSocket.isConnected() && bluetoothSocket.getRemoteDevice().equals(device);
     }
-
 
     private void listenForData() {
         new Thread(() -> {
             try {
+                // Get the input stream from the Bluetooth socket
                 inputStream = bluetoothSocket.getInputStream();
                 byte[] buffer = new byte[1024];
                 int bytes;
                 while (true) {
+                    // Read data from the input stream
                     bytes = inputStream.read(buffer);
                     String incomingMessage = new String(buffer, 0, bytes);
                     Log.d(TAG, "Incoming message: " + incomingMessage);
@@ -198,6 +213,7 @@ public class BluetoothService extends Service {
 
     @SuppressLint("MissingPermission")
     public String getConnectedDeviceName() {
+        // Check if the Bluetooth socket is connected and return the device name
         if (bluetoothSocket != null && bluetoothSocket.isConnected()) {
             String deviceName = bluetoothSocket.getRemoteDevice().getName();
             Log.d(TAG, "Connected device name: " + deviceName);
@@ -209,9 +225,11 @@ public class BluetoothService extends Service {
 
     public void closeConnection() {
         try {
+            // Close the input stream if it is not null
             if (inputStream != null) {
                 inputStream.close();
             }
+            // Close the Bluetooth socket if it is not null
             if (bluetoothSocket != null) {
                 bluetoothSocket.close();
             }

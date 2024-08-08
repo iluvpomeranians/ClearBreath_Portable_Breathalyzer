@@ -1,6 +1,9 @@
 package com.example.coen390androidproject_breathalyzerapp;
 
 public class BACRecord {
+
+    // GETTER FILE FOR ANYTHING BAC
+
     private double bacValue;
     private String timestamp;
 

@@ -61,19 +61,24 @@ public class BluetoothHelper {
 
     @SuppressLint("MissingPermission")
     public void setupBluetooth(Context context) {
-
+        // Check if Bluetooth is supported on the device
         if (!isBluetoothSupported(context)) {
             return;
         }
 
+        // Check if Bluetooth is enabled, if not, request to enable it
         if (!isBluetoothEnabled()) {
             requestEnableBluetooth(context);
         }
 
+        // Get the list of paired Bluetooth devices
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
         if (!pairedDevices.isEmpty()) {
+            // Iterate through the paired devices
             for (BluetoothDevice device : pairedDevices) {
+                // Check if the device name matches the target device name
                 if (DEVICE_NAME.equals(device.getName())) {
+                    // Connect to the target device
                     connectToDevice(context, device);
                     break;
                 }
@@ -96,6 +101,7 @@ public class BluetoothHelper {
                     return;
                 }
 
+                // Create a socket to connect to the device
                 bluetoothSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
                 bluetoothSocket.connect();
                 handler.post(() -> {
@@ -103,6 +109,7 @@ public class BluetoothHelper {
                     bluetoothStatusDisplay.setText("Status: Connected to " + device.getName());
                     bluetoothStatusDisplay.setTextColor(context.getResources().getColor(android.R.color.holo_green_dark));
                 });
+                // Start listening for data from the device
                 listenForData();
             } catch (IOException e) {
                 Log.e(TAG, "Can't connect to " + device.getName(), e);
@@ -115,18 +122,20 @@ public class BluetoothHelper {
         }).start();
     }
 
-
     private void listenForData() {
         new Thread(() -> {
             try {
+                // Get the input stream from the Bluetooth socket
                 inputStream = bluetoothSocket.getInputStream();
                 byte[] buffer = new byte[1024];
                 int bytes;
                 while (true) {
+                    // Read data from the input stream
                     bytes = inputStream.read(buffer);
                     String incomingMessage = new String(buffer, 0, bytes);
                     Log.d(TAG, "Incoming message: " + incomingMessage);
                     handler.post(() -> {
+                        // Notify the data listener with the received data
                         if (dataListener != null) {
                             dataListener.onDataReceived(incomingMessage.trim());
                         }
@@ -140,9 +149,11 @@ public class BluetoothHelper {
 
     public void closeConnection() {
         try {
+            // Close the input stream if it is not null
             if (inputStream != null) {
                 inputStream.close();
             }
+            // Close the Bluetooth socket if it is not null
             if (bluetoothSocket != null) {
                 bluetoothSocket.close();
             }
