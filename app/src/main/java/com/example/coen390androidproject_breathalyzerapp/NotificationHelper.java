@@ -9,7 +9,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import androidx.core.app.NotificationCompat;
 import android.util.Log;
-
+/// Helper class to create notifications
 public class NotificationHelper {
     private static final String CHANNEL_ID = "SOBER_NOTIFICATION_CHANNEL";
     private static final String CHANNEL_NAME = "Sober Notification";

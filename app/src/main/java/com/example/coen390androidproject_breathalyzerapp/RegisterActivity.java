@@ -23,7 +23,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.navigation.NavigationView;
 import app.juky.squircleview.views.SquircleButton;
-
+/// This class is responsible for handling the registration process of the user.
 public class RegisterActivity extends AppCompatActivity {
 
     private EditText editTextFullName, editTextUsername, editTextPassword, editTextConfirmPassword, editTextAge, editTextBMI;
@@ -66,7 +66,6 @@ public class RegisterActivity extends AppCompatActivity {
         dbHelper = new DBHelper(this);
         sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE); // Initialize sharedPreferences here
 
-        // Apply restrictions
         setInputRestrictions();
 
         // Set up the gender spinner
@@ -157,13 +156,13 @@ public class RegisterActivity extends AppCompatActivity {
                 }
         });
 
-        // Password: max length 6
+        // Password: max length 20
         editTextPassword.setFilters(new InputFilter[]{
-                new InputFilter.LengthFilter(6)
+                new InputFilter.LengthFilter(20)
         });
 
         editTextConfirmPassword.setFilters(new InputFilter[]{
-                new InputFilter.LengthFilter(6)
+                new InputFilter.LengthFilter(20)
         });
 
         // Age: Only numbers between 18 and 120
@@ -172,7 +171,7 @@ public class RegisterActivity extends AppCompatActivity {
                 new InputFilter.LengthFilter(3)
         });
 
-        // BMI: Only numbers with a single decimal point precision
+        // BMI: Only numbers with a single decimal point
         editTextBMI.setKeyListener(DigitsKeyListener.getInstance("0123456789."));
         editTextBMI.setFilters(new InputFilter[]{
                 new InputFilter() {
@@ -204,10 +203,10 @@ public class RegisterActivity extends AppCompatActivity {
         String password = editTextPassword.getText().toString().trim();
         String gender = spinnerGender.getSelectedItem().toString();
         String confirmPassword = editTextConfirmPassword.getText().toString().trim();
-
         String ageStr = editTextAge.getText().toString().trim();
         String bmiStr = editTextBMI.getText().toString().trim();
 
+        // General restrictions and validation
         if (fullName.isEmpty() || username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() ||
                 ageStr.isEmpty() || gender.isEmpty() || bmiStr.isEmpty()) {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();

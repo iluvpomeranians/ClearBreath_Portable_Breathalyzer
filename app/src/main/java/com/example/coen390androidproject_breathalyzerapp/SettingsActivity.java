@@ -25,7 +25,7 @@ import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
 import androidx.activity.OnBackPressedCallback;
 import app.juky.squircleview.views.SquircleButton;
-
+/// Class for user settings
 public class SettingsActivity extends AppCompatActivity {
 
     private SeekBar textSizeSeekBar;
@@ -36,7 +36,7 @@ public class SettingsActivity extends AppCompatActivity {
     private SquircleButton apply_button;
 
     private SharedPreferences sharedPreferences;
-
+    // Fonts to choose from, can add more or change
     private static final String[] FONTS = {
             "sans-serif", "sans-serif-light", "sans-serif-condensed", "serif", "monospace"
     };
@@ -132,7 +132,7 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
     }
-
+    //Fonts to choose from
     private void setupFontSpinner() {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, FONTS);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -158,21 +158,20 @@ public class SettingsActivity extends AppCompatActivity {
         int savedColor = sharedPreferences.getInt("toolbar_color", Color.BLUE);
         toolbar.setBackgroundColor(savedColor);
         setStatusBarColor(savedColor);
-
-        colorGrid.removeAllViews();  // Clear any existing views
+        colorGrid.removeAllViews();
 
         for (int i = 0; i < COLORS.length; i++) {
             int colorRes = COLORS[i];
             View colorView = new View(this);
             colorView.setBackgroundColor(ContextCompat.getColor(this, colorRes));
-            colorView.setContentDescription("Color option " + (i + 1)); // Accessibility
+            colorView.setContentDescription("Color option " + (i + 1));
 
             GridLayout.LayoutParams params = new GridLayout.LayoutParams(
                     GridLayout.spec(i / 4, 1f), GridLayout.spec(i % 4, 1f)
             );
             params.width = 0;
             params.height = 0;
-            params.setMargins(8, 8, 8, 8); // Adjust margins as needed
+            params.setMargins(8, 8, 8, 8); // 8 is perfect margin, do not modify please
 
             colorView.setLayoutParams(params);
 

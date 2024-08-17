@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import app.juky.squircleview.views.SquircleButton;
 
 
-
+/// This class is to display the instructions of the device to the user.
 public class MoreInfoActivity extends AppCompatActivity {
 
     private SquircleButton acknowledgeButton;

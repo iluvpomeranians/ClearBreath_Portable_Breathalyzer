@@ -89,14 +89,12 @@ public class StartRecordingActivity extends AppCompatActivity {
                         }
                     });
                     try {
-                        // Sleep for 150 milliseconds to simulate the progress
                         Thread.sleep(100);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
 
-                // When the progress is completed
                 handler.post(new Runnable() {
                     public void run() {
                         textViewBlow.setVisibility(View.GONE);
@@ -115,7 +113,7 @@ public class StartRecordingActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-
+// Calling class for FirebaseMessagingService for push notifications
     public static class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         private static final String TAG = "MyFirebaseMsgService";
