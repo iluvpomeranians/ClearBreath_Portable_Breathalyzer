@@ -44,9 +44,11 @@ public class AccountActivity extends AppCompatActivity {
         // lock our app to portrait
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
+        // Set up the toolbar, this code should be in every page
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        // Enable home button and set title
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
@@ -55,6 +57,7 @@ public class AccountActivity extends AppCompatActivity {
 
         dbHelper = new DBHelper(this);
 
+        // Seting up the navigation drawer and creating the mapping to other pages
         drawerLayout = findViewById(R.id.drawer_layout);
         toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawerLayout.addDrawerListener(toggle);
@@ -76,8 +79,7 @@ public class AccountActivity extends AppCompatActivity {
             } else if (id == R.id.nav_bac_data) {
                 intent = new Intent(AccountActivity.this, BACDataActivity.class);
                 intent.putExtra("currentUserId", currentUserId);
-            }
-            else{
+            } else {
                 return false;
             }
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -91,11 +93,13 @@ public class AccountActivity extends AppCompatActivity {
         btnRegister = findViewById(R.id.btn_register);
         btnLogout = findViewById(R.id.btn_logout);
 
+        // Retrieve login state and current user ID from SharedPreferences to update UI account name and use/map correct data
         SharedPreferences preferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         boolean loggedIn = preferences.getBoolean("loggedIn", false);
         currentUserId = preferences.getInt("currentUserId", -1);
         Log.d("AccountACT:", "currentUserId onCreate: " + currentUserId); // Debug log
 
+        // Update UI based on current user ID and checks if user is logged in through the id number later on
         updateUI(currentUserId);
 
         btnLogin.setOnClickListener(v -> {
@@ -108,6 +112,7 @@ public class AccountActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        // Apply settings to the UI components, should be in every page
         SettingsUtils.applySettings(this, textViewWelcome, btnLogout, btnRegister, btnLogin);
 
         btnLogout.setOnClickListener(v -> {
@@ -138,6 +143,7 @@ public class AccountActivity extends AppCompatActivity {
         finish();
     }
 
+    // Save login state to SharedPreferences
     private void saveLoginState(boolean loggedIn) {
         SharedPreferences preferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
@@ -146,6 +152,7 @@ public class AccountActivity extends AppCompatActivity {
         editor.apply();
     }
 
+    // Update menu items based on login state
     private void updateMenuItems() {
         boolean isLoggedIn = getSharedPreferences("UserPreferences", MODE_PRIVATE).getBoolean("loggedIn", false);
         Menu menu = navigationView.getMenu();
@@ -160,6 +167,7 @@ public class AccountActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        // Retrieve login state and current user ID from SharedPreferences
         SharedPreferences preferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         boolean loggedIn = preferences.getBoolean("loggedIn", false);
         currentUserId = preferences.getInt("currentUserId", -1);
@@ -179,8 +187,9 @@ public class AccountActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    // Update UI based on current user ID
     private void updateUI(int currentUserId) {
-        if (currentUserId == -1) {
+        if (currentUserId == -1) { //if true, either they just opened the app/page or logged out
             Log.d("AccountACT:", "currentUserId does not exist!");
             textViewWelcome.setText("Welcome to ClearBreath!");
             btnLogin.setVisibility(View.VISIBLE);
@@ -190,6 +199,7 @@ public class AccountActivity extends AppCompatActivity {
             MenuItem accountMenuItem = navigationView.getMenu().findItem(R.id.nav_account);
             accountMenuItem.setTitle("Account");
         } else {
+            //coming here would mean they are logged in, we update UI and show the correct buttons
             Cursor cursor = dbHelper.getAccount(currentUserId);
             if (cursor != null && cursor.moveToFirst()) {
                 String username = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_USERNAME));
@@ -202,6 +212,7 @@ public class AccountActivity extends AppCompatActivity {
                 accountMenuItem.setTitle(username);
                 cursor.close();
             } else {
+                //error that shouldnt happen.
                 Log.d("AccountACT:", "User not found in DB!");
                 textViewWelcome.setText("Welcome");
                 btnLogin.setVisibility(View.VISIBLE);

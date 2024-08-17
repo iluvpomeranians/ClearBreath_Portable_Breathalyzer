@@ -72,11 +72,16 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // to use full screen
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
         setContentView(R.layout.activity_account_history);
 
+        // Lock the app in portrait mode
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
+        //  toolbar things again
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -85,14 +90,19 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
             getSupportActionBar().setTitle("Account History");
         }
 
+        // Initialize the chart and database helper
         chart = findViewById(R.id.chart1);
         dbHelper = new DBHelper(this);
         Log.d("AccountHistoryActivity", "DBHelper initialized: " + (dbHelper != null));
+
+        // Retrieve the current user ID from SharedPreferences
         SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
         currentUserId = sharedPreferences.getInt("currentUserId", -1);
 
+        // Initialize the chart settings
         initializeChart();
 
+        // Set up the handler and runnable for periodic updates
         handler = new Handler();
         runnable = new Runnable() {
             @Override
@@ -125,11 +135,14 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         minutelyButton = findViewById(R.id.minutelyButton);
         defaultButton = findViewById(R.id.defaultButton);
 
+        // Apply settings again
         SettingsUtils.applySettings(this, sec15Button, minutelyButton, defaultButton);
+
         sec15Button.setOnClickListener(v -> setChartMode(ChartMode.SEC_15));
         minutelyButton.setOnClickListener(v -> setChartMode(ChartMode.MINUTELY));
         defaultButton.setOnClickListener(v -> setChartMode(ChartMode.DEFAULT));
 
+        // Start the runnable for periodic updates
         handler.post(runnable);
     }
 
@@ -152,6 +165,8 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     }
 
     private void initializeChart() {
+
+        //creating the chart and setting the properties
         chart.setOnChartValueSelectedListener(this);
         chart.getDescription().setEnabled(true);
         chart.setTouchEnabled(true);
@@ -161,14 +176,17 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         chart.setPinchZoom(false);
         chart.setBackgroundColor(Color.LTGRAY);
 
+        //creating the line
         LineData data = new LineData();
         data.setValueTextColor(Color.WHITE);
         chart.setData(data);
 
+        //the blue name at the bottom left
         Legend l = chart.getLegend();
         l.setForm(Legend.LegendForm.LINE);
         l.setTextColor(Color.WHITE);
 
+        //setting the x-axis properties and making it show up
         XAxis xl = chart.getXAxis();
         xl.setTextColor(Color.WHITE);
         xl.setDrawGridLines(false);
@@ -196,6 +214,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
             }
         });
 
+        //same for y-axis
         YAxis leftAxis = chart.getAxisLeft();
         leftAxis.setTextColor(Color.WHITE);
         leftAxis.setAxisMaximum(0.100f);
@@ -214,19 +233,25 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     }
 
     private void readBACDataFromDatabase() {
+        // Query the database for BAC records of the current user
         Cursor cursor = dbHelper.getBACRecords(currentUserId);
         if (cursor != null) {
+            // Clear the existing BAC records list
             allBacRecords.clear();
+            // Iterate through the cursor to retrieve BAC values and timestamps
             while (cursor.moveToNext()) {
                 double bacValue = cursor.getDouble(cursor.getColumnIndexOrThrow("bac_value"));
                 String timestamp = cursor.getString(cursor.getColumnIndexOrThrow("timestamp"));
+                // Create a new BACRecord object and add it to the list
                 BACRecord record = new BACRecord(bacValue, timestamp);
                 allBacRecords.add(record);
             }
+            // Close the cursor to release resources
             cursor.close();
         }
     }
 
+    //switching between modes
     private void displayBACData() {
         switch (currentMode) {
             case SEC_15:
@@ -242,25 +267,31 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     }
 
     private void displayDefaultBACData() {
+        // Get the current data from the chart
         LineData data = chart.getData();
         if (data == null) {
+            // If no data exists, create a new LineData object and set it to the chart
             data = new LineData();
             chart.setData(data);
         }
 
+        // Get the first data set from the data object
         ILineDataSet set = data.getDataSetByIndex(0);
         if (set == null) {
+            // If no data set exists, create a new one and add it to the data object
             set = createSet("Default Mode");
             data.addDataSet(set);
         }
 
         set.clear();
         int xIndex = 0;
+        // Iterate through all BAC records and add them to the data set
         for (BACRecord record : allBacRecords) {
             float formattedBac = (float) Math.round(record.getBacValue() * 1000) / 1000f;
             data.addEntry(new Entry(xIndex++, formattedBac), 0);
         }
 
+        //some chart updates and properties
         data.notifyDataChanged();
         chart.notifyDataSetChanged();
         chart.setVisibleXRangeMaximum(50);
@@ -268,6 +299,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         chart.invalidate();
     }
 
+    //same things as above but for 15 sec mode
     private void displaySec15BACData() {
         List<Entry> entries = calculateSec15BAC();
 
@@ -295,6 +327,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         chart.invalidate();
     }
 
+    //again, same thing as above but for minutely mode
     private void displayMinutelyBACData() {
         List<Entry> entries = calculateMinutelyBAC();
 
@@ -324,20 +357,28 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
 
     }
 
+
     private List<Entry> calculateSec15BAC() {
+        // Create a list to store the entries for the chart
         List<Entry> entries = new ArrayList<>();
+
+        // Arrays to store the sum of BAC values and the count of records for each 15-second interval
         double[] sumBAC = new double[4]; // 15-sec intervals (0-15, 15-30, 30-45, 45-60)
         int[] countBAC = new int[4];
 
+        // Iterate through all BAC records
         for (BACRecord record : allBacRecords) {
             String timestamp = record.getTimestamp();
             double bac = record.getBacValue();
             int second = getSecondFromTimestamp(timestamp);
-            int interval = (second % 60) / 15; // 0-15 -> 0, 15-30 -> 1, 30-45 -> 2, 45-60 -> 3
+            // Determine the interval (0-15 -> 0, 15-30 -> 1, 30-45 -> 2, 45-60 -> 3)
+            int interval = (second % 60) / 15;
+            // Accumulate the BAC values and count the records for each interval
             sumBAC[interval] += bac;
             countBAC[interval]++;
         }
 
+        // Calculate the average BAC for each interval and create entries for the chart
         for (int i = 0; i < 4; i++) {
             if (countBAC[i] > 0) {
                 double averageBAC = sumBAC[i] / countBAC[i];
@@ -347,6 +388,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         return entries;
     }
 
+    //same logic-ish as above but for minutely mode
     private List<Entry> calculateMinutelyBAC() {
         List<Entry> entries = new ArrayList<>();
         double[] sumBAC = new double[60]; // Minute intervals
@@ -368,6 +410,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         return entries;
     }
 
+    //do i really need to explain
     private float convertTimestampToMillis(String timestamp) {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
@@ -379,6 +422,8 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         }
     }
 
+    //function that was supposed to be used but there was no time left. it was supposed to check if the BAC was high for 2 consecutive readings and show a dialog
+    // while sending the user to the emergency page but it was never worked
     private void checkForHighBAC() {
         int highBACCount = 0;
         long currentTime = System.currentTimeMillis();
@@ -401,6 +446,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         }
     }
 
+    //part of the not implemented feature
     private void showHighBACDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("HIGH LEVEL OF BAC DETECTED")
@@ -410,6 +456,7 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
                 .show();
     }
 
+    //again, same as above
     private void navigateToEmergencyActivity() {
         Intent intent = new Intent(this, EmergencyActivity.class);
         intent.putExtra("showHighBACDialog", true);
@@ -428,7 +475,6 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
         }
     }
 
-
     private int getMinuteFromTimestamp(String timestamp) {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
@@ -441,7 +487,10 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
     }
 
     private LineDataSet createSet(String label) {
+        // Create a new LineDataSet with an empty list of entries and the provided label
         LineDataSet set = new LineDataSet(new ArrayList<>(), label);
+
+        //some chart properties
         set.setAxisDependency(YAxis.AxisDependency.LEFT);
         set.setColor(ColorTemplate.getHoloBlue());
         set.setLineWidth(2f);
@@ -455,9 +504,11 @@ public class AccountHistoryActivity extends AppCompatActivity implements OnChart
                 return String.format(Locale.ENGLISH, "%.3f", entry.getY()); // 3 decimal places
             }
         });
+
         return set;
     }
 
+    //from the name...
     private GradientDrawable createGradientDrawable() {
         int[] colors = {ColorTemplate.getHoloBlue(), Color.TRANSPARENT};
         return new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, colors);

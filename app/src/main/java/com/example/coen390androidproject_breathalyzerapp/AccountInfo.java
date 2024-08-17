@@ -2,6 +2,9 @@ package com.example.coen390androidproject_breathalyzerapp;
 import java.io.Serializable;
 
 public class AccountInfo implements Serializable {
+
+    //GETTERS AND SETTERS FOR ACCOUNT INFO
+
     private int id;
     private String fullName;
     private String username;
