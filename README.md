@@ -65,7 +65,4 @@ This project is an Android application that functions as a breathalyzer app, hel
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Contact
-
-For any inquiries or support, please contact us at `your-email@example.com`.
 
